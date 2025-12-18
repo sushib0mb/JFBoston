@@ -66,7 +66,7 @@ class _VeganFilterOptionState extends State<VeganFilterOption> {
           SizedBox(height: gap),
 
           Text(
-            isVegan ? 'Vegan' : 'Not Vegan',
+            isVegan ? 'Vegetarian' : 'Not Vegetarian',
             style: TextStyle(
               fontSize: fontSize,
               color: isVegan ? Colors.black : Colors.grey[400],

@@ -397,7 +397,7 @@ class _FoodPageState extends State<FoodPage> {
     if (veganOnly! && selectedAllergens.isNotEmpty) {
       return "✅ Vegetarian & Allergen-Safe Options";
     } else if (veganOnly!) {
-      return "✅ Vegan Options";
+      return "✅ Vegetarian Options";
     } else if (selectedAllergens.isNotEmpty) {
       return "✅ Allergen-Safe Options";
     } else {
@@ -407,9 +407,9 @@ class _FoodPageState extends State<FoodPage> {
 
   String getUnsafeSectionTitle() {
     if (veganOnly! && selectedAllergens.isNotEmpty) {
-      return "⚠️ Contains Allergens Or Not Vegan";
+      return "⚠️ Contains Allergens Or Not Vegetarian";
     } else if (veganOnly!) {
-      return "⚠️ Not Vegan";
+      return "⚠️ Not Vegetarian";
     } else if (selectedAllergens.isNotEmpty) {
       return "⚠️ May Contain Allergens";
     } else {
@@ -749,7 +749,7 @@ class _FoodPageState extends State<FoodPage> {
                                         // Vegan
                                         SizedBox(height: isTablet ? 20 : 12),
                                         Center(
-                                          child: _buildSectionTitle("Vegan"),
+                                          child: _buildSectionTitle("Vegetarian"),
                                         ),
                                         SizedBox(height: isTablet ? 16 : 12),
                                         VeganFilterOption(
