@@ -124,8 +124,7 @@ class FoodService {
                 boothLocation: boothData['booth_location'] ?? '',
                 genre: boothData['genre'] ?? '',
                 logoPath: boothData['logo_path'] ?? '',
-                boothDetailImagePath:
-                    boothData['booth_detail_image_path'] ?? '',
+                boothImagePath: boothData['booth_image_path'] ?? '',
                 isVegan: boothData['is_vegan'] ?? false,
                 mapPageFoodLocation: boothData['map_page_food_location'] ?? '',
                 payments:

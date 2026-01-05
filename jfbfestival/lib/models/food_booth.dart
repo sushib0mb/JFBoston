@@ -9,7 +9,7 @@ class FoodBooth {
   final String boothLocation;
   final String genre;
   final String logoPath;
-  final String boothDetailImagePath;
+  final String boothImagePath;
   final bool isVegan;
   final String mapPageFoodLocation;
   final List<String> payments;
@@ -25,7 +25,7 @@ class FoodBooth {
     required this.boothLocation,
     required this.genre,
     required this.logoPath,
-    required this.boothDetailImagePath,
+    required this.boothImagePath,
     required this.isVegan,
     required this.payments,
     required this.allergens,

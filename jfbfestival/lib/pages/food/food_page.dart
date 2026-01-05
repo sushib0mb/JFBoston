@@ -424,7 +424,7 @@ class _FoodPageState extends State<FoodPage> {
                               topRight: Radius.circular(25),
                             ),
                             image: DecorationImage(
-                              image: AssetImage(booth.boothDetailImagePath),
+                              image: NetworkImage(booth.boothImagePath),
                               fit: BoxFit.cover,
                             ),
                             boxShadow: [

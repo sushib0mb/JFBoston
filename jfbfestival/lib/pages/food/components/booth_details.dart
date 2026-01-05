@@ -62,7 +62,7 @@ class BoothDetails extends StatelessWidget {
                               topRight: Radius.circular(25),
                             ),
                             image: DecorationImage(
-                              image: NetworkImage(booth.boothDetailImagePath),
+                              image: NetworkImage(booth.boothImagePath),
                               fit: BoxFit.cover,
                             ),
                           ),
