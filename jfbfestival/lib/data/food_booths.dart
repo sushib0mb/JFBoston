@@ -53,6 +53,7 @@ class FoodService {
 
   // Get all food booths with their dishes
   Future<List<FoodBooth>> getFoodBooths() async {
+    print("started fetching");
     try {
       // Fetch all food booths
       final foodBoothsResponse = await _supabaseClient
@@ -67,6 +68,7 @@ class FoodService {
 
       for (final dishData in dishesResponse) {
         // Ensure allergens is a list, whether it's a string or already a list
+        print(dishData['name']);
         final allergens = dishData['allergens'];
         List<String> allergensList = [];
         if (allergens != null) {
@@ -99,6 +101,8 @@ class FoodService {
           foodBoothsResponse.map<FoodBooth>((boothData) {
             final boothId = boothData['id'];
 
+            print("booth data: $boothData");
+
             try {
               // Ensure booth allergens is a list (same as for dishes)
               final boothAllergens = boothData['allergens'];
@@ -116,11 +120,12 @@ class FoodService {
                 name: boothData['name'],
                 image: boothData['image'] ?? '',
                 description: boothData['description'] ?? '',
-                allergy: boothData['allergy'],
+                // allergy: boothData['allergy'],
                 boothLocation: boothData['booth_location'] ?? '',
                 genre: boothData['genre'] ?? '',
                 logoPath: boothData['logo_path'] ?? '',
-                dishImagePath: boothData['dish_image_path'] ?? '',
+                boothDetailImagePath:
+                    boothData['booth_detail_image_path'] ?? '',
                 isVegan: boothData['is_vegan'] ?? false,
                 mapPageFoodLocation: boothData['map_page_food_location'] ?? '',
                 payments:

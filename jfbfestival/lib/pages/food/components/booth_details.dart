@@ -62,7 +62,7 @@ class BoothDetails extends StatelessWidget {
                               topRight: Radius.circular(25),
                             ),
                             image: DecorationImage(
-                              image: AssetImage(booth.dishImagePath),
+                              image: NetworkImage(booth.boothDetailImagePath),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -404,7 +404,7 @@ class _DishCardState extends State<DishCard> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(16),
                   ),
-                  child: Image.asset(
+                  child: Image.network(
                     widget.dish.imagePath,
                     height: 120,
                     width: double.infinity,
@@ -459,7 +459,7 @@ class _DishCardState extends State<DishCard> {
                           Icon(Icons.eco, color: Colors.white, size: 14),
                           SizedBox(width: 4),
                           Text(
-                            "Vegatarian",
+                            "Vegetarian",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -593,7 +593,7 @@ class _DishCardState extends State<DishCard> {
                                             ],
                                           ),
                                           child: Center(
-                                            child: Image.asset(
+                                            child: Image.network(
                                               iconPath,
                                               width: 30,
                                               height: 30,

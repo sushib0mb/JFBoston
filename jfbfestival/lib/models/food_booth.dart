@@ -1,5 +1,5 @@
 // lib/models/food_booth.dart
-import 'dish.dart'; 
+import 'dish.dart';
 
 class FoodBooth {
   final String name;
@@ -9,7 +9,7 @@ class FoodBooth {
   final String boothLocation;
   final String genre;
   final String logoPath;
-  final String dishImagePath;
+  final String boothDetailImagePath;
   final bool isVegan;
   final String mapPageFoodLocation;
   final List<String> payments;
@@ -25,10 +25,10 @@ class FoodBooth {
     required this.boothLocation,
     required this.genre,
     required this.logoPath,
-    required this.dishImagePath,
+    required this.boothDetailImagePath,
     required this.isVegan,
     required this.payments,
     required this.allergens,
-     this.dishes = const [],
+    this.dishes = const [],
   });
 }

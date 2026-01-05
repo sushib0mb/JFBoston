@@ -5,7 +5,8 @@ import 'package:jfbfestival/pages/food/components/allergy_filter.dart';
 import 'package:jfbfestival/pages/food/components/booth_details.dart';
 import 'package:jfbfestival/data/food_booths.dart';
 import 'package:jfbfestival/models/food_booth.dart';
-import 'dart:ui';
+import 'package:jfbfestival/pages/food/components/top_action_buttons.dart';
+import 'package:jfbfestival/pages/food/components/search_bar.dart';
 
 class AnimatedBoothDetailWrapper extends StatefulWidget {
   final FoodBooth booth;
@@ -196,8 +197,36 @@ class _FoodPageState extends State<FoodPage> {
           // Search bar (fixed position, won't scroll)
 
           // Filter button on top of everything
-          _buildTopActionButtons(),
-          if (_isSearching) _buildSearchBar(),
+          TopActionButtons(
+            isSearching: _isSearching,
+            onSearchPressed: () {
+              setState(() => _isSearching = true);
+              _searchFocusNode.requestFocus();
+            },
+            onFilterPressed: () {
+              if (!_isFilterPopupOpen) _showFilterPopup();
+            },
+          ),
+          if (_isSearching)
+            CustomSearchBar(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              topPadding:
+                  MediaQuery.of(context).padding.top +
+                  (MediaQuery.of(context).size.height * 0.070) +
+                  (MediaQuery.of(context).size.height * 0.015) +
+                  32.5,
+              onChanged: (value) {
+                setState(() {}); // This rebuilds the parent to filter the list
+              },
+              onCancel: () {
+                setState(() {
+                  _searchController.clear();
+                  _isSearching = false;
+                });
+                _searchFocusNode.unfocus();
+              },
+            ),
         ],
       ),
     );
@@ -213,156 +242,6 @@ class _FoodPageState extends State<FoodPage> {
             const Color(0xFF0B3775).withOpacity(0.15),
             const Color(0xFFBF1D23).withOpacity(0.15),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopActionButtons() {
-    return Positioned(
-      top:
-          MediaQuery.of(context).padding.top +
-          MediaQuery.of(context).size.height * 0.015,
-      right: MediaQuery.of(context).size.width * 0.05,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Search Button
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child:
-                _isSearching
-                    ? Container() // Empty container when searching
-                    : _buildIconButton(
-                      icon: Icons.search,
-                      onPressed: () {
-                        setState(() {
-                          _isSearching = true;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _searchFocusNode.requestFocus();
-                          });
-                        });
-                      },
-                    ),
-          ),
-          const SizedBox(width: 10),
-          // Filter Button
-          _buildIconButton(
-            iconAsset: 'assets/Filter.png',
-            onPressed: () {
-              if (!_isFilterPopupOpen) {
-                _showFilterPopup();
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIconButton({
-    IconData? icon,
-    String? iconAsset,
-    required VoidCallback onPressed,
-  }) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600;
-
-    // bump sizes on tablet
-    final double btnSize = isTablet ? 70.0 : 55.0;
-    final double padding = isTablet ? 14.0 : 10.0;
-    final double iconSize = isTablet ? 36.0 : 30.0;
-    final double elevation = isTablet ? 12.0 : 10.0;
-
-    return GestureDetector(
-      onTap: onPressed,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          width: btnSize,
-          height: btnSize,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(btnSize / 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: elevation,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(padding),
-            child:
-                iconAsset != null
-                    ? Image.asset(iconAsset, fit: BoxFit.contain)
-                    : Icon(icon, size: iconSize),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    final pad = MediaQuery.of(context).size.height * 0.070;
-    var topPadding =
-        MediaQuery.of(context).padding.top +
-        pad +
-        MediaQuery.of(context).size.height * 0.015 +
-        32.5;
-    if (!_isSearching) return SizedBox.shrink(); // Hide if not searching
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        30,
-        topPadding,
-        30,
-        0,
-      ), // Tighter top padding
-      child: Material(
-        elevation: 4,
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Search food booths...',
-                    border: InputBorder.none,
-                  ),
-                  onChanged: (_) => setState(() {}),
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey),
-                onPressed: () {
-                  setState(() {
-                    _searchController.clear();
-                    _isSearching = false;
-                  });
-                  _searchFocusNode.unfocus();
-                },
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -545,7 +424,7 @@ class _FoodPageState extends State<FoodPage> {
                               topRight: Radius.circular(25),
                             ),
                             image: DecorationImage(
-                              image: AssetImage(booth.dishImagePath),
+                              image: AssetImage(booth.boothDetailImagePath),
                               fit: BoxFit.cover,
                             ),
                             boxShadow: [
@@ -749,7 +628,9 @@ class _FoodPageState extends State<FoodPage> {
                                         // Vegan
                                         SizedBox(height: isTablet ? 20 : 12),
                                         Center(
-                                          child: _buildSectionTitle("Vegetarian"),
+                                          child: _buildSectionTitle(
+                                            "Vegetarian",
+                                          ),
                                         ),
                                         SizedBox(height: isTablet ? 16 : 12),
                                         VeganFilterOption(
