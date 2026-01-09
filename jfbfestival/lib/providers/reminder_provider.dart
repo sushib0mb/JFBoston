@@ -146,13 +146,13 @@ class ReminderProvider extends ChangeNotifier {
         for (final e in events) {
           // debugPrint('    🔍 Processing event: ${e.title} at ${e.time}');
           // Skip if time is invalid or title is blank
-          if (!e.time.contains('-') || e.title.trim().isEmpty) {
+          if (!e.time.contains('-') || e.performanceName.trim().isEmpty) {
             // debugPrint('      ➡️ Skipping due to invalid time or empty title.');
             continue;
           }
 
           // Skip known filler or sponsor-related events
-          final lowerTitle = e.title.toLowerCase();
+          final lowerTitle = e.performanceName.toLowerCase();
           if (lowerTitle.contains('sponsor') ||
               lowerTitle.contains('raffle') ||
               lowerTitle.contains('advertising') ||
@@ -203,7 +203,7 @@ class ReminderProvider extends ChangeNotifier {
             try {
               await _notifier.schedule(
                 id: id++,
-                title: '🔔 Coming up: ${e.title}',
+                title: '🔔 Coming up: ${e.performanceName}',
                 body: 'Starting at ${startStr}',
                 when: eventStartBoston,
                 leadTime: leadTime,

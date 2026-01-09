@@ -593,7 +593,7 @@ class _DishCardState extends State<DishCard> {
                                             ],
                                           ),
                                           child: Center(
-                                            child: Image.network(
+                                            child: Image.asset(
                                               iconPath,
                                               width: 30,
                                               height: 30,

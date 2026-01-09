@@ -39,7 +39,7 @@ class _TimetablePageState extends State<TimetablePage> {
         selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
     for (var slot in schedule) {
       for (var e in [...?slot.stage1Events, ...?slot.stage2Events]) {
-        if (e.title == selected.title &&
+        if (e.performanceName == selected.performanceName &&
             e.time == selected.time &&
             e.stage == selected.stage) {
           setState(() {
@@ -698,9 +698,9 @@ class _PerformanceBoxState extends State<PerformanceBox>
           _buildIcon(iconSize + 20),
           SizedBox(height: eventHeight * 0.05),
           Text(
-            widget.eventItem.title.length > 27
-                ? "${widget.eventItem.title.substring(0, 27)}..."
-                : widget.eventItem.title,
+            widget.eventItem.performanceName.length > 27
+                ? "${widget.eventItem.performanceName.substring(0, 27)}..."
+                : widget.eventItem.performanceName,
             style: TextStyle(
               fontSize: scale * 12,
               fontWeight: FontWeight.w500,
@@ -758,9 +758,9 @@ class _PerformanceBoxState extends State<PerformanceBox>
             isTablet ? CrossAxisAlignment.start : CrossAxisAlignment.start,
         children: [
           Text(
-            widget.eventItem.title.length > maxTitle
-                ? "${widget.eventItem.title.substring(0, maxTitle)}..."
-                : widget.eventItem.title,
+            widget.eventItem.performanceName.length > maxTitle
+                ? "${widget.eventItem.performanceName.substring(0, maxTitle)}..."
+                : widget.eventItem.performanceName,
             style: TextStyle(
               fontSize: titleScale,
               fontWeight: FontWeight.w500,
@@ -919,7 +919,7 @@ class _EventDetailViewState extends State<EventDetailView>
               height: headerH,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(widget.event.eventDetailImage),
+                  image: AssetImage(widget.event.eventImage),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: const BorderRadius.only(
@@ -939,7 +939,7 @@ class _EventDetailViewState extends State<EventDetailView>
                   child: Transform.scale(
                     scale: _headerScale.value,
                     child: Text(
-                      widget.event.title,
+                      widget.event.performanceName,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: titleSize,

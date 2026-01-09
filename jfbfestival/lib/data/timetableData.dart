@@ -3,33 +3,33 @@ import 'package:supabase/supabase.dart';
 
 // Event item model
 class EventItem {
-  final String title;
+  final String performanceName;
   final String time;
   final String iconImage;
   final int duration;
   final String stage;
   final String description;
-  final String eventDetailImage;
+  final String eventImage;
 
   EventItem({
-    required this.title,
+    required this.performanceName,
     required this.time,
     required this.duration,
     required this.iconImage,
     required this.stage,
     required this.description,
-    required this.eventDetailImage,
+    required this.eventImage,
   });
 
   factory EventItem.fromSupabase(Map<String, dynamic> data) {
     return EventItem(
-      title: data['event_title'] ?? '',
-      time: data['event_time_range'] ?? '',
-      duration: data['event_duration_minutes'] ?? 0,
-      iconImage: data['event_icon_path'] ?? '',
-      stage: data['event_stage'] ?? '',
-      description: data['event_description'] ?? '',
-      eventDetailImage: data['event_detail_image_path'] ?? '',
+      performanceName: data['performance_name'] ?? '',
+      time: data['time'] ?? '',
+      duration: data['duration'] ?? 0,
+      iconImage: data['icon_image'] ?? '',
+      stage: data['stage'] ?? '',
+      description: data['description'] ?? '',
+      eventImage: data['event_image'] ?? '',
     );
   }
 }
@@ -57,199 +57,100 @@ class ScheduleDataService extends ChangeNotifier {
   List<ScheduleItem> day2ScheduleData = [];
 
   // State variables
-  bool isLoadingDay1 = false;
-  bool isLoadingDay2 = false;
-  String? errorDay1;
-  String? errorDay2;
+  bool isLoading = false;
+  String? errorMessage;
 
   // Realtime channel
   RealtimeChannel? _realtimeChannel;
 
   // Constructor
   ScheduleDataService(this._supabase) {
-    initScheduleDataListeners();
-  }
-
-  // Initialize data listeners
-  void initScheduleDataListeners() {
-    // Fetch initial data
-    fetchDay1ScheduleData();
-    fetchDay2ScheduleData();
-
-    // Set up realtime listener
+    refreshAllData();
     _setupRealtimeListener();
   }
 
-  // Set up realtime listener for both tables
+  Future<void> refreshAllData() async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      final List<dynamic> response = await _supabase
+          .from("stage_events")
+          .select()
+          .order('time');
+
+      print("fetching success");
+
+      final allEvents = List<Map<String, dynamic>>.from(response);
+      print("all events: $allEvents");
+
+      day1ScheduleData = _processEventData(
+        allEvents.where((e) => e['day'] == 1).toList(),
+      );
+      day2ScheduleData = _processEventData(
+        allEvents.where((e) => e['day'] == 2).toList(),
+      );
+
+      errorMessage = null;
+    } catch (e) {
+      print("error: $e");
+      errorMessage = "Error: $e";
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void _setupRealtimeListener() {
-    final supabase = _supabase;
+    _realtimeChannel = _supabase.channel('schedule_updates');
 
-    final channel = supabase.channel('db-changes');
-
-    // Listen for INSERT, UPDATE, DELETE on day1_events
-    channel
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(event: 'INSERT', schema: 'public', table: 'day1_events'),
-        (payload, [ref]) {
-          fetchDay1ScheduleData();
-        },
-      )
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(event: 'UPDATE', schema: 'public', table: 'day1_events'),
-        (payload, [ref]) {
-          fetchDay1ScheduleData();
-        },
-      )
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(event: 'DELETE', schema: 'public', table: 'day1_events'),
-        (payload, [ref]) {
-          fetchDay1ScheduleData();
-        },
-      )
-      // Listen for INSERT, UPDATE, DELETE on day2_events
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(event: 'INSERT', schema: 'public', table: 'day2_events'),
-        (payload, [ref]) {
-          fetchDay2ScheduleData();
-        },
-      )
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(event: 'UPDATE', schema: 'public', table: 'day2_events'),
-        (payload, [ref]) {
-          fetchDay2ScheduleData();
-        },
-      )
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(event: 'DELETE', schema: 'public', table: 'day2_events'),
-        (payload, [ref]) {
-          fetchDay2ScheduleData();
-        },
-      )
-      ..subscribe();
-  }
-
-  // Fetch Day 1 schedule data
-  Future<void> fetchDay1ScheduleData() async {
-    try {
-      isLoadingDay1 = true;
-      notifyListeners();
-
-      // Fetch all events data for day 1
-      final response = await _supabase
-          .from('day1_events')
-          .select()
-          .order('grouping_time');
-
-      // Convert the response to the correct type
-      List<Map<String, dynamic>> typedResponse =
-          (response as List)
-              .map(
-                (item) =>
-                    Map<String, dynamic>.from(item as Map<dynamic, dynamic>),
-              )
-              .toList();
-
-      // Process the data
-      day1ScheduleData = _processEventData(typedResponse);
-
-      isLoadingDay1 = false;
-      errorDay1 = null;
-      notifyListeners();
-    } catch (e) {
-      errorDay1 = "Failed to load Day 1 schedule data: $e";
-      isLoadingDay1 = false;
-      notifyListeners();
-    }
-  }
-
-  // Fetch Day 2 schedule data
-  Future<void> fetchDay2ScheduleData() async {
-    try {
-      isLoadingDay2 = true;
-      notifyListeners();
-
-      // Fetch all events data for day 1
-      final response = await _supabase
-          .from('day2_events')
-          .select()
-          .order('grouping_time');
-
-      // Convert the response to the correct type
-      List<Map<String, dynamic>> typedResponse =
-          (response as List)
-              .map(
-                (item) =>
-                    Map<String, dynamic>.from(item as Map<dynamic, dynamic>),
-              )
-              .toList();
-
-      // Process the data
-      day2ScheduleData = _processEventData(typedResponse);
-
-      isLoadingDay2 = false;
-      errorDay2 = null;
-      notifyListeners();
-    } catch (e) {
-      errorDay2 = "Failed to load Day 2 schedule data: $e";
-      isLoadingDay2 = false;
-      notifyListeners();
-    }
+    _realtimeChannel!
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'stage_events',
+          callback: (payload) {
+            print('Schedule change detected: ${payload.eventType}');
+            refreshAllData();
+          },
+        )
+        .subscribe();
   }
 
   // Process event data into schedule items
   List<ScheduleItem> _processEventData(List<Map<String, dynamic>> data) {
-    try {
-      // Group the events by grouping_time
-      Map<String, Map<String, List<EventItem>>> groupedEvents = {};
+    Map<String, Map<String, List<EventItem>>> groupedEvents = {};
 
-      for (var item in data) {
-        String groupingTime = item['grouping_time'] ?? '';
-        String stage = item['event_stage'] ?? '';
+    for (var item in data) {
+      String groupingTime = item['time'] ?? '';
+      String stage = item['event_stage'] ?? '';
 
-        // Initialize the grouping time if not exists
-        if (!groupedEvents.containsKey(groupingTime)) {
-          groupedEvents[groupingTime] = {'stage1': [], 'stage2': []};
-        }
+      // Create a slot for this time if it doesn't exist
+      groupedEvents.putIfAbsent(
+        groupingTime,
+        () => {'stage1': [], 'stage2': []},
+      );
 
-        EventItem event = EventItem.fromSupabase(item);
+      EventItem event = EventItem.fromSupabase(item);
 
-        // Add event to the appropriate stage list
-        if (stage == 'Stage 1') {
-          groupedEvents[groupingTime]!['stage1']!.add(event);
-        } else if (stage == 'Stage 2') {
-          groupedEvents[groupingTime]!['stage2']!.add(event);
-        }
+      // Map the DB stage string to our internal keys
+      if (stage == 'Main Stage') {
+        groupedEvents[groupingTime]!['stage1']!.add(event);
+      } else if (stage == 'Downtown') {
+        groupedEvents[groupingTime]!['stage2']!.add(event);
       }
-
-      // Convert the grouped data to ScheduleItem list
-      List<ScheduleItem> scheduleItems = [];
-
-      groupedEvents.entries.forEach((entry) {
-        scheduleItems.add(
-          ScheduleItem(
-            time: entry.key,
-            stage1Events: entry.value['stage1'],
-            stage2Events: entry.value['stage2'],
-          ),
-        );
-      });
-
-      // Sort by time
-      scheduleItems.sort((a, b) => a.time.compareTo(b.time));
-
-      return scheduleItems;
-    } catch (e) {
-      throw "Error processing schedule data: $e";
     }
+
+    return groupedEvents.entries.map((entry) {
+        return ScheduleItem(
+          time: entry.key,
+          stage1Events: entry.value['stage1'],
+          stage2Events: entry.value['stage2'],
+        );
+      }).toList()
+      ..sort((a, b) => a.time.compareTo(b.time));
   }
 
-  // Clean up resources
   @override
   void dispose() {
     _realtimeChannel?.unsubscribe();

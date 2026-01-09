@@ -1,7 +1,7 @@
 name: jfbfestival
 description: "A new Flutter project."
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.1+2
 
@@ -13,17 +13,17 @@ dependencies:
   video_player: ^2.7.0
   motion: ^2.0.1
   provider: ^6.0.0
-  flutter_blur: ^0.0.2 
+  flutter_blur: ^0.0.2
   cupertino_icons: ^1.0.8
   intl: ^0.20.2
   url_launcher: ^6.0.9
-  share_plus: ^10.1.4   
-  hive: ^2.2.3          # core Hive package
+  share_plus: ^10.1.4
+  hive: ^2.2.3 # core Hive package
   hive_flutter: ^1.1.0
-  supabase: ^1.0.0
-  flutter_local_notifications: ^17.1.0   # latest at time of writing
-  timezone: ^0.9.4  
-  flutter_dotenv: ^5.1.0 
+  supabase: ^2.6.0
+  flutter_local_notifications: ^17.1.0 # latest at time of writing
+  timezone: ^0.9.4
+  flutter_dotenv: ^5.1.0
   shared_preferences: ^2.0.15
   collection: ^1.19.1
 
@@ -34,8 +34,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  hive_generator: ^2.0.0  # to generate type adapters
-  build_runner: ^2.4.0    # to run code generation
+  hive_generator: ^2.0.0 # to generate type adapters
+  build_runner: ^2.4.0 # to run code generation
   flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
@@ -57,7 +57,7 @@ flutter:
     - assets/Filter.png
     - assets/payments/
     - assets/allergens/
-    
+
     - assets/instagram.png
     - assets/facebook.png
     - assets/youtube.png
@@ -67,16 +67,16 @@ flutter:
     - assets/MapNew2.png
     - assets/MapNew3.png
     - assets/MapNew4.png
-    - assets/Intro1.mp4    
+    - assets/Intro1.mp4
     - assets/langChange.png
 
     #home new
-    - assets/JFB-4.jpg 
+    - assets/JFB-4.jpg
     - assets/JFB-3.jpg
-    - assets/JFB-8.jpg 
+    - assets/JFB-8.jpg
     - assets/JFB-15.jpg
-    - assets/JFB-10.jpg 
-    - assets/JFB-22.jpg 
+    - assets/JFB-10.jpg
+    - assets/JFB-22.jpg
     - assets/JFB-6.jpg
     - assets/allergens/tree_nut.png
     - assets/allergens/milk.png

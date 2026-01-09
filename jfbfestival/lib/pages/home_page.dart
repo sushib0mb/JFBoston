@@ -732,7 +732,7 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: isTablet ? 8 : 5),
                   // Title
                   Text(
-                    event.title,
+                    event.performanceName,
                     style: TextStyle(
                       fontSize: titleFontSize,
                       fontWeight: FontWeight.bold,

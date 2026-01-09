@@ -32,23 +32,29 @@ class FoodService {
 
   // Set up real-time subscriptions
   void _setupRealtimeSubscriptions() {
-    // Listen for food booth changes
-    _foodBoothsSubscription = _supabaseClient
-        .from('food_booths')
-        .stream(primaryKey: ['id'])
-        .listen((List<Map<String, dynamic>> data) async {
-          // When food booths change, refresh all data
-          await fetchInitialData();
-        });
+    // Create a single channel to handle all database changes
+    final channel = _supabaseClient.channel('food-updates');
 
-    // Listen for dish changes
-    _dishesSubscription = _supabaseClient
-        .from('dishes')
-        .stream(primaryKey: ['id'])
-        .listen((List<Map<String, dynamic>> data) async {
-          // When dishes change, refresh all data
-          await fetchInitialData();
-        });
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'food_booths',
+          callback: (payload) {
+            print('Booth change detected: ${payload.eventType}');
+            fetchInitialData();
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'dishes',
+          callback: (payload) {
+            print('Dish change detected: ${payload.eventType}');
+            fetchInitialData();
+          },
+        )
+        .subscribe();
   }
 
   // Get all food booths with their dishes
@@ -64,11 +70,12 @@ class FoodService {
       final dishesResponse = await _supabaseClient.from('dishes').select();
 
       // Map dishes response to Dish objects
-      final Map<String, List<Dish>> dishesByBooth = {};
+      final Map<dynamic, List<Dish>> dishesByBooth = {};
 
       for (final dishData in dishesResponse) {
-        // Ensure allergens is a list, whether it's a string or already a list
         print(dishData['name']);
+
+        // Ensure allergens is a list, whether it's a string or already a list
         final allergens = dishData['allergens'];
         List<String> allergensList = [];
         if (allergens != null) {
@@ -84,15 +91,18 @@ class FoodService {
         final dish = Dish(
           name: dishData['name'],
           description: dishData['description'] ?? '',
-          imagePath: dishData['imagePath'] ?? '',
+          imagePath: dishData['image_path'] ?? '',
           allergens: allergensList,
           isVegan: dishData['is_vegan'] ?? false,
         );
 
         final boothId = dishData['booth_id'];
+        print(boothId);
         if (boothId != null) {
+          print("da");
           dishesByBooth[boothId] ??= [];
           dishesByBooth[boothId]!.add(dish);
+          print("added dish");
         }
       }
 
@@ -145,6 +155,7 @@ class FoodService {
 
       return booths;
     } catch (e) {
+      print(e);
       return [];
     }
   }
