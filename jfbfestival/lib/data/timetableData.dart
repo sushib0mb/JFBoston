@@ -4,9 +4,10 @@ import 'package:supabase/supabase.dart';
 // Event item model
 class EventItem {
   final String performanceName;
-  final String time;
+  final String time; // actual start time in HH:MM format
+  final String groupTime; // 30-minute bracket in HH:MM format (xx:00 or xx:30)
   final String iconImage;
-  final int duration;
+  final int duration; // in minutes
   final String stage;
   final String description;
   final String eventImage;
@@ -14,6 +15,7 @@ class EventItem {
   EventItem({
     required this.performanceName,
     required this.time,
+    required this.groupTime,
     required this.duration,
     required this.iconImage,
     required this.stage,
@@ -22,15 +24,36 @@ class EventItem {
   });
 
   factory EventItem.fromSupabase(Map<String, dynamic> data) {
+    final String timetz = data['time'] ?? '';
+    final String groupTime = _calculateGroupTime(timetz);
+
     return EventItem(
       performanceName: data['performance_name'] ?? '',
-      time: data['time'] ?? '',
+      time: timetz,
+      groupTime: groupTime,
       duration: data['duration'] ?? 0,
       iconImage: data['icon_image'] ?? '',
       stage: data['stage'] ?? '',
       description: data['description'] ?? '',
       eventImage: data['event_image'] ?? '',
     );
+  }
+
+  // Calculate 30-minute bracket (floor to nearest xx:00 or xx:30)
+  static String _calculateGroupTime(String time) {
+    if (time.isEmpty) return '';
+    final parts = time.split(':');
+    if (parts.length < 2) return time;
+
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+
+    // Floor to nearest 30-minute bracket
+    if (minute < 30) {
+      return '${hour.toString().padLeft(2, '0')}:00';
+    } else {
+      return '${hour.toString().padLeft(2, '0')}:30';
+    }
   }
 }
 
@@ -117,38 +140,159 @@ class ScheduleDataService extends ChangeNotifier {
         .subscribe();
   }
 
-  // Process event data into schedule items
+  // Utility: Convert HH:MM format to minutes since midnight
+  int _timeToMinutes(String time) {
+    if (time.isEmpty) return 0;
+    final parts = time.split(':');
+    if (parts.length < 2) return 0;
+
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    return hour * 60 + minute;
+  }
+
+  // Utility: Convert minutes since midnight to HH:MM am/pm format
+  String _minutesToDisplayFormat(int minutes) {
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    final meridiem = hour >= 12 ? 'pm' : 'am';
+
+    return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $meridiem';
+  }
+
+  // Utility: Convert HH:MM to 30-minute bracket
+  String _calculateGroupTime(String time) {
+    if (time.isEmpty) return '';
+    final parts = time.split(':');
+    if (parts.length < 2) return time;
+
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+
+    // Floor to nearest 30-minute bracket
+    if (minute < 30) {
+      return '${hour.toString().padLeft(2, '0')}:00';
+    } else {
+      return '${hour.toString().padLeft(2, '0')}:30';
+    }
+  }
+
+  // Process event data into schedule items with 30-minute brackets
   List<ScheduleItem> _processEventData(List<Map<String, dynamic>> data) {
-    Map<String, Map<String, List<EventItem>>> groupedEvents = {};
+    if (data.isEmpty) {
+      return [];
+    }
 
+    // Convert all events and group by groupTime
+    List<EventItem> allEvents = [];
+    Map<String, Map<String, List<EventItem>>> groupedByBracket = {};
+
+    // Add all events into their respective group times
     for (var item in data) {
-      String groupingTime = item['time'] ?? '';
-      String stage = item['event_stage'] ?? '';
+      EventItem event = EventItem.fromSupabase(item);
+      allEvents.add(event);
 
-      // Create a slot for this time if it doesn't exist
-      groupedEvents.putIfAbsent(
-        groupingTime,
+      // Group by groupTime and stage
+      groupedByBracket.putIfAbsent(
+        event.groupTime,
         () => {'stage1': [], 'stage2': []},
       );
 
-      EventItem event = EventItem.fromSupabase(item);
-
-      // Map the DB stage string to our internal keys
-      if (stage == 'Main Stage') {
-        groupedEvents[groupingTime]!['stage1']!.add(event);
-      } else if (stage == 'Downtown') {
-        groupedEvents[groupingTime]!['stage2']!.add(event);
+      if (event.stage == 'Main Stage') {
+        groupedByBracket[event.groupTime]!['stage1']!.add(event);
+      } else if (event.stage == 'Downtown') {
+        groupedByBracket[event.groupTime]!['stage2']!.add(event);
       }
     }
 
-    return groupedEvents.entries.map((entry) {
-        return ScheduleItem(
-          time: entry.key,
-          stage1Events: entry.value['stage1'],
-          stage2Events: entry.value['stage2'],
+    // Calculate floor of first event and ceil of last event in minutes
+    int minMinutes = allEvents
+        .map((e) => _timeToMinutes(e.time))
+        .reduce((a, b) => a < b ? a : b);
+    int maxMinutes = allEvents
+        .map((e) => _timeToMinutes(e.time) + e.duration)
+        .reduce((a, b) => a > b ? a : b);
+
+    // Floor first time to nearest bracket
+    int floorMinutes = (minMinutes ~/ 30) * 30;
+
+    // Ceil last time to nearest bracket
+    int ceilMinutes = ((maxMinutes + 29) ~/ 30) * 30;
+
+    // Generate all 30-minute brackets
+    List<String> allBrackets = [];
+    for (int m = floorMinutes; m <= ceilMinutes; m += 30) {
+      final hour = m ~/ 60;
+      final minute = m % 60;
+      final bracket =
+          '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+      allBrackets.add(bracket);
+    }
+
+    // Create ScheduleItems for all brackets
+    List<ScheduleItem> scheduleItems = [];
+    for (int i = 0; i < allBrackets.length; i++) {
+      final bracket = allBrackets[i];
+      final stage1List = groupedByBracket[bracket]?['stage1'] ?? [];
+      final stage2List = groupedByBracket[bracket]?['stage2'] ?? [];
+
+      // If bracket is empty, create empty EventItems to preserve height
+      if (stage1List.isEmpty && stage2List.isEmpty) {
+        // Calculate duration to next bracket with events
+        int nextEventMinutes = ceilMinutes + 30;
+        for (var event in allEvents) {
+          final eventMinutes = _timeToMinutes(event.time);
+          if (eventMinutes > _timeToMinutes(bracket)) {
+            nextEventMinutes = eventMinutes;
+            break;
+          }
+        }
+
+        final durationToNextEvent = nextEventMinutes - _timeToMinutes(bracket);
+
+        final emptyStage1 = EventItem(
+          performanceName: '',
+          time: bracket,
+          groupTime: bracket,
+          duration: durationToNextEvent,
+          iconImage: '',
+          stage: '',
+          description: '',
+          eventImage: '',
         );
-      }).toList()
-      ..sort((a, b) => a.time.compareTo(b.time));
+
+        final emptyStage2 = EventItem(
+          performanceName: '',
+          time: bracket,
+          groupTime: bracket,
+          duration: durationToNextEvent,
+          iconImage: '',
+          stage: '',
+          description: '',
+          eventImage: '',
+        );
+
+        scheduleItems.add(
+          ScheduleItem(
+            time: bracket,
+            stage1Events: [emptyStage1],
+            stage2Events: [emptyStage2],
+          ),
+        );
+      } else {
+        scheduleItems.add(
+          ScheduleItem(
+            time: bracket,
+            stage1Events: stage1List.isEmpty ? null : stage1List,
+            stage2Events: stage2List.isEmpty ? null : stage2List,
+          ),
+        );
+      }
+    }
+
+    return scheduleItems;
   }
 
   @override

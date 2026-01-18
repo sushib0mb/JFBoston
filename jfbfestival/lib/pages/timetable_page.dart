@@ -69,8 +69,10 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 
   void _scrollToEventTime(String time) {
+    // Parse time in HH:MM format to minutes
     var start = _parseTimeToMinutes(time);
-    var base = _parseTimeToMinutes('11:00 am');
+    // Use 11:00 as base reference (11*60 = 660 minutes)
+    var base = 660; // 11:00 in minutes
     var offset = (start - base) * (isTablet(context) ? 12.0 : 10.0);
     _scrollController.animateTo(
       offset,
@@ -350,8 +352,8 @@ class ScheduleList extends StatelessWidget {
       return Container();
     }
 
-    final timelineSlots =
-        scheduleItems.map((item) => item.time).toSet().toList();
+    // Get all bracket times from schedule items (these are the 30-min brackets)
+    final timelineSlots = scheduleItems.map((item) => item.time).toList();
     final baseTime = _parseTimeToMinutes(timelineSlots.first);
 
     // Get the last event's duration from both stages based on scheduleItems
@@ -397,11 +399,12 @@ class ScheduleList extends StatelessWidget {
             child: Stack(
               children:
                   timelineSlots.map((timeString) {
-                    final timeParts = timeString.split(" ");
-                    final timeText =
-                        timeParts.isNotEmpty ? timeParts[0] : timeString;
-                    final ampm = timeParts.length > 1 ? timeParts[1] : "";
                     final timeInMinutes = _parseTimeToMinutes(timeString);
+                    final displayLabel = _minutesToDisplayFormat(timeInMinutes);
+                    final timeParts = displayLabel.split(" ");
+                    final timeText =
+                        timeParts.isNotEmpty ? timeParts[0] : displayLabel;
+                    final ampm = timeParts.length > 1 ? timeParts[1] : "";
                     final topPosition =
                         (timeInMinutes - baseTime) * pixelsPerMinute;
 
@@ -536,7 +539,7 @@ class ScheduleList extends StatelessWidget {
                       ? item.stage1Events ?? []
                       : item.stage2Events ?? [],
             )
-            .where((e) => e.title.isNotEmpty)
+            .where((e) => e.performanceName.isNotEmpty)
             .toList();
 
     // Sort events by time if needed
@@ -557,11 +560,11 @@ class ScheduleList extends StatelessWidget {
   }
 }
 
-// Parse time string (like "11:00 am") to minutes since midnight
+// Parse time string in HH:MM or HH:MM am/pm format to minutes since midnight
 int _parseTimeToMinutes(String timeString) {
   try {
-    // Parse time format (handle both "11:00 am" and "11:00" formats)
-    final parts = timeString.split(' ');
+    // Remove leading zeros for parsing if needed
+    final parts = timeString.trim().split(' ');
     final timePart = parts[0];
     final isPM = parts.length > 1 && parts[1].toLowerCase() == 'pm';
 
@@ -583,6 +586,17 @@ int _parseTimeToMinutes(String timeString) {
   } catch (e) {
     return 0; // Default fallback
   }
+}
+
+// Convert minutes since midnight to HH:MM am/pm format
+String _minutesToDisplayFormat(int minutes) {
+  final hour = minutes ~/ 60;
+  final minute = minutes % 60;
+
+  final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+  final meridiem = hour >= 12 ? 'pm' : 'am';
+
+  return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $meridiem';
 }
 
 // / パフォーマンスボックス：タップ時に詳細を表示（タップ時のアニメーション付き）
@@ -738,7 +752,7 @@ class _PerformanceBoxState extends State<PerformanceBox>
       ),
       child:
           widget.eventItem.iconImage.isNotEmpty
-              ? Image.asset(widget.eventItem.iconImage, fit: BoxFit.cover)
+              ? Image.network(widget.eventItem.iconImage, fit: BoxFit.cover)
               : Icon(Icons.event, size: size * 0.6),
     );
   }
@@ -919,7 +933,7 @@ class _EventDetailViewState extends State<EventDetailView>
               height: headerH,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(widget.event.eventImage),
+                  image: NetworkImage(widget.event.eventImage),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: const BorderRadius.only(
@@ -967,7 +981,7 @@ class _EventDetailViewState extends State<EventDetailView>
                 children: [
                   _infoChip(
                     widget.event.stage,
-                    widget.event.stage == "Stage 1"
+                    widget.event.stage == "Main Stage"
                         ? const Color.fromARGB(120, 191, 29, 25)
                         : const Color.fromARGB(76, 11, 55, 117),
                     infoFont,
@@ -1049,7 +1063,7 @@ class _EventDetailViewState extends State<EventDetailView>
               backgroundColor: Colors.white,
               child: Padding(
                 padding: const EdgeInsets.all(8),
-                child: Image.asset(
+                child: Image.network(
                   widget.event.iconImage,
                   fit: BoxFit.contain,
                   width: avatarR * 1.4,
