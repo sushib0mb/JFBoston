@@ -126,7 +126,7 @@ class _TimetablePageState extends State<TimetablePage> {
                 Positioned(
                   left: w * 0.06,
                   top: h * 0.002,
-                  child: _dayButton(
+                  child: _day1Button(
                     'Day 1',
                     1,
                     dayBtnWidth,
@@ -206,7 +206,7 @@ class _TimetablePageState extends State<TimetablePage> {
     );
   }
 
-  Widget _dayButton(String text, int day, double w, double h, double fs) {
+  Widget _day1Button(String text, int day, double w, double h, double fs) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 600;
 
@@ -405,7 +405,6 @@ class ScheduleList extends StatelessWidget {
                     final timeText =
                         timeParts.isNotEmpty ? timeParts[0] : displayLabel;
                     final ampm = timeParts.length > 1 ? timeParts[1] : "";
-                    print("display label: $displayLabel");
                     final topPosition =
                         (timeInMinutes - baseTime) * pixelsPerMinute;
 
