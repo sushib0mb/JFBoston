@@ -102,10 +102,7 @@ class ScheduleDataService extends ChangeNotifier {
           .select()
           .order('time');
 
-      print("fetching success");
-
       final allEvents = List<Map<String, dynamic>>.from(response);
-      print("all events: $allEvents");
 
       day1ScheduleData = _processEventData(
         allEvents.where((e) => e['day'] == 1).toList(),

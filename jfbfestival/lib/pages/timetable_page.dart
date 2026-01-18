@@ -405,6 +405,7 @@ class ScheduleList extends StatelessWidget {
                     final timeText =
                         timeParts.isNotEmpty ? timeParts[0] : displayLabel;
                     final ampm = timeParts.length > 1 ? timeParts[1] : "";
+                    print("display label: $displayLabel");
                     final topPosition =
                         (timeInMinutes - baseTime) * pixelsPerMinute;
 
@@ -452,9 +453,14 @@ class ScheduleList extends StatelessWidget {
                   physics: BouncingScrollPhysics(),
                   child: SizedBox(
                     height: timelineHeight,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: _buildEventColumn(1, pixelsPerMinute),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: _buildEventColumn(
+                        1,
+                        pixelsPerMinute,
+                        baseTime,
+                        latestTime,
+                      ),
                     ),
                   ),
                 ),
@@ -479,9 +485,14 @@ class ScheduleList extends StatelessWidget {
                   physics: NeverScrollableScrollPhysics(),
                   child: SizedBox(
                     height: timelineHeight,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: _buildEventColumn(2, pixelsPerMinute),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: _buildEventColumn(
+                        2,
+                        pixelsPerMinute,
+                        baseTime,
+                        latestTime,
+                      ),
                     ),
                   ),
                 ),
@@ -530,7 +541,12 @@ class ScheduleList extends StatelessWidget {
     return Stack(children: lines);
   }
 
-  List<Widget> _buildEventColumn(int stage, double pixelsPerMinute) {
+  List<Widget> _buildEventColumn(
+    int stage,
+    double pixelsPerMinute,
+    int baseTime,
+    int latestTime,
+  ) {
     final events =
         scheduleItems
             .expand(
@@ -547,14 +563,15 @@ class ScheduleList extends StatelessWidget {
 
     return [
       for (var i = 0; i < events.length; i++)
-        Column(
-          children: [
-            SizedBox(height: 4), // Add small gap between events in timetable
-            SizedBox(
-              height: ((events[i].duration) * pixelsPerMinute) - 4,
-              child: PerformanceBox(eventItem: events[i], onTap: onEventTap),
-            ),
-          ],
+        Positioned(
+          top:
+              (_parseTimeToMinutes(events[i].time) - baseTime) *
+                  pixelsPerMinute +
+              4,
+          child: SizedBox(
+            height: (events[i].duration) * pixelsPerMinute - 4,
+            child: PerformanceBox(eventItem: events[i], onTap: onEventTap),
+          ),
         ),
     ];
   }
@@ -563,15 +580,12 @@ class ScheduleList extends StatelessWidget {
 // Parse time string in HH:MM or HH:MM am/pm format to minutes since midnight
 int _parseTimeToMinutes(String timeString) {
   try {
-    // Remove leading zeros for parsing if needed
-    final parts = timeString.trim().split(' ');
-    final timePart = parts[0];
-    final isPM = parts.length > 1 && parts[1].toLowerCase() == 'pm';
-
-    final hourAndMinute = timePart.split(':');
+    final hourAndMinute = timeString.split(':');
     int hour = int.parse(hourAndMinute[0]);
     final int minute =
         hourAndMinute.length > 1 ? int.parse(hourAndMinute[1]) : 0;
+
+    final isPM = int.tryParse(hourAndMinute[0])! >= 12;
 
     // Convert to 24-hour format if PM
     if (isPM && hour < 12) {
