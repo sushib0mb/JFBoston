@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
-import '/data/timetableData.dart'; // Ensure this import still exists if needed for other reasons
+import '../data/timetable_data.dart'; // Ensure this import still exists if needed for other reasons
 // import 'package:flutter/foundation.dart' show kDebugMode; // Removed debug mode import
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

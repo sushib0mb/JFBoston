@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '/data/timetableData.dart';
+import '../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
 import 'package:provider/provider.dart';
 
@@ -660,18 +660,6 @@ class _HomePageState extends State<HomePage> {
           (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
         ),
       ],
-    );
-  }
-
-  bool _isDay1Event(EventItem e) {
-    final scheduleService = Provider.of<ScheduleDataService>(
-      context,
-      listen: false,
-    );
-
-    // returns true if e appears in day1ScheduleData
-    return scheduleService.day1ScheduleData.any(
-      (slot) => ([...?slot.stage1Events, ...?slot.stage2Events]).contains(e),
     );
   }
 

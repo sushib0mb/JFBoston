@@ -16,7 +16,7 @@ import 'pages/food/food_page.dart';
 import 'pages/home_page.dart';
 import 'pages/map_page.dart';
 import 'pages/timetable_page.dart';
-import 'data/timetableData.dart';
+import 'data/timetable_data.dart';
 import 'SplashScreen/video_splash_screen.dart';
 import 'models/feedback_entry.dart';
 import 'models/survey_entry.dart';

@@ -24,7 +24,9 @@ class EventItem {
   });
 
   factory EventItem.fromSupabase(Map<String, dynamic> data) {
-    final String timetz = data['time'] ?? '';
+    String rawTime = data['time'] ?? '';
+    final String timetz =
+        rawTime.contains(':') ? rawTime.split(':').take(2).join(':') : rawTime;
     final String groupTime = _calculateGroupTime(timetz);
 
     return EventItem(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/data/timetableData.dart';
+import 'package:jfbfestival/data/timetable_data.dart';
 import 'package:provider/provider.dart';
 
 /// メインビュー：タイムテーブル
@@ -628,6 +628,17 @@ class _PerformanceBoxState extends State<PerformanceBox>
     with SingleTickerProviderStateMixin {
   bool isPressed = false;
 
+  String calculateEndTime(String time, int duration) {
+    List<String> timeParts = time.split(":");
+    int totalMinutes =
+        int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]) + duration;
+
+    final endHour = (totalMinutes ~/ 60) % 24; // % 24 handles midnight wrapping
+    final endMinute = totalMinutes % 60;
+
+    return '${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -738,7 +749,7 @@ class _PerformanceBoxState extends State<PerformanceBox>
           ),
           SizedBox(height: isTablet ? 12 : 8),
           Text(
-            widget.eventItem.time,
+            '${widget.eventItem.time} - ${calculateEndTime(widget.eventItem.time, widget.eventItem.duration)}',
             style: TextStyle(
               fontSize: scale * 10,
               fontWeight: FontWeight.w500,
@@ -798,7 +809,7 @@ class _PerformanceBoxState extends State<PerformanceBox>
           ),
           SizedBox(height: isTablet ? 6 : 4),
           Text(
-            widget.eventItem.time,
+            '${widget.eventItem.time} - ${calculateEndTime(widget.eventItem.time, widget.eventItem.duration)}',
             style: TextStyle(
               fontSize: timeScale,
               fontWeight: FontWeight.w500,
@@ -936,6 +947,18 @@ class _EventDetailViewState extends State<EventDetailView>
     double descFont,
     double avatarR,
   ) {
+    String calculateEndTime(String time, int duration) {
+      List<String> timeParts = time.split(":");
+      int totalMinutes =
+          int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]) + duration;
+
+      final endHour =
+          (totalMinutes ~/ 60) % 24; // % 24 handles midnight wrapping
+      final endMinute = totalMinutes % 60;
+
+      return '${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}';
+    }
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -999,7 +1022,11 @@ class _EventDetailViewState extends State<EventDetailView>
                         : const Color.fromARGB(76, 11, 55, 117),
                     infoFont,
                   ),
-                  _infoChip(widget.event.time, Colors.white, infoFont),
+                  _infoChip(
+                    '${widget.event.time} - ${calculateEndTime(widget.event.time, widget.event.duration)}',
+                    Colors.white,
+                    infoFont,
+                  ),
                 ],
               ),
             ),
