@@ -94,6 +94,7 @@ class FoodService {
           imagePath: dishData['image_path'] ?? '',
           allergens: allergensList,
           isVegan: dishData['is_vegan'] ?? false,
+          boothId: dishData['booth_id'],
         );
 
         final boothId = dishData['booth_id'];

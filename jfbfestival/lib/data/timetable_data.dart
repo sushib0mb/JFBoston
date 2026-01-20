@@ -11,6 +11,7 @@ class EventItem {
   final String stage;
   final String description;
   final String eventImage;
+  final int day;
 
   EventItem({
     required this.performanceName,
@@ -21,6 +22,7 @@ class EventItem {
     required this.stage,
     required this.description,
     required this.eventImage,
+    required this.day,
   });
 
   factory EventItem.fromSupabase(Map<String, dynamic> data) {
@@ -38,6 +40,7 @@ class EventItem {
       stage: data['stage'] ?? '',
       description: data['description'] ?? '',
       eventImage: data['event_image'] ?? '',
+      day: data['day'] ?? '',
     );
   }
 
@@ -232,6 +235,7 @@ class ScheduleDataService extends ChangeNotifier {
           stage: '',
           description: '',
           eventImage: '',
+          day: -1,
         );
 
         final emptyStage2 = EventItem(
@@ -243,6 +247,7 @@ class ScheduleDataService extends ChangeNotifier {
           stage: '',
           description: '',
           eventImage: '',
+          day: -1,
         );
 
         scheduleItems.add(
