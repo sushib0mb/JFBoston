@@ -150,34 +150,6 @@ class ScheduleDataService extends ChangeNotifier {
     return hour * 60 + minute;
   }
 
-  // Utility: Convert minutes since midnight to HH:MM am/pm format
-  String _minutesToDisplayFormat(int minutes) {
-    final hour = minutes ~/ 60;
-    final minute = minutes % 60;
-
-    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    final meridiem = hour >= 12 ? 'pm' : 'am';
-
-    return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $meridiem';
-  }
-
-  // Utility: Convert HH:MM to 30-minute bracket
-  String _calculateGroupTime(String time) {
-    if (time.isEmpty) return '';
-    final parts = time.split(':');
-    if (parts.length < 2) return time;
-
-    final hour = int.tryParse(parts[0]) ?? 0;
-    final minute = int.tryParse(parts[1]) ?? 0;
-
-    // Floor to nearest 30-minute bracket
-    if (minute < 30) {
-      return '${hour.toString().padLeft(2, '0')}:00';
-    } else {
-      return '${hour.toString().padLeft(2, '0')}:30';
-    }
-  }
-
   // Process event data into schedule items with 30-minute brackets
   List<ScheduleItem> _processEventData(List<Map<String, dynamic>> data) {
     if (data.isEmpty) {

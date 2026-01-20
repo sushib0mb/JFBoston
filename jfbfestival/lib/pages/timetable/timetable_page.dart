@@ -126,7 +126,7 @@ class _TimetablePageState extends State<TimetablePage> {
                 Positioned(
                   left: w * 0.06,
                   top: h * 0.002,
-                  child: _day1Button(
+                  child: _dayPicker(
                     'Day 1',
                     1,
                     dayBtnWidth,
@@ -137,7 +137,7 @@ class _TimetablePageState extends State<TimetablePage> {
                 Positioned(
                   right: w * 0.06,
                   top: h * 0.002,
-                  child: _day2Button(
+                  child: _dayPicker(
                     'Day 2',
                     2,
                     dayBtnWidth,
@@ -206,7 +206,7 @@ class _TimetablePageState extends State<TimetablePage> {
     );
   }
 
-  Widget _day1Button(String text, int day, double w, double h, double fs) {
+  Widget _dayPicker(String text, int day, double w, double h, double fs) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 600;
 
@@ -220,55 +220,27 @@ class _TimetablePageState extends State<TimetablePage> {
       child: Container(
         width: width,
         height: height,
-        alignment: Alignment(-0.3, 0),
+        alignment: day == 1 ? Alignment(-0.3, 0) : Alignment(0.3, 0),
         decoration: ShapeDecoration(
           color:
-              selectedDay == day
-                  ? const Color.fromARGB(38, 191, 29, 35)
-                  : const Color.fromARGB(175, 224, 224, 224),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-            side:
-                selectedDay == day
-                    ? BorderSide(
-                      color: Color.fromARGB(255, 191, 29, 35),
-                      width: 2,
-                    )
-                    : BorderSide.none,
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(fontSize: font, fontWeight: FontWeight.w400),
-        ),
-      ),
-    );
-  }
-
-  Widget _day2Button(String text, int day, double w, double h, double fs) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600;
-
-    // scale up a bit on tablets
-    final width = isTablet ? w * 1.2 : w;
-    final height = isTablet ? h * 1.2 : h;
-    final font = isTablet ? fs * 1.2 : fs;
-
-    return GestureDetector(
-      onTap: () => setState(() => selectedDay = day),
-      child: Container(
-        width: width,
-        height: height,
-        alignment: Alignment(0.3, 0),
-        decoration: ShapeDecoration(
-          color:
-              selectedDay == day
+              day == 1
+                  ? selectedDay == day
+                      ? const Color.fromARGB(38, 191, 29, 35)
+                      : const Color.fromARGB(175, 224, 224, 224)
+                  : selectedDay == day
                   ? const Color.fromARGB(38, 11, 55, 117)
                   : const Color.fromARGB(175, 224, 224, 224),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
             side:
-                selectedDay == day
+                day == 1
+                    ? selectedDay == day
+                        ? BorderSide(
+                          color: Color.fromARGB(255, 191, 29, 35),
+                          width: 2,
+                        )
+                        : BorderSide.none
+                    : selectedDay == day
                     ? BorderSide(
                       color: Color.fromARGB(255, 11, 55, 117),
                       width: 2,
