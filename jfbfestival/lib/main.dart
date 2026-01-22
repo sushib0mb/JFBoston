@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme_notifier.dart';
 import 'settings_page.dart';
 import 'pages/food/food_page.dart';
-import 'pages/home_page.dart';
+import 'pages/home/home_page.dart';
 import 'pages/map_page.dart';
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
@@ -82,8 +82,9 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Fredoka',
             ),
             themeMode: theme.mode,
-            home: const VideoSplashScreen(),
 
+            // home: const VideoSplashScreen(),
+            home: const MainScreen(),
             routes: {
               SettingsPage.routeName: (_) => const SettingsPage(),
               SurveyPage.routeName: (_) => const SurveyPage(),

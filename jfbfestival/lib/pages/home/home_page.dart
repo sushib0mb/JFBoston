@@ -2,8 +2,9 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/pages/home/components/live_timetable.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../data/timetable_data.dart';
+import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +32,8 @@ class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
+
+// TODO: Refactor this page, put this in a folder and make components. Link the database to the sponsor images, don't forget option for non image sponsors too
 
 class _HomePageState extends State<HomePage> {
   // your original images
@@ -220,6 +223,10 @@ class _HomePageState extends State<HomePage> {
 
                         // Spacing + Sections
                         SizedBox(height: verticalSpacing),
+                        // LiveTimetable(
+                        //   testTime: widget.testTime,
+                        //   screenWidth: screenWidth,
+                        // ),
                         _buildLiveTimetable(screenWidth),
                         _buildSocialMediaIcons(screenWidth),
                         _buildSponsorsSection(screenWidth),
@@ -293,8 +300,8 @@ class _HomePageState extends State<HomePage> {
     // final now = widget.testTime ?? DateTime.utc(2025, 4, 27, 16, 55);
 
     // Festival dates setup
-    final festivalStart = DateTime(2025, 4, 26, 11); // April 26 at 11:00 AM
-    final festivalEnd = DateTime(2025, 4, 27, 23, 59); // April 27 at 11:59 PM
+    final festivalStart = DateTime(2026, 1, 22, 11); // April 26 at 11:00 AM
+    final festivalEnd = DateTime(2026, 1, 23, 23, 59); // April 27 at 11:59 PM
 
     // Check if we're outside festival dates
     if (now.isBefore(festivalStart) || now.isAfter(festivalEnd)) {
@@ -321,7 +328,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     // Determine which day's schedule to use (day 1 or day 2)
-    final bool isDay1 = now.day == 26; // First day is April 26
+    final bool isDay1 = now.day == 22; // First day is April 26
 
     // Make sure schedule data exists before proceeding
     final List<ScheduleItem> scheduleList;
@@ -417,7 +424,7 @@ class _HomePageState extends State<HomePage> {
     // Current year and month
     final year = now.year;
     final month = now.month;
-    final day = isDay1 ? 26 : 27; // April 27 or 28, 2025
+    final day = isDay1 ? 22 : 23; // April 27 or 28, 2025
 
     // Process all events to find current and upcoming
     for (final item in scheduleList) {
@@ -462,6 +469,8 @@ class _HomePageState extends State<HomePage> {
               eventEndHour,
               eventEndMinute,
             );
+
+            print("event start $eventStart");
 
             // Current event: now is between event start and end times
             if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
@@ -682,6 +691,7 @@ class _HomePageState extends State<HomePage> {
 
     return GestureDetector(
       onTap: () {
+        // TODO: Someone pasted llM shit here without putting the navigation logic
         // … your existing navigation logic …
       },
       child: Padding(
