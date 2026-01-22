@@ -41,7 +41,6 @@ class FoodService {
           schema: 'public',
           table: 'food_booths',
           callback: (payload) {
-            print('Booth change detected: ${payload.eventType}');
             fetchInitialData();
           },
         )
@@ -50,7 +49,6 @@ class FoodService {
           schema: 'public',
           table: 'dishes',
           callback: (payload) {
-            print('Dish change detected: ${payload.eventType}');
             fetchInitialData();
           },
         )
@@ -59,7 +57,6 @@ class FoodService {
 
   // Get all food booths with their dishes
   Future<List<FoodBooth>> getFoodBooths() async {
-    print("started fetching");
     try {
       // Fetch all food booths
       final foodBoothsResponse = await _supabaseClient
@@ -73,8 +70,6 @@ class FoodService {
       final Map<dynamic, List<Dish>> dishesByBooth = {};
 
       for (final dishData in dishesResponse) {
-        print(dishData['name']);
-
         // Ensure allergens is a list, whether it's a string or already a list
         final allergens = dishData['allergens'];
         List<String> allergensList = [];
@@ -98,12 +93,9 @@ class FoodService {
         );
 
         final boothId = dishData['booth_id'];
-        print(boothId);
         if (boothId != null) {
-          print("da");
           dishesByBooth[boothId] ??= [];
           dishesByBooth[boothId]!.add(dish);
-          print("added dish");
         }
       }
 
@@ -111,8 +103,6 @@ class FoodService {
       final List<FoodBooth> booths =
           foodBoothsResponse.map<FoodBooth>((boothData) {
             final boothId = boothData['id'];
-
-            print("booth data: $boothData");
 
             try {
               // Ensure booth allergens is a list (same as for dishes)

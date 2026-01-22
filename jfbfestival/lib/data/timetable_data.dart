@@ -135,7 +135,6 @@ class ScheduleDataService extends ChangeNotifier {
           schema: 'public',
           table: 'stage_events',
           callback: (payload) {
-            print('Schedule change detected: ${payload.eventType}');
             refreshAllData();
           },
         )
