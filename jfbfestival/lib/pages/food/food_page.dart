@@ -179,10 +179,7 @@ class _FoodPageState extends State<FoodPage> {
                           context,
                         ).colorScheme.surface, // ← themed card color
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.only(top: _isSearching ? 10 : 0),
-                    child: _buildMainContent(screenWidth, screenHeight),
-                  ),
+                  child: _buildMainContent(screenWidth, screenHeight),
                 ),
               ),
             ],
@@ -213,8 +210,7 @@ class _FoodPageState extends State<FoodPage> {
               focusNode: _searchFocusNode,
               topPadding:
                   MediaQuery.of(context).padding.top +
-                  (MediaQuery.of(context).size.height * 0.070) +
-                  (MediaQuery.of(context).size.height * 0.015) +
+                  (MediaQuery.of(context).size.height * 0.085) +
                   32.5,
               onChanged: (value) {
                 setState(() {}); // This rebuilds the parent to filter the list

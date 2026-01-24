@@ -25,6 +25,7 @@ class FoodService {
       final fetchedBooths = await getFoodBooths();
       foodBooths.clear();
       foodBooths.addAll(fetchedBooths);
+      foodBooths.sort((a, b) => a.name.compareTo(b.name));
     } catch (e) {
       print('Error fetching initial food booths data: $e');
     }
