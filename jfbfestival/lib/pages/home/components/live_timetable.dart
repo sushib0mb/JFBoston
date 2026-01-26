@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/pages/home/home_page.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
 
@@ -114,7 +115,7 @@ class _LiveTimetableState extends State<LiveTimetable> {
               widget.dayNumber == -1
                   ? "See you at ${widget.festivalLocation} on ${widget.festivalStartMonth}/${widget.festivalStartDay} - ${festivalEnd.month}/${festivalEnd.day}!"
                   : "Thank you for visiting, and see you next year!",
-              style: const TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
           ),
@@ -178,9 +179,11 @@ class _LiveTimetableState extends State<LiveTimetable> {
                 isCurrent: true,
                 isTablet: isTablet,
               ),
-              SizedBox(height: sectionSpacing),
             ],
             if (currentAndUpcomingEvents.upcomingStageEvents.isNotEmpty) ...[
+              if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
+                SizedBox(height: sectionSpacing),
+              ],
               _buildEventSection(
                 "⏭️ Up Next",
                 currentAndUpcomingEvents.upcomingStageEvents,
@@ -188,15 +191,36 @@ class _LiveTimetableState extends State<LiveTimetable> {
                 isCurrent: false,
                 isTablet: isTablet,
               ),
-              SizedBox(height: sectionSpacing),
             ],
             if (currentAndUpcomingEvents.currentStageEvents.isEmpty &&
                 currentAndUpcomingEvents.upcomingStageEvents.isEmpty)
-              Text(
-                "No current or upcoming events at this time.",
-                style: TextStyle(fontSize: statusFontSize),
-                textAlign: TextAlign.center,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 5,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    "No current or upcoming events at this time",
+                    style: TextStyle(fontSize: statusFontSize),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
+
+            // Text(
+            //   "No current or upcoming events at this time.",
+            //   style: TextStyle(fontSize: statusFontSize),
+            //   textAlign: TextAlign.center,
+            // ),
           ],
         ),
       );
@@ -246,6 +270,63 @@ class _LiveTimetableState extends State<LiveTimetable> {
     }
   }
 
+  // Calculate event start and end times from event time and duration
+  T _calculateEventTimes<T>(
+    EventItem event,
+    int year,
+    int month,
+    int day, {
+    bool returnAsString = false,
+  }) {
+    final eventTimeParts = event.time.split(':');
+    final eventStartHour = int.parse(eventTimeParts[0]);
+    final eventStartMinute = int.parse(eventTimeParts[1]);
+
+    final start = DateTime(year, month, day, eventStartHour, eventStartMinute);
+    final end = start.add(Duration(minutes: event.duration));
+
+    if (returnAsString) {
+      String startTime =
+          "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}";
+      String endTime =
+          "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}";
+      return ("$startTime - $endTime") as T;
+    }
+
+    return (start: start, end: end) as T;
+  }
+
+  // Categorize a list of events as current or upcoming
+  void _categorizeEventList(
+    List<EventItem>? events,
+    DateTime now,
+    int year,
+    int month,
+    int day,
+    List<EventItem> currentEvents,
+    List<EventItem> upcomingEvents,
+  ) {
+    if (events == null) return;
+
+    for (final event in events) {
+      // Skip placeholder events (empty performance names)
+      if (event.performanceName.isEmpty || !event.time.contains(':')) continue;
+
+      try {
+        final times = _calculateEventTimes(event, year, month, day);
+
+        // Categorize as current or upcoming
+        if (now.isAfter(times.start) && now.isBefore(times.end)) {
+          currentEvents.add(event);
+        } else if (times.start.isAfter(now)) {
+          upcomingEvents.add(event);
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+
   // Process events from all stages and categorize them as current or upcoming
   void _processEvents(
     List<ScheduleItem> scheduleList,
@@ -264,107 +345,26 @@ class _LiveTimetableState extends State<LiveTimetable> {
     for (final item in scheduleList) {
       if (item.stage1Events == null && item.stage2Events == null) continue;
 
-      // Process stage 1 events
-      if (item.stage1Events != null) {
-        for (final event in item.stage1Events!) {
-          // Skip placeholder events (empty performance names)
-          if (event.performanceName.isEmpty || !event.time.contains(':'))
-            continue;
+      // Categorize stage 1 and stage 2 events using the same logic
+      _categorizeEventList(
+        item.stage1Events,
+        now,
+        year,
+        month,
+        day,
+        currentEvents,
+        upcomingEvents,
+      );
 
-          try {
-            final eventTimeParts = event.time.split(':');
-            final eventStartHour = int.parse(eventTimeParts[0]);
-            final eventStartMinute = int.parse(eventTimeParts[1]);
-
-            final tempDate = DateTime(
-              2000,
-              1,
-              1,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final tempEndDate = tempDate.add(Duration(minutes: event.duration));
-
-            final eventEndHour = tempEndDate.hour;
-            final eventEndMinute = tempEndDate.minute;
-
-            final eventStart = DateTime(
-              widget.festivalStartYear,
-              widget.festivalStartMonth,
-              widget.festivalStartDay + event.day - 1,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final eventEnd = DateTime(
-              widget.festivalStartYear,
-              widget.festivalStartMonth,
-              widget.festivalStartDay + event.day - 1,
-              eventEndHour,
-              eventEndMinute,
-            );
-
-            // Categorize as current or upcoming
-            if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentEvents.add(event);
-            } else if (eventStart.isAfter(now)) {
-              upcomingEvents.add(event);
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-      }
-
-      // Process stage 2 events
-      if (item.stage2Events != null) {
-        for (final event in item.stage2Events!) {
-          // Skip placeholder events (empty performance names)
-          if (event.performanceName.isEmpty || !event.time.contains(':'))
-            continue;
-
-          try {
-            final eventTimeParts = event.time.split(':');
-            final eventStartHour = int.parse(eventTimeParts[0]);
-            final eventStartMinute = int.parse(eventTimeParts[1]);
-
-            final tempDate = DateTime(
-              2000,
-              1,
-              1,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final tempEndDate = tempDate.add(Duration(minutes: event.duration));
-
-            final eventEndHour = tempEndDate.hour;
-            final eventEndMinute = tempEndDate.minute;
-
-            final eventStart = DateTime(
-              year,
-              month,
-              day,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final eventEnd = DateTime(
-              year,
-              month,
-              day,
-              eventEndHour,
-              eventEndMinute,
-            );
-
-            // Categorize as current or upcoming
-            if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentEvents.add(event);
-            } else if (eventStart.isAfter(now)) {
-              upcomingEvents.add(event);
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-      }
+      _categorizeEventList(
+        item.stage2Events,
+        now,
+        year,
+        month,
+        day,
+        currentEvents,
+        upcomingEvents,
+      );
     }
 
     // Sort upcoming events by start time
@@ -487,7 +487,16 @@ class _LiveTimetableState extends State<LiveTimetable> {
                     ),
                   ),
                   // Time
-                  Text(event.time, style: TextStyle(color: Colors.grey)),
+                  Text(
+                    (_calculateEventTimes(
+                      event,
+                      festivalStartYear,
+                      festivalStartMonth,
+                      festivalStartDay + festivalDays - 1,
+                      returnAsString: true,
+                    )),
+                    style: TextStyle(color: Colors.grey),
+                  ),
                   // “Going on now” badge
                   if (isCurrent)
                     Padding(
