@@ -1,22 +1,42 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
 
 class CurrentAndUpcomingEvents {
-  final List<EventItem> currentStage1Events;
-  final List<EventItem> currentStage2Events;
-  final List<EventItem> upcomingStage1Events;
-  final List<EventItem> upcomingStage2Events;
+  final List<EventItem> currentStageEvents;
+  final List<EventItem> upcomingStageEvents;
 
   CurrentAndUpcomingEvents({
-    required this.currentStage1Events,
-    required this.currentStage2Events,
-    required this.upcomingStage1Events,
-    required this.upcomingStage2Events,
+    required this.currentStageEvents,
+    required this.upcomingStageEvents,
   });
 }
 
-class LiveTimetable extends StatelessWidget {
+class _EventCache {
+  CurrentAndUpcomingEvents? cachedEvents;
+  DateTime lastCalculationTime = DateTime(2000);
+
+  bool isCacheValid(DateTime now) {
+    if (cachedEvents == null) return false;
+    final secondsSinceLastCalculation =
+        now.difference(lastCalculationTime).inSeconds;
+    return secondsSinceLastCalculation < 60;
+  }
+
+  void invalidate() {
+    cachedEvents = null;
+    lastCalculationTime = DateTime(2000);
+  }
+
+  void updateCache(CurrentAndUpcomingEvents events, DateTime now) {
+    cachedEvents = events;
+    lastCalculationTime = now;
+  }
+}
+
+class LiveTimetable extends StatefulWidget {
   final double screenWidth;
   final int festivalStartYear;
   final int festivalStartMonth;
@@ -37,21 +57,46 @@ class LiveTimetable extends StatelessWidget {
   });
 
   @override
+  State<LiveTimetable> createState() => _LiveTimetableState();
+}
+
+class _LiveTimetableState extends State<LiveTimetable> {
+  late _EventCache _cache;
+  late Timer _fallbackTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _cache = _EventCache();
+    // Set up fallback timer to recalculate events every minute
+    _fallbackTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fallbackTimer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bool isTablet = screenWidth >= 600;
+    final bool isTablet = widget.screenWidth >= 600;
     final double sidePadding = isTablet ? 32.0 : 16.0;
     final double sectionSpacing = isTablet ? 24.0 : 16.0;
     final double statusFontSize = isTablet ? 18.0 : 16.0;
 
     final now = DateTime.now();
 
-    // If not during festival, show appropriate message in place of live timetable
-    if (dayNumber <= 0) {
+    // If not during festival, show appropriate message
+    if (widget.dayNumber <= 0) {
       final festivalEnd = DateTime(
-        festivalStartYear,
-        festivalStartMonth,
-        festivalStartDay,
-      ).add(Duration(days: festivalDays - 1));
+        widget.festivalStartYear,
+        widget.festivalStartMonth,
+        widget.festivalStartDay,
+      ).add(Duration(days: widget.festivalDays - 1));
 
       return Padding(
         padding: const EdgeInsets.all(16.0),
@@ -66,8 +111,8 @@ class LiveTimetable extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              dayNumber == -1
-                  ? "See you at $festivalLocation on $festivalStartMonth/$festivalStartDay - ${festivalEnd.month}/${festivalEnd.day}!"
+              widget.dayNumber == -1
+                  ? "See you at ${widget.festivalLocation} on ${widget.festivalStartMonth}/${widget.festivalStartDay} - ${festivalEnd.month}/${festivalEnd.day}!"
                   : "Thank you for visiting, and see you next year!",
               style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
@@ -76,23 +121,29 @@ class LiveTimetable extends StatelessWidget {
         ),
       );
     } else {
-      // Make sure schedule data exists before proceeding
-      final scheduleService = Provider.of<ScheduleDataService>(context);
+      // Get schedule service with listener for data changes
+      final scheduleService = Provider.of<ScheduleDataService>(
+        context,
+        listen: true,
+      );
       final List<ScheduleItem> scheduleList;
 
       try {
-        scheduleList = switch (dayNumber) {
+        scheduleList = switch (widget.dayNumber) {
           1 => scheduleService.day1ScheduleData,
           2 => scheduleService.day2ScheduleData,
           _ => [],
         };
+
+        // Invalidate cache if schedule data changed
+        _cache.invalidate();
 
         // Safety check - if schedule data is empty, show a message
         if (scheduleList.isEmpty) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              "No schedule data available for  Day $dayNumber",
+              "No schedule data available for Day ${widget.dayNumber}",
               style: TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -113,40 +164,34 @@ class LiveTimetable extends StatelessWidget {
       final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
         scheduleList,
         now,
-        dayNumber,
       );
+
       return Padding(
         padding: EdgeInsets.all(sidePadding),
         child: Column(
           children: [
-            if (currentAndUpcomingEvents.currentStage1Events.isNotEmpty ||
-                currentAndUpcomingEvents.currentStage2Events.isNotEmpty) ...[
+            if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
               _buildEventSection(
                 "🎤 Now Happening",
-                currentAndUpcomingEvents.currentStage1Events,
-                currentAndUpcomingEvents.currentStage2Events,
-                screenWidth,
+                currentAndUpcomingEvents.currentStageEvents,
+                widget.screenWidth,
                 isCurrent: true,
                 isTablet: isTablet,
               ),
               SizedBox(height: sectionSpacing),
             ],
-            if (currentAndUpcomingEvents.upcomingStage1Events.isNotEmpty ||
-                currentAndUpcomingEvents.upcomingStage2Events.isNotEmpty) ...[
+            if (currentAndUpcomingEvents.upcomingStageEvents.isNotEmpty) ...[
               _buildEventSection(
                 "⏭️ Up Next",
-                currentAndUpcomingEvents.upcomingStage1Events,
-                currentAndUpcomingEvents.upcomingStage2Events,
-                screenWidth,
+                currentAndUpcomingEvents.upcomingStageEvents,
+                widget.screenWidth,
                 isCurrent: false,
                 isTablet: isTablet,
               ),
               SizedBox(height: sectionSpacing),
             ],
-            if (currentAndUpcomingEvents.currentStage1Events.isEmpty &&
-                currentAndUpcomingEvents.currentStage2Events.isEmpty &&
-                currentAndUpcomingEvents.upcomingStage1Events.isEmpty &&
-                currentAndUpcomingEvents.upcomingStage2Events.isEmpty)
+            if (currentAndUpcomingEvents.currentStageEvents.isEmpty &&
+                currentAndUpcomingEvents.upcomingStageEvents.isEmpty)
               Text(
                 "No current or upcoming events at this time.",
                 style: TextStyle(fontSize: statusFontSize),
@@ -161,32 +206,73 @@ class LiveTimetable extends StatelessWidget {
   CurrentAndUpcomingEvents _getCurrentAndUpcomingEvents(
     List<ScheduleItem> scheduleList,
     DateTime now,
-    int dayNumber,
   ) {
-    // Initialize empty lists for all categories
-    List<EventItem> currentStage1Events = [];
-    List<EventItem> currentStage2Events = [];
-    List<EventItem> upcomingStage1Events = [];
-    List<EventItem> upcomingStage2Events = [];
+    // Check cache first
+    if (_cache.isCacheValid(now)) {
+      return _cache.cachedEvents!;
+    }
 
-    // Current year and month
+    // Cache miss - calculate current and upcoming events
+    final currentEvents = <EventItem>[];
+    final upcomingEvents = <EventItem>[];
+
+    _processEvents(scheduleList, now, currentEvents, upcomingEvents);
+
+    // Create and cache result
+    final result = CurrentAndUpcomingEvents(
+      currentStageEvents: currentEvents,
+      upcomingStageEvents: upcomingEvents,
+    );
+
+    _cache.updateCache(result, now);
+    return result;
+  }
+
+  // Helper method to parse event start time from time string with full date
+  DateTime _parseEventStartTime(String timeStr, int year, int month, int day) {
+    try {
+      final parts = timeStr.split(':');
+      if (parts.length != 2) {
+        // Return a default time far in the future if parsing fails
+        return DateTime(9999);
+      }
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      return DateTime(year, month, day, hour, minute);
+    } catch (e) {
+      // Return a default time far in the future if parsing fails
+      print('Error parsing event start time: $e');
+      return DateTime(9999);
+    }
+  }
+
+  // Process events from all stages and categorize them as current or upcoming
+  void _processEvents(
+    List<ScheduleItem> scheduleList,
+    DateTime now,
+    List<EventItem> currentEvents,
+    List<EventItem> upcomingEvents,
+  ) {
+    currentEvents.clear();
+    upcomingEvents.clear();
+
     final year = now.year;
     final month = now.month;
-    final day = festivalStartDay + dayNumber - 1;
+    final day = widget.festivalStartDay + widget.dayNumber - 1;
 
-    // Process all events to find current and upcoming
+    // Process all events from all schedule items
     for (final item in scheduleList) {
-      // Safety check - skip if stage events are null
       if (item.stage1Events == null && item.stage2Events == null) continue;
 
-      // Process Stage 1 events
+      // Process stage 1 events
       if (item.stage1Events != null) {
         for (final event in item.stage1Events!) {
-          // Skip if time format is invalid
-          if (!event.time.contains(':')) continue;
+          // Skip placeholder events (empty performance names)
+          if (event.performanceName.isEmpty || !event.time.contains(':'))
+            continue;
 
           try {
-            final eventTimeParts = event.time.split(":");
+            final eventTimeParts = event.time.split(':');
             final eventStartHour = int.parse(eventTimeParts[0]);
             final eventStartMinute = int.parse(eventTimeParts[1]);
 
@@ -203,38 +289,25 @@ class LiveTimetable extends StatelessWidget {
             final eventEndMinute = tempEndDate.minute;
 
             final eventStart = DateTime(
-              festivalStartYear,
-              festivalStartMonth,
-              festivalStartDay + event.day - 1,
+              widget.festivalStartYear,
+              widget.festivalStartMonth,
+              widget.festivalStartDay + event.day - 1,
               eventStartHour,
               eventStartMinute,
             );
             final eventEnd = DateTime(
-              festivalStartYear,
-              festivalStartMonth,
-              festivalStartDay + event.day - 1,
+              widget.festivalStartYear,
+              widget.festivalStartMonth,
+              widget.festivalStartDay + event.day - 1,
               eventEndHour,
               eventEndMinute,
             );
 
-            // Current event: now is between event start and end times
+            // Categorize as current or upcoming
             if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentStage1Events.add(event);
-            }
-            // Upcoming event: event starts after now
-            else if (eventStart.isAfter(now)) {
-              // Only add if we don't have upcoming events yet or if this starts at the same time
-              if (upcomingStage1Events.isEmpty ||
-                  eventStart.isAtSameMomentAs(
-                    _parseEventStartTime(
-                      upcomingStage1Events.first.time,
-                      year,
-                      month,
-                      day,
-                    ),
-                  )) {
-                upcomingStage1Events.add(event);
-              }
+              currentEvents.add(event);
+            } else if (eventStart.isAfter(now)) {
+              upcomingEvents.add(event);
             }
           } catch (e) {
             continue;
@@ -242,29 +315,29 @@ class LiveTimetable extends StatelessWidget {
         }
       }
 
-      // Process Stage 2 events
+      // Process stage 2 events
       if (item.stage2Events != null) {
         for (final event in item.stage2Events!) {
-          // Skip if time format is invalid
-          if (!event.time.contains('-')) continue;
+          // Skip placeholder events (empty performance names)
+          if (event.performanceName.isEmpty || !event.time.contains(':'))
+            continue;
 
           try {
-            // Parse the event time range (e.g., "11:00-11:15")
-            final timeParts = event.time.split('-');
-            final eventStartStr = timeParts[0].trim();
-            final eventEndStr = timeParts[1].trim();
+            final eventTimeParts = event.time.split(':');
+            final eventStartHour = int.parse(eventTimeParts[0]);
+            final eventStartMinute = int.parse(eventTimeParts[1]);
 
-            // Convert to full DateTime objects
-            final eventStartParts = eventStartStr.split(':');
-            final eventEndParts = eventEndStr.split(':');
+            final tempDate = DateTime(
+              2000,
+              1,
+              1,
+              eventStartHour,
+              eventStartMinute,
+            );
+            final tempEndDate = tempDate.add(Duration(minutes: event.duration));
 
-            if (eventStartParts.length != 2 || eventEndParts.length != 2)
-              continue;
-
-            final eventStartHour = int.parse(eventStartParts[0]);
-            final eventStartMinute = int.parse(eventStartParts[1]);
-            final eventEndHour = int.parse(eventEndParts[0]);
-            final eventEndMinute = int.parse(eventEndParts[1]);
+            final eventEndHour = tempEndDate.hour;
+            final eventEndMinute = tempEndDate.minute;
 
             final eventStart = DateTime(
               year,
@@ -281,24 +354,11 @@ class LiveTimetable extends StatelessWidget {
               eventEndMinute,
             );
 
-            // Current event: now is between event start and end times
+            // Categorize as current or upcoming
             if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentStage2Events.add(event);
-            }
-            // Upcoming event: event starts after now
-            else if (eventStart.isAfter(now)) {
-              // Only add if we don't have upcoming events yet or if this starts at the same time
-              if (upcomingStage2Events.isEmpty ||
-                  eventStart.isAtSameMomentAs(
-                    _parseEventStartTime(
-                      upcomingStage2Events.first.time,
-                      year,
-                      month,
-                      day,
-                    ),
-                  )) {
-                upcomingStage2Events.add(event);
-              }
+              currentEvents.add(event);
+            } else if (eventStart.isAfter(now)) {
+              upcomingEvents.add(event);
             }
           } catch (e) {
             continue;
@@ -307,84 +367,32 @@ class LiveTimetable extends StatelessWidget {
       }
     }
 
-    // Sort upcoming events by start time if we have multiple events
-    if (upcomingStage1Events.length > 1) {
-      upcomingStage1Events.sort((a, b) {
+    // Sort upcoming events by start time
+    if (upcomingEvents.length > 1) {
+      upcomingEvents.sort((a, b) {
         final aTime = _parseEventStartTime(a.time, year, month, day);
         final bTime = _parseEventStartTime(b.time, year, month, day);
         return aTime.compareTo(bTime);
       });
-    }
 
-    if (upcomingStage2Events.length > 1) {
-      upcomingStage2Events.sort((a, b) {
-        final aTime = _parseEventStartTime(a.time, year, month, day);
-        final bTime = _parseEventStartTime(b.time, year, month, day);
-        return aTime.compareTo(bTime);
+      // Keep only the earliest batch of upcoming events
+      final firstEventTime = _parseEventStartTime(
+        upcomingEvents.first.time,
+        year,
+        month,
+        day,
+      );
+      upcomingEvents.removeWhere((event) {
+        final eventTime = _parseEventStartTime(event.time, year, month, day);
+        return !eventTime.isAtSameMomentAs(firstEventTime);
       });
     }
-
-    // If we have multiple upcoming events with different start times, only keep the earliest ones
-    if (upcomingStage1Events.isNotEmpty && upcomingStage2Events.isNotEmpty) {
-      final stage1StartTime = _parseEventStartTime(
-        upcomingStage1Events.first.time,
-        year,
-        month,
-        day,
-      );
-      final stage2StartTime = _parseEventStartTime(
-        upcomingStage2Events.first.time,
-        year,
-        month,
-        day,
-      );
-
-      if (stage1StartTime.isBefore(stage2StartTime)) {
-        // Keep only stage1 events that start at the earliest time
-        upcomingStage2Events.clear();
-      } else if (stage2StartTime.isBefore(stage1StartTime)) {
-        // Keep only stage2 events that start at the earliest time
-        upcomingStage1Events.clear();
-      }
-    }
-
-    return CurrentAndUpcomingEvents(
-      currentStage1Events: currentStage1Events,
-      currentStage2Events: currentStage2Events,
-      upcomingStage1Events: upcomingStage1Events,
-      upcomingStage2Events: upcomingStage2Events,
-    );
   }
 
-  // Helper method to parse event start time from time range string with full date
-  DateTime _parseEventStartTime(
-    String timeRange,
-    int year,
-    int month,
-    int day,
-  ) {
-    try {
-      final timePart = timeRange.split('-')[0].trim();
-      final parts = timePart.split(':');
-      if (parts.length != 2) {
-        // Return a default time far in the future if parsing fails
-        return DateTime(9999);
-      }
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-      return DateTime(year, month, day, hour, minute);
-    } catch (e) {
-      // Return a default time far in the future if parsing fails
-      print('Error parsing event start time: $e');
-      return DateTime(9999);
-    }
-  }
-
-  // 2) EVENT SECTION
+  // Build event section with title and list of events
   Widget _buildEventSection(
     String title,
-    List<EventItem> stage1Events,
-    List<EventItem> stage2Events,
+    List<EventItem> events,
     double screenWidth, {
     required bool isCurrent,
     required bool isTablet,
@@ -407,10 +415,7 @@ class LiveTimetable extends StatelessWidget {
           ),
         ),
         SizedBox(height: spacing),
-        ...stage1Events.map(
-          (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
-        ),
-        ...stage2Events.map(
+        ...events.map(
           (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
         ),
       ],

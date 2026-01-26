@@ -359,7 +359,7 @@ class _HomePageState extends State<HomePage> {
             BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
           ],
         ),
-        child: Image.network(imagePath, height: 30),
+        child: Image.asset(imagePath, height: 30),
       ),
     );
   }
