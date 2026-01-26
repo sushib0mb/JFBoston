@@ -8,6 +8,27 @@ import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
 import 'package:provider/provider.dart';
 
+// Centralized festival date logic - single source of truth
+const int festivalDays = 2;
+const int festivalStartYear = 2026;
+const int festivalStartMonth = 1;
+const int festivalStartDay = 25;
+const int festivalStartHour = 11;
+
+/// Returns the current festival day (1-based), or 0 if not during the festival.
+int getFestivalDay(DateTime now) {
+  final start = DateTime(
+    festivalStartYear,
+    festivalStartMonth,
+    festivalStartDay,
+  );
+  final end = start.add(Duration(days: festivalDays));
+  if (now.isBefore(start) || !now.isBefore(end)) {
+    return 0;
+  }
+  return now.difference(start).inDays + 1;
+}
+
 class CurrentAndUpcomingEvents {
   final List<EventItem> currentStage1Events;
   final List<EventItem> currentStage2Events;
@@ -289,22 +310,20 @@ class _HomePageState extends State<HomePage> {
   // Helper class to organize events
 
   Widget _buildLiveTimetable(double screenWidth) {
-    // Use test time if provided, otherwise use current Boston time (UTC-4)
     final bool isTablet = screenWidth >= 600;
     final double sidePadding = isTablet ? 32.0 : 16.0;
     final double sectionSpacing = isTablet ? 24.0 : 16.0;
     final double statusFontSize = isTablet ? 18.0 : 16.0;
 
-    final now = widget.testTime ?? DateTime.now(); // Local time
+    final now = widget.testTime ?? DateTime.now();
+    final int festivalDay = getFestivalDay(now);
 
-    // final now = widget.testTime ?? DateTime.utc(2025, 4, 27, 16, 55);
-
-    // Festival dates setup
-    final festivalStart = DateTime(2026, 1, 22, 11); // April 26 at 11:00 AM
-    final festivalEnd = DateTime(2026, 1, 23, 23, 59); // April 27 at 11:59 PM
-
-    // Check if we're outside festival dates
-    if (now.isBefore(festivalStart) || now.isAfter(festivalEnd)) {
+    if (festivalDay == 0) {
+      final festivalEnd = DateTime(
+        festivalStartYear,
+        festivalStartMonth,
+        festivalStartDay,
+      ).add(Duration(days: festivalDays - 1));
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
@@ -316,9 +335,9 @@ class _HomePageState extends State<HomePage> {
               BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
             ],
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              "Live Timetable is only available on Apr 26 – 27",
+              "Live Timetable is only available on $festivalStartMonth/$festivalStartDay – ${festivalEnd.month}/${festivalEnd.day}",
               style: TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -327,8 +346,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Determine which day's schedule to use (day 1 or day 2)
-    final bool isDay1 = now.day == 22; // First day is April 26
+    final bool isDay1 = festivalDay == 1;
 
     // Make sure schedule data exists before proceeding
     final List<ScheduleItem> scheduleList;
@@ -362,11 +380,10 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Find all current and upcoming events for both stages
     final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
       scheduleList,
       now,
-      isDay1,
+      festivalDay,
     );
     return Padding(
       padding: EdgeInsets.all(sidePadding),
@@ -413,18 +430,16 @@ class _HomePageState extends State<HomePage> {
   CurrentAndUpcomingEvents _getCurrentAndUpcomingEvents(
     List<ScheduleItem> scheduleList,
     DateTime now,
-    bool isDay1,
+    int festivalDay,
   ) {
-    // Initialize empty lists for all categories
     List<EventItem> currentStage1Events = [];
     List<EventItem> currentStage2Events = [];
     List<EventItem> upcomingStage1Events = [];
     List<EventItem> upcomingStage2Events = [];
 
-    // Current year and month
     final year = now.year;
     final month = now.month;
-    final day = isDay1 ? 22 : 23; // April 27 or 28, 2025
+    final day = festivalStartDay + (festivalDay - 1);
 
     // Process all events to find current and upcoming
     for (final item in scheduleList) {
