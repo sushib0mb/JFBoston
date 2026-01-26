@@ -12,8 +12,8 @@ import 'package:provider/provider.dart';
 const int festivalDays = 2;
 const int festivalStartYear = 2026;
 const int festivalStartMonth = 1;
-const int festivalStartDay = 25;
-const int festivalStartHour = 11;
+const int festivalStartDay = 26;
+const String festivalLocation = "Boston Common";
 
 /// Returns the current festival day (1-based), or 0 if not during the festival.
 int getFestivalDay(DateTime now) {
@@ -23,7 +23,9 @@ int getFestivalDay(DateTime now) {
     festivalStartDay,
   );
   final end = start.add(Duration(days: festivalDays));
-  if (now.isBefore(start) || !now.isBefore(end)) {
+  if (now.isBefore(start)) {
+    return -1;
+  } else if (!now.isBefore(end)) {
     return 0;
   }
   return now.difference(start).inDays + 1;
@@ -44,17 +46,13 @@ class CurrentAndUpcomingEvents {
 }
 
 class HomePage extends StatefulWidget {
-  final DateTime? testTime;
   final EventItem? selectedEvent;
 
-  const HomePage({Key? key, this.testTime, this.selectedEvent})
-    : super(key: key);
+  const HomePage({Key? key, this.selectedEvent}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
-
-// TODO: Refactor this page, put this in a folder and make components. Link the database to the sponsor images, don't forget option for non image sponsors too
 
 class _HomePageState extends State<HomePage> {
   // your original images
@@ -310,20 +308,23 @@ class _HomePageState extends State<HomePage> {
   // Helper class to organize events
 
   Widget _buildLiveTimetable(double screenWidth) {
+    // Use test time if provided, otherwise use current Boston time (UTC-4)
     final bool isTablet = screenWidth >= 600;
     final double sidePadding = isTablet ? 32.0 : 16.0;
     final double sectionSpacing = isTablet ? 24.0 : 16.0;
     final double statusFontSize = isTablet ? 18.0 : 16.0;
 
-    final now = widget.testTime ?? DateTime.now();
-    final int festivalDay = getFestivalDay(now);
+    final now = DateTime.now();
+    final int dayNumber = getFestivalDay(now);
 
-    if (festivalDay == 0) {
+    // If not during festival, show appropriate message in place of live timetable
+    if (dayNumber <= 0) {
       final festivalEnd = DateTime(
         festivalStartYear,
         festivalStartMonth,
         festivalStartDay,
       ).add(Duration(days: festivalDays - 1));
+
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
@@ -337,109 +338,113 @@ class _HomePageState extends State<HomePage> {
           ),
           child: Center(
             child: Text(
-              "Live Timetable is only available on $festivalStartMonth/$festivalStartDay – ${festivalEnd.month}/${festivalEnd.day}",
-              style: TextStyle(fontSize: 16),
+              dayNumber == -1
+                  ? "See you at $festivalLocation on $festivalStartMonth/$festivalStartDay - ${festivalEnd.month}/${festivalEnd.day}!"
+                  : "Thank you for visiting, and see you next year!",
+              style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
           ),
         ),
       );
-    }
+    } else {
+      // Make sure schedule data exists before proceeding
+      final scheduleService = Provider.of<ScheduleDataService>(context);
+      final List<ScheduleItem> scheduleList;
 
-    final bool isDay1 = festivalDay == 1;
+      try {
+        scheduleList = switch (dayNumber) {
+          1 => scheduleService.day1ScheduleData,
+          2 => scheduleService.day2ScheduleData,
+          _ => [],
+        };
 
-    // Make sure schedule data exists before proceeding
-    final List<ScheduleItem> scheduleList;
-    final scheduleService = Provider.of<ScheduleDataService>(context);
-    try {
-      scheduleList =
-          isDay1
-              ? scheduleService.day1ScheduleData
-              : scheduleService.day2ScheduleData;
-
-      // Safety check - if schedule data is empty, show a message
-      if (scheduleList.isEmpty) {
+        // Safety check - if schedule data is empty, show a message
+        if (scheduleList.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "No schedule data available for  Day $dayNumber",
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+      } catch (e) {
+        // Handle case where data is not available
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "No schedule data available for ${isDay1 ? 'Day 1' : 'Day 2'}.",
-            style: TextStyle(fontSize: 16),
+            "Error loading schedule data: $e",
+            style: TextStyle(fontSize: 16, color: Colors.red),
             textAlign: TextAlign.center,
           ),
         );
       }
-    } catch (e) {
-      // Handle case where data is not available
+
+      final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
+        scheduleList,
+        now,
+        dayNumber,
+      );
       return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          "Error loading schedule data: $e",
-          style: TextStyle(fontSize: 16, color: Colors.red),
-          textAlign: TextAlign.center,
+        padding: EdgeInsets.all(sidePadding),
+        child: Column(
+          children: [
+            if (currentAndUpcomingEvents.currentStage1Events.isNotEmpty ||
+                currentAndUpcomingEvents.currentStage2Events.isNotEmpty) ...[
+              _buildEventSection(
+                "🎤 Now Happening",
+                currentAndUpcomingEvents.currentStage1Events,
+                currentAndUpcomingEvents.currentStage2Events,
+                screenWidth,
+                isCurrent: true,
+                isTablet: isTablet,
+              ),
+              SizedBox(height: sectionSpacing),
+            ],
+            if (currentAndUpcomingEvents.upcomingStage1Events.isNotEmpty ||
+                currentAndUpcomingEvents.upcomingStage2Events.isNotEmpty) ...[
+              _buildEventSection(
+                "⏭️ Up Next",
+                currentAndUpcomingEvents.upcomingStage1Events,
+                currentAndUpcomingEvents.upcomingStage2Events,
+                screenWidth,
+                isCurrent: false,
+                isTablet: isTablet,
+              ),
+              SizedBox(height: sectionSpacing),
+            ],
+            if (currentAndUpcomingEvents.currentStage1Events.isEmpty &&
+                currentAndUpcomingEvents.currentStage2Events.isEmpty &&
+                currentAndUpcomingEvents.upcomingStage1Events.isEmpty &&
+                currentAndUpcomingEvents.upcomingStage2Events.isEmpty)
+              Text(
+                "No current or upcoming events at this time.",
+                style: TextStyle(fontSize: statusFontSize),
+                textAlign: TextAlign.center,
+              ),
+          ],
         ),
       );
     }
-
-    final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
-      scheduleList,
-      now,
-      festivalDay,
-    );
-    return Padding(
-      padding: EdgeInsets.all(sidePadding),
-      child: Column(
-        children: [
-          if (currentAndUpcomingEvents.currentStage1Events.isNotEmpty ||
-              currentAndUpcomingEvents.currentStage2Events.isNotEmpty) ...[
-            _buildEventSection(
-              "🎤 Now Happening",
-              currentAndUpcomingEvents.currentStage1Events,
-              currentAndUpcomingEvents.currentStage2Events,
-              screenWidth,
-              isCurrent: true,
-              isTablet: isTablet,
-            ),
-            SizedBox(height: sectionSpacing),
-          ],
-          if (currentAndUpcomingEvents.upcomingStage1Events.isNotEmpty ||
-              currentAndUpcomingEvents.upcomingStage2Events.isNotEmpty) ...[
-            _buildEventSection(
-              "⏭️ Up Next",
-              currentAndUpcomingEvents.upcomingStage1Events,
-              currentAndUpcomingEvents.upcomingStage2Events,
-              screenWidth,
-              isCurrent: false,
-              isTablet: isTablet,
-            ),
-            SizedBox(height: sectionSpacing),
-          ],
-          if (currentAndUpcomingEvents.currentStage1Events.isEmpty &&
-              currentAndUpcomingEvents.currentStage2Events.isEmpty &&
-              currentAndUpcomingEvents.upcomingStage1Events.isEmpty &&
-              currentAndUpcomingEvents.upcomingStage2Events.isEmpty)
-            Text(
-              "No current or upcoming events at this time.",
-              style: TextStyle(fontSize: statusFontSize),
-              textAlign: TextAlign.center,
-            ),
-        ],
-      ),
-    );
   }
 
   CurrentAndUpcomingEvents _getCurrentAndUpcomingEvents(
     List<ScheduleItem> scheduleList,
     DateTime now,
-    int festivalDay,
+    int dayNumber,
   ) {
+    // Initialize empty lists for all categories
     List<EventItem> currentStage1Events = [];
     List<EventItem> currentStage2Events = [];
     List<EventItem> upcomingStage1Events = [];
     List<EventItem> upcomingStage2Events = [];
 
+    // Current year and month
     final year = now.year;
     final month = now.month;
-    final day = festivalStartDay + (festivalDay - 1);
+    final day = festivalStartDay + dayNumber - 1;
 
     // Process all events to find current and upcoming
     for (final item in scheduleList) {
@@ -450,42 +455,39 @@ class _HomePageState extends State<HomePage> {
       if (item.stage1Events != null) {
         for (final event in item.stage1Events!) {
           // Skip if time format is invalid
-          if (!event.time.contains('-')) continue;
+          if (!event.time.contains(':')) continue;
 
           try {
-            // Parse the event time range (e.g., "11:00-11:15")
-            final timeParts = event.time.split('-');
-            final eventStartStr = timeParts[0].trim();
-            final eventEndStr = timeParts[1].trim();
+            final eventTimeParts = event.time.split(":");
+            final eventStartHour = int.parse(eventTimeParts[0]);
+            final eventStartMinute = int.parse(eventTimeParts[1]);
 
-            // Convert to full DateTime objects
-            final eventStartParts = eventStartStr.split(':');
-            final eventEndParts = eventEndStr.split(':');
+            final tempDate = DateTime(
+              2000,
+              1,
+              1,
+              eventStartHour,
+              eventStartMinute,
+            );
+            final tempEndDate = tempDate.add(Duration(minutes: event.duration));
 
-            if (eventStartParts.length != 2 || eventEndParts.length != 2)
-              continue;
-
-            final eventStartHour = int.parse(eventStartParts[0]);
-            final eventStartMinute = int.parse(eventStartParts[1]);
-            final eventEndHour = int.parse(eventEndParts[0]);
-            final eventEndMinute = int.parse(eventEndParts[1]);
+            final eventEndHour = tempEndDate.hour;
+            final eventEndMinute = tempEndDate.minute;
 
             final eventStart = DateTime(
-              year,
-              month,
-              day,
+              festivalStartYear,
+              festivalStartMonth,
+              festivalStartDay + event.day - 1,
               eventStartHour,
               eventStartMinute,
             );
             final eventEnd = DateTime(
-              year,
-              month,
-              day,
+              festivalStartYear,
+              festivalStartMonth,
+              festivalStartDay + event.day - 1,
               eventEndHour,
               eventEndMinute,
             );
-
-            print("event start $eventStart");
 
             // Current event: now is between event start and end times
             if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
@@ -797,7 +799,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  child: Image.asset(
+                  child: Image.network(
                     event.iconImage,
                     height: iconDiameter,
                     width: iconDiameter,
@@ -861,7 +863,7 @@ class _HomePageState extends State<HomePage> {
             BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
           ],
         ),
-        child: Image.asset(imagePath, height: 30),
+        child: Image.network(imagePath, height: 30),
       ),
     );
   }

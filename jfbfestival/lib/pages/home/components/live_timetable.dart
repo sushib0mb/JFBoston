@@ -519,7 +519,7 @@ class LiveTimetable extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Image.asset(
+                  child: Image.network(
                     event.iconImage,
                     height: iconDiameter,
                     width: iconDiameter,
