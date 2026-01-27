@@ -389,6 +389,37 @@ class _LiveTimetableState extends State<LiveTimetable> {
     }
   }
 
+  // Format countdown time as "HHh MMm" or "MMm"
+  String _formatCountdownTime(DateTime eventStart) {
+    final now = DateTime.now();
+    final difference = eventStart.difference(now);
+    final totalMinutes = difference.inMinutes;
+
+    if (totalMinutes <= 0) return "0m";
+
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+
+    if (hours == 0) {
+      return "${minutes}m";
+    } else if (minutes == 0) {
+      return "${hours}h";
+    } else {
+      return "${hours}h ${minutes}m";
+    }
+  }
+
+  // Get badge color based on remaining minutes
+  Color _getCountdownBadgeColor(int remainingMinutes) {
+    if (remainingMinutes > 60) {
+      return const Color.fromARGB(255, 154, 190, 118);
+    } else if (remainingMinutes >= 10) {
+      return const Color.fromARGB(255, 240, 192, 32);
+    } else {
+      return const Color.fromARGB(255, 240, 129, 121);
+    }
+  }
+
   // Build event section with title and list of events
   Widget _buildEventSection(
     String title,
@@ -399,6 +430,11 @@ class _LiveTimetableState extends State<LiveTimetable> {
   }) {
     final double titleFontSize = isTablet ? 24.0 : 20.0;
     final double spacing = isTablet ? 12.0 : 8.0;
+
+    final now = DateTime.now();
+    final year = now.year;
+    final month = now.month;
+    final day = widget.festivalStartDay + widget.dayNumber - 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,9 +451,21 @@ class _LiveTimetableState extends State<LiveTimetable> {
           ),
         ),
         SizedBox(height: spacing),
-        ...events.map(
-          (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
-        ),
+        ...events.map((e) {
+          final eventStartDateTime = _parseEventStartTime(
+            e.time,
+            year,
+            month,
+            day,
+          );
+          return _buildEventCard(
+            e,
+            isCurrent,
+            screenWidth,
+            isTablet,
+            eventStartDateTime,
+          );
+        }),
       ],
     );
   }
@@ -428,6 +476,7 @@ class _LiveTimetableState extends State<LiveTimetable> {
     bool isCurrent,
     double screenWidth,
     bool isTablet,
+    DateTime eventStartDateTime,
   ) {
     final double verticalPadding = isTablet ? 12.0 : 8.0;
     final EdgeInsets cardPadding = EdgeInsets.all(isTablet ? 24 : 16);
@@ -498,27 +547,35 @@ class _LiveTimetableState extends State<LiveTimetable> {
                     style: TextStyle(color: Colors.grey),
                   ),
                   // “Going on now” badge
-                  if (isCurrent)
-                    Padding(
-                      padding: EdgeInsets.only(top: isTablet ? 8.0 : 5.0),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTablet ? 6 : 4,
-                          horizontal: isTablet ? 12 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "Going on now!",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isTablet ? 14 : 12,
-                          ),
+                  Padding(
+                    padding: EdgeInsets.only(top: isTablet ? 8.0 : 5.0),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: isTablet ? 6 : 4,
+                        horizontal: isTablet ? 12 : 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            isCurrent
+                                ? Colors.orange
+                                : _getCountdownBadgeColor(
+                                  eventStartDateTime
+                                      .difference(DateTime.now())
+                                      .inMinutes,
+                                ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isCurrent
+                            ? "Going on now!"
+                            : "Starts in ${_formatCountdownTime(eventStartDateTime)}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isTablet ? 18 : 14,
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
