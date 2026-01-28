@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jfbfestival/data/food_booths.dart';
+import 'package:jfbfestival/services/sponsor_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 import 'package:hive_flutter/hive_flutter.dart';
@@ -17,7 +18,7 @@ import 'pages/home/home_page.dart';
 import 'pages/map_page.dart';
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
-import 'SplashScreen/video_splash_screen.dart';
+// import 'SplashScreen/video_splash_screen.dart';
 import 'models/feedback_entry.dart';
 import 'models/survey_entry.dart';
 import 'pages/survey/survey_page.dart';
@@ -56,8 +57,8 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
         ChangeNotifierProvider(create: (_) => ReminderProvider()),
-        // Add ScheduleDataService provider
         ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
+        ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
       ],
       child: const MyApp(),
     ),

@@ -85,7 +85,6 @@ class _LiveTimetableState extends State<LiveTimetable> {
   @override
   Widget build(BuildContext context) {
     final bool isTablet = widget.screenWidth >= 600;
-    final double sidePadding = isTablet ? 32.0 : 16.0;
     final double sectionSpacing = isTablet ? 24.0 : 16.0;
     final double statusFontSize = isTablet ? 18.0 : 16.0;
 

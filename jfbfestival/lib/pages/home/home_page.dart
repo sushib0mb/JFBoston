@@ -3,10 +3,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:jfbfestival/pages/home/components/live_timetable.dart';
+import 'package:jfbfestival/services/sponsor_service.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
-import 'package:provider/provider.dart';
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
@@ -142,6 +143,8 @@ class _HomePageState extends State<HomePage> {
     final settingsIconSize = isTablet ? 36.0 : 30.0;
     final settingsIconPadding = isTablet ? 14.0 : 10.0;
 
+    final sponsorService = Provider.of<SponsorService>(context);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
@@ -252,7 +255,7 @@ class _HomePageState extends State<HomePage> {
                           dayNumber: getFestivalDay(DateTime.now()),
                         ),
                         _buildSocialMediaIcons(screenWidth),
-                        _buildSponsorsSection(screenWidth),
+                        _buildSponsorsSection(screenWidth, sponsorService),
                         SizedBox(height: verticalSpacing * 6),
                       ],
                     ),
@@ -364,7 +367,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSponsorsSection(double screenWidth) {
+  Widget _buildSponsorsSection(double screenWidth, SponsorService service) {
     return Container(
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
@@ -387,7 +390,7 @@ class _HomePageState extends State<HomePage> {
             "assets/sponsors/yamatotransport.jpg",
           ),
           SizedBox(height: 3),
-          _buildCorporateSponsors(),
+          _buildCorporateSponsors(service),
           _buildIndividualSponsors(),
           _buildAuctionDonors(),
           _buildJfbOrganizers(),
@@ -418,20 +421,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCorporateSponsors() {
-    List<String> corporateLogos = [
-      "assets/sponsors/meetboston.jpg",
-      "assets/sponsors/sanipak.png",
-      "assets/sponsors/chopvalue.png",
-      "assets/sponsors/mitsubishi.jpg",
-      "assets/sponsors/SDT.jpg",
-      "assets/sponsors/senko.png",
-      "assets/sponsors/yamamoto.jpg",
-      "assets/sponsors/openwater.png",
-      "assets/sponsors/idamerica.png",
-      "assets/sponsors/downtown.png",
-      "assets/sponsors/redsox.png",
-    ];
+  Widget _buildCorporateSponsors(SponsorService service) {
+    // List<String> corporateLogos = [
+    //   "assets/sponsors/meetboston.jpg",
+    //   "assets/sponsors/sanipak.png",
+    //   "assets/sponsors/chopvalue.png",
+    //   "assets/sponsors/mitsubishi.jpg",
+    //   "assets/sponsors/SDT.jpg",
+    //   "assets/sponsors/senko.png",
+    //   "assets/sponsors/yamamoto.jpg",
+    //   "assets/sponsors/openwater.png",
+    //   "assets/sponsors/idamerica.png",
+    //   "assets/sponsors/downtown.png",
+    //   "assets/sponsors/redsox.png",
+    // ];
+
+    // List<String> corporateLogos = service.sponsors.map((e) => e.image).toList();
+
+    // TODO: Combine all of the functions into 1, handle case where it's just text(make a text box that's the same size as the sponsors and add text in)
+    // TODO: if there is only 1 sponsor in a category, center it
+    List<String> corporateLogos = [service.sponsors[0].image];
 
     return Column(
       children: [
@@ -463,7 +472,10 @@ class _HomePageState extends State<HomePage> {
               child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.15,
                 width: MediaQuery.of(context).size.width * 0.3,
-                child: Image.asset(corporateLogos[index], fit: BoxFit.contain),
+                child: Image.network(
+                  corporateLogos[index],
+                  fit: BoxFit.contain,
+                ),
               ),
             );
           },

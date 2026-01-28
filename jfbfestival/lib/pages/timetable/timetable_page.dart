@@ -5,7 +5,6 @@ import 'package:jfbfestival/pages/timetable/components/performance.dart';
 import 'package:provider/provider.dart';
 import 'components/stage_header.dart';
 
-/// メインビュー：タイムテーブル
 class TimetablePage extends StatefulWidget {
   final EventItem? selectedEvent;
   final int? selectedDay;
