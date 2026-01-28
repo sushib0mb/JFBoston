@@ -167,8 +167,8 @@ class _LiveTimetableState extends State<LiveTimetable> {
         now,
       );
 
-      return Padding(
-        padding: EdgeInsets.all(sidePadding),
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
             if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
@@ -215,12 +215,6 @@ class _LiveTimetableState extends State<LiveTimetable> {
                   ),
                 ),
               ),
-
-            // Text(
-            //   "No current or upcoming events at this time.",
-            //   style: TextStyle(fontSize: statusFontSize),
-            //   textAlign: TextAlign.center,
-            // ),
           ],
         ),
       );
@@ -440,7 +434,10 @@ class _LiveTimetableState extends State<LiveTimetable> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: isTablet ? 12 : 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 12 : 8,
+            vertical: isTablet ? 7 : 5,
+          ),
           child: Text(
             title,
             style: TextStyle(
