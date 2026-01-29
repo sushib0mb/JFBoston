@@ -368,6 +368,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSponsorsSection(double screenWidth, SponsorService service) {
+    Map<String, List<String>> groupedSponsors = {};
+
+    // 2. Iterate through the service data to populate the map
+    for (var sponsor in service.sponsors) {
+      if (!groupedSponsors.containsKey(sponsor.category)) {
+        groupedSponsors[sponsor.category] = [];
+      }
+      groupedSponsors[sponsor.category]!.add(sponsor.image);
+    }
+
     return Container(
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
@@ -390,7 +400,15 @@ class _HomePageState extends State<HomePage> {
             "assets/sponsors/yamatotransport.jpg",
           ),
           SizedBox(height: 3),
-          _buildCorporateSponsors(service),
+
+          // _buildCorporateSponsors(service),
+          ...groupedSponsors.entries.map((entry) {
+            String categoryName = entry.key;
+            List<String> images = entry.value;
+
+            return _buildSponsorSection(categoryName, images);
+          }),
+
           _buildIndividualSponsors(),
           _buildAuctionDonors(),
           _buildJfbOrganizers(),
@@ -417,6 +435,46 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         Image.asset(imagePath, height: 65),
+      ],
+    );
+  }
+
+  Widget _buildSponsorSection(String categoryName, List<String> images) {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
+          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(40),
+          ),
+          child: Text(
+            categoryName,
+            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
+          ),
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          itemCount: images.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: images.length > 1 ? 2 : 1,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 10,
+            childAspectRatio: 3,
+          ),
+          itemBuilder: (context, index) {
+            return Center(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.15,
+                width: MediaQuery.of(context).size.width * 0.3,
+                child: Image.network(images[index], fit: BoxFit.contain),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
