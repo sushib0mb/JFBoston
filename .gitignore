@@ -12,6 +12,8 @@
 .swiftpm/
 migrate_working_dir/
 .env
+.metadata
+jfbfestival/devtools_options.yaml
 
 # IntelliJ related
 *.iml
