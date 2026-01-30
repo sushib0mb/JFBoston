@@ -1,49 +1,103 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/pages/home/home_page.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
 
 class CurrentAndUpcomingEvents {
-  final List<EventItem> currentStage1Events;
-  final List<EventItem> currentStage2Events;
-  final List<EventItem> upcomingStage1Events;
-  final List<EventItem> upcomingStage2Events;
+  final List<EventItem> currentStageEvents;
+  final List<EventItem> upcomingStageEvents;
 
   CurrentAndUpcomingEvents({
-    required this.currentStage1Events,
-    required this.currentStage2Events,
-    required this.upcomingStage1Events,
-    required this.upcomingStage2Events,
+    required this.currentStageEvents,
+    required this.upcomingStageEvents,
   });
 }
 
-class LiveTimetable extends StatelessWidget {
-  final DateTime? testTime;
+class _EventCache {
+  CurrentAndUpcomingEvents? cachedEvents;
+  DateTime lastCalculationTime = DateTime(2000);
+
+  bool isCacheValid(DateTime now) {
+    if (cachedEvents == null) return false;
+    final secondsSinceLastCalculation =
+        now.difference(lastCalculationTime).inSeconds;
+    return secondsSinceLastCalculation < 60;
+  }
+
+  void invalidate() {
+    cachedEvents = null;
+    lastCalculationTime = DateTime(2000);
+  }
+
+  void updateCache(CurrentAndUpcomingEvents events, DateTime now) {
+    cachedEvents = events;
+    lastCalculationTime = now;
+  }
+}
+
+class LiveTimetable extends StatefulWidget {
   final double screenWidth;
+  final int festivalStartYear;
+  final int festivalStartMonth;
+  final int festivalStartDay;
+  final int festivalDays;
+  final String festivalLocation;
+  final int dayNumber;
 
   const LiveTimetable({
     super.key,
-    required this.testTime,
     required this.screenWidth,
+    required this.festivalStartYear,
+    required this.festivalStartMonth,
+    required this.festivalStartDay,
+    required this.festivalDays,
+    required this.festivalLocation,
+    required this.dayNumber,
   });
 
   @override
+  State<LiveTimetable> createState() => _LiveTimetableState();
+}
+
+class _LiveTimetableState extends State<LiveTimetable> {
+  late _EventCache _cache;
+  late Timer _fallbackTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _cache = _EventCache();
+    // Set up fallback timer to recalculate events every minute
+    _fallbackTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fallbackTimer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Use test time if provided, otherwise use current Boston time (UTC-4)
-    final bool isTablet = screenWidth >= 600;
-    final double sidePadding = isTablet ? 32.0 : 16.0;
+    final bool isTablet = widget.screenWidth >= 600;
     final double sectionSpacing = isTablet ? 24.0 : 16.0;
     final double statusFontSize = isTablet ? 18.0 : 16.0;
 
-    final now = testTime ?? DateTime.now(); // Local time
+    final now = DateTime.now();
 
-    // final now = widget.testTime ?? DateTime.utc(2025, 4, 27, 16, 55);
+    // If not during festival, show appropriate message
+    if (widget.dayNumber <= 0) {
+      final festivalEnd = DateTime(
+        widget.festivalStartYear,
+        widget.festivalStartMonth,
+        widget.festivalStartDay,
+      ).add(Duration(days: widget.festivalDays - 1));
 
-    // Festival dates setup
-    final festivalStart = DateTime(2026, 1, 22, 11); // April 26 at 11:00 AM
-    final festivalEnd = DateTime(2026, 1, 23, 23, 59); // April 27 at 11:59 PM
-
-    // Check if we're outside festival dates
-    if (now.isBefore(festivalStart) || now.isAfter(festivalEnd)) {
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Container(
@@ -55,309 +109,146 @@ class LiveTimetable extends StatelessWidget {
               BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
             ],
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              "Live Timetable is only available on Apr 26 – 27",
-              style: TextStyle(fontSize: 16),
+              widget.dayNumber == -1
+                  ? "See you at ${widget.festivalLocation} on ${widget.festivalStartMonth}/${widget.festivalStartDay} - ${festivalEnd.month}/${festivalEnd.day}!"
+                  : "Thank you for visiting, and see you next year!",
+              style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
           ),
         ),
       );
-    }
+    } else {
+      // Get schedule service with listener for data changes
+      final scheduleService = Provider.of<ScheduleDataService>(
+        context,
+        listen: true,
+      );
+      final List<ScheduleItem> scheduleList;
 
-    // Determine which day's schedule to use (day 1 or day 2)
-    final bool isDay1 = now.day == 22; // First day is April 26
+      try {
+        scheduleList = switch (widget.dayNumber) {
+          1 => scheduleService.day1ScheduleData,
+          2 => scheduleService.day2ScheduleData,
+          _ => [],
+        };
 
-    // Make sure schedule data exists before proceeding
-    final List<ScheduleItem> scheduleList;
-    final scheduleService = Provider.of<ScheduleDataService>(context);
-    try {
-      scheduleList =
-          isDay1
-              ? scheduleService.day1ScheduleData
-              : scheduleService.day2ScheduleData;
+        // Invalidate cache if schedule data changed
+        _cache.invalidate();
 
-      // Safety check - if schedule data is empty, show a message
-      if (scheduleList.isEmpty) {
+        // Safety check - if schedule data is empty, show a message
+        if (scheduleList.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "No schedule data available for Day ${widget.dayNumber}",
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+      } catch (e) {
+        // Handle case where data is not available
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "No schedule data available for ${isDay1 ? 'Day 1' : 'Day 2'}.",
-            style: TextStyle(fontSize: 16),
+            "Error loading schedule data: $e",
+            style: TextStyle(fontSize: 16, color: Colors.red),
             textAlign: TextAlign.center,
           ),
         );
       }
-    } catch (e) {
-      // Handle case where data is not available
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          "Error loading schedule data: $e",
-          style: TextStyle(fontSize: 16, color: Colors.red),
-          textAlign: TextAlign.center,
+
+      final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
+        scheduleList,
+        now,
+      );
+
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
+              _buildEventSection(
+                "🎤 Now Happening",
+                currentAndUpcomingEvents.currentStageEvents,
+                widget.screenWidth,
+                isCurrent: true,
+                isTablet: isTablet,
+              ),
+            ],
+            if (currentAndUpcomingEvents.upcomingStageEvents.isNotEmpty) ...[
+              if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
+                SizedBox(height: sectionSpacing),
+              ],
+              _buildEventSection(
+                "⏭️ Up Next",
+                currentAndUpcomingEvents.upcomingStageEvents,
+                widget.screenWidth,
+                isCurrent: false,
+                isTablet: isTablet,
+              ),
+            ],
+            if (currentAndUpcomingEvents.currentStageEvents.isEmpty &&
+                currentAndUpcomingEvents.upcomingStageEvents.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 5,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    "No current or upcoming events at this time",
+                    style: TextStyle(fontSize: statusFontSize),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
         ),
       );
     }
-
-    // Find all current and upcoming events for both stages
-    final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
-      scheduleList,
-      now,
-      isDay1,
-    );
-    return Padding(
-      padding: EdgeInsets.all(sidePadding),
-      child: Column(
-        children: [
-          if (currentAndUpcomingEvents.currentStage1Events.isNotEmpty ||
-              currentAndUpcomingEvents.currentStage2Events.isNotEmpty) ...[
-            _buildEventSection(
-              "🎤 Now Happening",
-              currentAndUpcomingEvents.currentStage1Events,
-              currentAndUpcomingEvents.currentStage2Events,
-              screenWidth,
-              isCurrent: true,
-              isTablet: isTablet,
-            ),
-            SizedBox(height: sectionSpacing),
-          ],
-          if (currentAndUpcomingEvents.upcomingStage1Events.isNotEmpty ||
-              currentAndUpcomingEvents.upcomingStage2Events.isNotEmpty) ...[
-            _buildEventSection(
-              "⏭️ Up Next",
-              currentAndUpcomingEvents.upcomingStage1Events,
-              currentAndUpcomingEvents.upcomingStage2Events,
-              screenWidth,
-              isCurrent: false,
-              isTablet: isTablet,
-            ),
-            SizedBox(height: sectionSpacing),
-          ],
-          if (currentAndUpcomingEvents.currentStage1Events.isEmpty &&
-              currentAndUpcomingEvents.currentStage2Events.isEmpty &&
-              currentAndUpcomingEvents.upcomingStage1Events.isEmpty &&
-              currentAndUpcomingEvents.upcomingStage2Events.isEmpty)
-            Text(
-              "No current or upcoming events at this time.",
-              style: TextStyle(fontSize: statusFontSize),
-              textAlign: TextAlign.center,
-            ),
-        ],
-      ),
-    );
   }
 
   CurrentAndUpcomingEvents _getCurrentAndUpcomingEvents(
     List<ScheduleItem> scheduleList,
     DateTime now,
-    bool isDay1,
   ) {
-    // Initialize empty lists for all categories
-    List<EventItem> currentStage1Events = [];
-    List<EventItem> currentStage2Events = [];
-    List<EventItem> upcomingStage1Events = [];
-    List<EventItem> upcomingStage2Events = [];
-
-    // Current year and month
-    final year = now.year;
-    final month = now.month;
-    final day = isDay1 ? 26 : 27; // April 27 or 28, 2025
-
-    // Process all events to find current and upcoming
-    for (final item in scheduleList) {
-      // Safety check - skip if stage events are null
-      if (item.stage1Events == null && item.stage2Events == null) continue;
-
-      // Process Stage 1 events
-      if (item.stage1Events != null) {
-        for (final event in item.stage1Events!) {
-          // Skip if time format is invalid
-          if (!event.time.contains('-')) continue;
-
-          try {
-            // Parse the event time range (e.g., "11:00-11:15")
-            final timeParts = event.time.split('-');
-            final eventStartStr = timeParts[0].trim();
-            final eventEndStr = timeParts[1].trim();
-
-            // Convert to full DateTime objects
-            final eventStartParts = eventStartStr.split(':');
-            final eventEndParts = eventEndStr.split(':');
-
-            if (eventStartParts.length != 2 || eventEndParts.length != 2)
-              continue;
-
-            final eventStartHour = int.parse(eventStartParts[0]);
-            final eventStartMinute = int.parse(eventStartParts[1]);
-            final eventEndHour = int.parse(eventEndParts[0]);
-            final eventEndMinute = int.parse(eventEndParts[1]);
-
-            final eventStart = DateTime(
-              year,
-              month,
-              day,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final eventEnd = DateTime(
-              year,
-              month,
-              day,
-              eventEndHour,
-              eventEndMinute,
-            );
-
-            // Current event: now is between event start and end times
-            if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentStage1Events.add(event);
-            }
-            // Upcoming event: event starts after now
-            else if (eventStart.isAfter(now)) {
-              // Only add if we don't have upcoming events yet or if this starts at the same time
-              if (upcomingStage1Events.isEmpty ||
-                  eventStart.isAtSameMomentAs(
-                    _parseEventStartTime(
-                      upcomingStage1Events.first.time,
-                      year,
-                      month,
-                      day,
-                    ),
-                  )) {
-                upcomingStage1Events.add(event);
-              }
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-      }
-
-      // Process Stage 2 events
-      if (item.stage2Events != null) {
-        for (final event in item.stage2Events!) {
-          // Skip if time format is invalid
-          if (!event.time.contains('-')) continue;
-
-          try {
-            // Parse the event time range (e.g., "11:00-11:15")
-            final timeParts = event.time.split('-');
-            final eventStartStr = timeParts[0].trim();
-            final eventEndStr = timeParts[1].trim();
-
-            // Convert to full DateTime objects
-            final eventStartParts = eventStartStr.split(':');
-            final eventEndParts = eventEndStr.split(':');
-
-            if (eventStartParts.length != 2 || eventEndParts.length != 2)
-              continue;
-
-            final eventStartHour = int.parse(eventStartParts[0]);
-            final eventStartMinute = int.parse(eventStartParts[1]);
-            final eventEndHour = int.parse(eventEndParts[0]);
-            final eventEndMinute = int.parse(eventEndParts[1]);
-
-            final eventStart = DateTime(
-              year,
-              month,
-              day,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final eventEnd = DateTime(
-              year,
-              month,
-              day,
-              eventEndHour,
-              eventEndMinute,
-            );
-
-            // Current event: now is between event start and end times
-            if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentStage2Events.add(event);
-            }
-            // Upcoming event: event starts after now
-            else if (eventStart.isAfter(now)) {
-              // Only add if we don't have upcoming events yet or if this starts at the same time
-              if (upcomingStage2Events.isEmpty ||
-                  eventStart.isAtSameMomentAs(
-                    _parseEventStartTime(
-                      upcomingStage2Events.first.time,
-                      year,
-                      month,
-                      day,
-                    ),
-                  )) {
-                upcomingStage2Events.add(event);
-              }
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-      }
+    // Check cache first
+    if (_cache.isCacheValid(now)) {
+      return _cache.cachedEvents!;
     }
 
-    // Sort upcoming events by start time if we have multiple events
-    if (upcomingStage1Events.length > 1) {
-      upcomingStage1Events.sort((a, b) {
-        final aTime = _parseEventStartTime(a.time, year, month, day);
-        final bTime = _parseEventStartTime(b.time, year, month, day);
-        return aTime.compareTo(bTime);
-      });
-    }
+    // Cache miss - calculate current and upcoming events
+    final currentEvents = <EventItem>[];
+    final upcomingEvents = <EventItem>[];
 
-    if (upcomingStage2Events.length > 1) {
-      upcomingStage2Events.sort((a, b) {
-        final aTime = _parseEventStartTime(a.time, year, month, day);
-        final bTime = _parseEventStartTime(b.time, year, month, day);
-        return aTime.compareTo(bTime);
-      });
-    }
+    _processEvents(scheduleList, now, currentEvents, upcomingEvents);
 
-    // If we have multiple upcoming events with different start times, only keep the earliest ones
-    if (upcomingStage1Events.isNotEmpty && upcomingStage2Events.isNotEmpty) {
-      final stage1StartTime = _parseEventStartTime(
-        upcomingStage1Events.first.time,
-        year,
-        month,
-        day,
-      );
-      final stage2StartTime = _parseEventStartTime(
-        upcomingStage2Events.first.time,
-        year,
-        month,
-        day,
-      );
-
-      if (stage1StartTime.isBefore(stage2StartTime)) {
-        // Keep only stage1 events that start at the earliest time
-        upcomingStage2Events.clear();
-      } else if (stage2StartTime.isBefore(stage1StartTime)) {
-        // Keep only stage2 events that start at the earliest time
-        upcomingStage1Events.clear();
-      }
-    }
-
-    return CurrentAndUpcomingEvents(
-      currentStage1Events: currentStage1Events,
-      currentStage2Events: currentStage2Events,
-      upcomingStage1Events: upcomingStage1Events,
-      upcomingStage2Events: upcomingStage2Events,
+    // Create and cache result
+    final result = CurrentAndUpcomingEvents(
+      currentStageEvents: currentEvents,
+      upcomingStageEvents: upcomingEvents,
     );
+
+    _cache.updateCache(result, now);
+    return result;
   }
 
-  // Helper method to parse event start time from time range string with full date
-  DateTime _parseEventStartTime(
-    String timeRange,
-    int year,
-    int month,
-    int day,
-  ) {
+  // Helper method to parse event start time from time string with full date
+  DateTime _parseEventStartTime(String timeStr, int year, int month, int day) {
     try {
-      final timePart = timeRange.split('-')[0].trim();
-      final parts = timePart.split(':');
+      final parts = timeStr.split(':');
       if (parts.length != 2) {
         // Return a default time far in the future if parsing fails
         return DateTime(9999);
@@ -372,11 +263,160 @@ class LiveTimetable extends StatelessWidget {
     }
   }
 
-  // 2) EVENT SECTION
+  // Calculate event start and end times from event time and duration
+  T _calculateEventTimes<T>(
+    EventItem event,
+    int year,
+    int month,
+    int day, {
+    bool returnAsString = false,
+  }) {
+    final eventTimeParts = event.time.split(':');
+    final eventStartHour = int.parse(eventTimeParts[0]);
+    final eventStartMinute = int.parse(eventTimeParts[1]);
+
+    final start = DateTime(year, month, day, eventStartHour, eventStartMinute);
+    final end = start.add(Duration(minutes: event.duration));
+
+    if (returnAsString) {
+      String startTime =
+          "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}";
+      String endTime =
+          "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}";
+      return ("$startTime - $endTime") as T;
+    }
+
+    return (start: start, end: end) as T;
+  }
+
+  // Categorize a list of events as current or upcoming
+  void _categorizeEventList(
+    List<EventItem>? events,
+    DateTime now,
+    int year,
+    int month,
+    int day,
+    List<EventItem> currentEvents,
+    List<EventItem> upcomingEvents,
+  ) {
+    if (events == null) return;
+
+    for (final event in events) {
+      // Skip placeholder events (empty performance names)
+      if (event.performanceName.isEmpty || !event.time.contains(':')) continue;
+
+      try {
+        final times = _calculateEventTimes(event, year, month, day);
+
+        // Categorize as current or upcoming
+        if (now.isAfter(times.start) && now.isBefore(times.end)) {
+          currentEvents.add(event);
+        } else if (times.start.isAfter(now)) {
+          upcomingEvents.add(event);
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+
+  // Process events from all stages and categorize them as current or upcoming
+  void _processEvents(
+    List<ScheduleItem> scheduleList,
+    DateTime now,
+    List<EventItem> currentEvents,
+    List<EventItem> upcomingEvents,
+  ) {
+    currentEvents.clear();
+    upcomingEvents.clear();
+
+    final year = now.year;
+    final month = now.month;
+    final day = widget.festivalStartDay + widget.dayNumber - 1;
+
+    // Process all events from all schedule items
+    for (final item in scheduleList) {
+      if (item.stage1Events == null && item.stage2Events == null) continue;
+
+      // Categorize stage 1 and stage 2 events using the same logic
+      _categorizeEventList(
+        item.stage1Events,
+        now,
+        year,
+        month,
+        day,
+        currentEvents,
+        upcomingEvents,
+      );
+
+      _categorizeEventList(
+        item.stage2Events,
+        now,
+        year,
+        month,
+        day,
+        currentEvents,
+        upcomingEvents,
+      );
+    }
+
+    // Sort upcoming events by start time
+    if (upcomingEvents.length > 1) {
+      upcomingEvents.sort((a, b) {
+        final aTime = _parseEventStartTime(a.time, year, month, day);
+        final bTime = _parseEventStartTime(b.time, year, month, day);
+        return aTime.compareTo(bTime);
+      });
+
+      // Keep only the earliest batch of upcoming events
+      final firstEventTime = _parseEventStartTime(
+        upcomingEvents.first.time,
+        year,
+        month,
+        day,
+      );
+      upcomingEvents.removeWhere((event) {
+        final eventTime = _parseEventStartTime(event.time, year, month, day);
+        return !eventTime.isAtSameMomentAs(firstEventTime);
+      });
+    }
+  }
+
+  // Format countdown time as "HHh MMm" or "MMm"
+  String _formatCountdownTime(DateTime eventStart) {
+    final now = DateTime.now();
+    final difference = eventStart.difference(now);
+    final totalMinutes = difference.inMinutes;
+
+    if (totalMinutes <= 0) return "0m";
+
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+
+    if (hours == 0) {
+      return "${minutes}m";
+    } else if (minutes == 0) {
+      return "${hours}h";
+    } else {
+      return "${hours}h ${minutes}m";
+    }
+  }
+
+  // Get badge color based on remaining minutes
+  Color _getCountdownBadgeColor(int remainingMinutes) {
+    if (remainingMinutes > 60) {
+      return const Color.fromARGB(255, 154, 190, 118);
+    } else if (remainingMinutes >= 10) {
+      return const Color.fromARGB(255, 240, 192, 32);
+    } else {
+      return const Color.fromARGB(255, 240, 129, 121);
+    }
+  }
+
+  // Build event section with title and list of events
   Widget _buildEventSection(
     String title,
-    List<EventItem> stage1Events,
-    List<EventItem> stage2Events,
+    List<EventItem> events,
     double screenWidth, {
     required bool isCurrent,
     required bool isTablet,
@@ -384,11 +424,19 @@ class LiveTimetable extends StatelessWidget {
     final double titleFontSize = isTablet ? 24.0 : 20.0;
     final double spacing = isTablet ? 12.0 : 8.0;
 
+    final now = DateTime.now();
+    final year = now.year;
+    final month = now.month;
+    final day = widget.festivalStartDay + widget.dayNumber - 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: isTablet ? 12 : 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 12 : 8,
+            vertical: isTablet ? 7 : 5,
+          ),
           child: Text(
             title,
             style: TextStyle(
@@ -399,12 +447,21 @@ class LiveTimetable extends StatelessWidget {
           ),
         ),
         SizedBox(height: spacing),
-        ...stage1Events.map(
-          (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
-        ),
-        ...stage2Events.map(
-          (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
-        ),
+        ...events.map((e) {
+          final eventStartDateTime = _parseEventStartTime(
+            e.time,
+            year,
+            month,
+            day,
+          );
+          return _buildEventCard(
+            e,
+            isCurrent,
+            screenWidth,
+            isTablet,
+            eventStartDateTime,
+          );
+        }),
       ],
     );
   }
@@ -415,6 +472,7 @@ class LiveTimetable extends StatelessWidget {
     bool isCurrent,
     double screenWidth,
     bool isTablet,
+    DateTime eventStartDateTime,
   ) {
     final double verticalPadding = isTablet ? 12.0 : 8.0;
     final EdgeInsets cardPadding = EdgeInsets.all(isTablet ? 24 : 16);
@@ -474,29 +532,46 @@ class LiveTimetable extends StatelessWidget {
                     ),
                   ),
                   // Time
-                  Text(event.time, style: TextStyle(color: Colors.grey)),
+                  Text(
+                    (_calculateEventTimes(
+                      event,
+                      festivalStartYear,
+                      festivalStartMonth,
+                      festivalStartDay + festivalDays - 1,
+                      returnAsString: true,
+                    )),
+                    style: TextStyle(color: Colors.grey),
+                  ),
                   // “Going on now” badge
-                  if (isCurrent)
-                    Padding(
-                      padding: EdgeInsets.only(top: isTablet ? 8.0 : 5.0),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTablet ? 6 : 4,
-                          horizontal: isTablet ? 12 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "Going on now!",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isTablet ? 14 : 12,
-                          ),
+                  Padding(
+                    padding: EdgeInsets.only(top: isTablet ? 8.0 : 5.0),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: isTablet ? 6 : 4,
+                        horizontal: isTablet ? 12 : 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            isCurrent
+                                ? Colors.orange
+                                : _getCountdownBadgeColor(
+                                  eventStartDateTime
+                                      .difference(DateTime.now())
+                                      .inMinutes,
+                                ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isCurrent
+                            ? "Going on now!"
+                            : "Starts in ${_formatCountdownTime(eventStartDateTime)}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isTablet ? 18 : 14,
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -519,7 +594,7 @@ class LiveTimetable extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Image.asset(
+                  child: Image.network(
                     event.iconImage,
                     height: iconDiameter,
                     width: iconDiameter,

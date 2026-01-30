@@ -3,17 +3,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:jfbfestival/pages/home/components/live_timetable.dart';
+import 'package:jfbfestival/services/sponsor_service.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
-import 'package:provider/provider.dart';
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
 const int festivalStartYear = 2026;
 const int festivalStartMonth = 1;
-const int festivalStartDay = 25;
-const int festivalStartHour = 11;
+const int festivalStartDay = 30;
+const String festivalLocation = "Boston Common";
 
 /// Returns the current festival day (1-based), or 0 if not during the festival.
 int getFestivalDay(DateTime now) {
@@ -23,7 +24,9 @@ int getFestivalDay(DateTime now) {
     festivalStartDay,
   );
   final end = start.add(Duration(days: festivalDays));
-  if (now.isBefore(start) || !now.isBefore(end)) {
+  if (now.isBefore(start)) {
+    return -1;
+  } else if (!now.isBefore(end)) {
     return 0;
   }
   return now.difference(start).inDays + 1;
@@ -44,17 +47,13 @@ class CurrentAndUpcomingEvents {
 }
 
 class HomePage extends StatefulWidget {
-  final DateTime? testTime;
   final EventItem? selectedEvent;
 
-  const HomePage({Key? key, this.testTime, this.selectedEvent})
-    : super(key: key);
+  const HomePage({Key? key, this.selectedEvent}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
-
-// TODO: Refactor this page, put this in a folder and make components. Link the database to the sponsor images, don't forget option for non image sponsors too
 
 class _HomePageState extends State<HomePage> {
   // your original images
@@ -143,6 +142,8 @@ class _HomePageState extends State<HomePage> {
     final settingsBtnSize = isTablet ? 70.0 : 55.0;
     final settingsIconSize = isTablet ? 36.0 : 30.0;
     final settingsIconPadding = isTablet ? 14.0 : 10.0;
+
+    final sponsorService = Provider.of<SponsorService>(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -244,13 +245,17 @@ class _HomePageState extends State<HomePage> {
 
                         // Spacing + Sections
                         SizedBox(height: verticalSpacing),
-                        // LiveTimetable(
-                        //   testTime: widget.testTime,
-                        //   screenWidth: screenWidth,
-                        // ),
-                        _buildLiveTimetable(screenWidth),
+                        LiveTimetable(
+                          screenWidth: screenWidth,
+                          festivalDays: festivalDays,
+                          festivalLocation: festivalLocation,
+                          festivalStartDay: festivalStartDay,
+                          festivalStartMonth: festivalStartMonth,
+                          festivalStartYear: festivalStartYear,
+                          dayNumber: getFestivalDay(DateTime.now()),
+                        ),
                         _buildSocialMediaIcons(screenWidth),
-                        _buildSponsorsSection(screenWidth),
+                        _buildSponsorsSection(screenWidth, sponsorService),
                         SizedBox(height: verticalSpacing * 6),
                       ],
                     ),
@@ -304,510 +309,6 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
-    );
-  }
-
-  // Helper class to organize events
-
-  Widget _buildLiveTimetable(double screenWidth) {
-    final bool isTablet = screenWidth >= 600;
-    final double sidePadding = isTablet ? 32.0 : 16.0;
-    final double sectionSpacing = isTablet ? 24.0 : 16.0;
-    final double statusFontSize = isTablet ? 18.0 : 16.0;
-
-    final now = widget.testTime ?? DateTime.now();
-    final int festivalDay = getFestivalDay(now);
-
-    if (festivalDay == 0) {
-      final festivalEnd = DateTime(
-        festivalStartYear,
-        festivalStartMonth,
-        festivalStartDay,
-      ).add(Duration(days: festivalDays - 1));
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              "Live Timetable is only available on $festivalStartMonth/$festivalStartDay – ${festivalEnd.month}/${festivalEnd.day}",
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final bool isDay1 = festivalDay == 1;
-
-    // Make sure schedule data exists before proceeding
-    final List<ScheduleItem> scheduleList;
-    final scheduleService = Provider.of<ScheduleDataService>(context);
-    try {
-      scheduleList =
-          isDay1
-              ? scheduleService.day1ScheduleData
-              : scheduleService.day2ScheduleData;
-
-      // Safety check - if schedule data is empty, show a message
-      if (scheduleList.isEmpty) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            "No schedule data available for ${isDay1 ? 'Day 1' : 'Day 2'}.",
-            style: TextStyle(fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        );
-      }
-    } catch (e) {
-      // Handle case where data is not available
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          "Error loading schedule data: $e",
-          style: TextStyle(fontSize: 16, color: Colors.red),
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
-    final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
-      scheduleList,
-      now,
-      festivalDay,
-    );
-    return Padding(
-      padding: EdgeInsets.all(sidePadding),
-      child: Column(
-        children: [
-          if (currentAndUpcomingEvents.currentStage1Events.isNotEmpty ||
-              currentAndUpcomingEvents.currentStage2Events.isNotEmpty) ...[
-            _buildEventSection(
-              "🎤 Now Happening",
-              currentAndUpcomingEvents.currentStage1Events,
-              currentAndUpcomingEvents.currentStage2Events,
-              screenWidth,
-              isCurrent: true,
-              isTablet: isTablet,
-            ),
-            SizedBox(height: sectionSpacing),
-          ],
-          if (currentAndUpcomingEvents.upcomingStage1Events.isNotEmpty ||
-              currentAndUpcomingEvents.upcomingStage2Events.isNotEmpty) ...[
-            _buildEventSection(
-              "⏭️ Up Next",
-              currentAndUpcomingEvents.upcomingStage1Events,
-              currentAndUpcomingEvents.upcomingStage2Events,
-              screenWidth,
-              isCurrent: false,
-              isTablet: isTablet,
-            ),
-            SizedBox(height: sectionSpacing),
-          ],
-          if (currentAndUpcomingEvents.currentStage1Events.isEmpty &&
-              currentAndUpcomingEvents.currentStage2Events.isEmpty &&
-              currentAndUpcomingEvents.upcomingStage1Events.isEmpty &&
-              currentAndUpcomingEvents.upcomingStage2Events.isEmpty)
-            Text(
-              "No current or upcoming events at this time.",
-              style: TextStyle(fontSize: statusFontSize),
-              textAlign: TextAlign.center,
-            ),
-        ],
-      ),
-    );
-  }
-
-  CurrentAndUpcomingEvents _getCurrentAndUpcomingEvents(
-    List<ScheduleItem> scheduleList,
-    DateTime now,
-    int festivalDay,
-  ) {
-    List<EventItem> currentStage1Events = [];
-    List<EventItem> currentStage2Events = [];
-    List<EventItem> upcomingStage1Events = [];
-    List<EventItem> upcomingStage2Events = [];
-
-    final year = now.year;
-    final month = now.month;
-    final day = festivalStartDay + (festivalDay - 1);
-
-    // Process all events to find current and upcoming
-    for (final item in scheduleList) {
-      // Safety check - skip if stage events are null
-      if (item.stage1Events == null && item.stage2Events == null) continue;
-
-      // Process Stage 1 events
-      if (item.stage1Events != null) {
-        for (final event in item.stage1Events!) {
-          // Skip if time format is invalid
-          if (!event.time.contains('-')) continue;
-
-          try {
-            // Parse the event time range (e.g., "11:00-11:15")
-            final timeParts = event.time.split('-');
-            final eventStartStr = timeParts[0].trim();
-            final eventEndStr = timeParts[1].trim();
-
-            // Convert to full DateTime objects
-            final eventStartParts = eventStartStr.split(':');
-            final eventEndParts = eventEndStr.split(':');
-
-            if (eventStartParts.length != 2 || eventEndParts.length != 2)
-              continue;
-
-            final eventStartHour = int.parse(eventStartParts[0]);
-            final eventStartMinute = int.parse(eventStartParts[1]);
-            final eventEndHour = int.parse(eventEndParts[0]);
-            final eventEndMinute = int.parse(eventEndParts[1]);
-
-            final eventStart = DateTime(
-              year,
-              month,
-              day,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final eventEnd = DateTime(
-              year,
-              month,
-              day,
-              eventEndHour,
-              eventEndMinute,
-            );
-
-            print("event start $eventStart");
-
-            // Current event: now is between event start and end times
-            if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentStage1Events.add(event);
-            }
-            // Upcoming event: event starts after now
-            else if (eventStart.isAfter(now)) {
-              // Only add if we don't have upcoming events yet or if this starts at the same time
-              if (upcomingStage1Events.isEmpty ||
-                  eventStart.isAtSameMomentAs(
-                    _parseEventStartTime(
-                      upcomingStage1Events.first.time,
-                      year,
-                      month,
-                      day,
-                    ),
-                  )) {
-                upcomingStage1Events.add(event);
-              }
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-      }
-
-      // Process Stage 2 events
-      if (item.stage2Events != null) {
-        for (final event in item.stage2Events!) {
-          // Skip if time format is invalid
-          if (!event.time.contains('-')) continue;
-
-          try {
-            // Parse the event time range (e.g., "11:00-11:15")
-            final timeParts = event.time.split('-');
-            final eventStartStr = timeParts[0].trim();
-            final eventEndStr = timeParts[1].trim();
-
-            // Convert to full DateTime objects
-            final eventStartParts = eventStartStr.split(':');
-            final eventEndParts = eventEndStr.split(':');
-
-            if (eventStartParts.length != 2 || eventEndParts.length != 2)
-              continue;
-
-            final eventStartHour = int.parse(eventStartParts[0]);
-            final eventStartMinute = int.parse(eventStartParts[1]);
-            final eventEndHour = int.parse(eventEndParts[0]);
-            final eventEndMinute = int.parse(eventEndParts[1]);
-
-            final eventStart = DateTime(
-              year,
-              month,
-              day,
-              eventStartHour,
-              eventStartMinute,
-            );
-            final eventEnd = DateTime(
-              year,
-              month,
-              day,
-              eventEndHour,
-              eventEndMinute,
-            );
-
-            // Current event: now is between event start and end times
-            if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
-              currentStage2Events.add(event);
-            }
-            // Upcoming event: event starts after now
-            else if (eventStart.isAfter(now)) {
-              // Only add if we don't have upcoming events yet or if this starts at the same time
-              if (upcomingStage2Events.isEmpty ||
-                  eventStart.isAtSameMomentAs(
-                    _parseEventStartTime(
-                      upcomingStage2Events.first.time,
-                      year,
-                      month,
-                      day,
-                    ),
-                  )) {
-                upcomingStage2Events.add(event);
-              }
-            }
-          } catch (e) {
-            continue;
-          }
-        }
-      }
-    }
-
-    // Sort upcoming events by start time if we have multiple events
-    if (upcomingStage1Events.length > 1) {
-      upcomingStage1Events.sort((a, b) {
-        final aTime = _parseEventStartTime(a.time, year, month, day);
-        final bTime = _parseEventStartTime(b.time, year, month, day);
-        return aTime.compareTo(bTime);
-      });
-    }
-
-    if (upcomingStage2Events.length > 1) {
-      upcomingStage2Events.sort((a, b) {
-        final aTime = _parseEventStartTime(a.time, year, month, day);
-        final bTime = _parseEventStartTime(b.time, year, month, day);
-        return aTime.compareTo(bTime);
-      });
-    }
-
-    // If we have multiple upcoming events with different start times, only keep the earliest ones
-    if (upcomingStage1Events.isNotEmpty && upcomingStage2Events.isNotEmpty) {
-      final stage1StartTime = _parseEventStartTime(
-        upcomingStage1Events.first.time,
-        year,
-        month,
-        day,
-      );
-      final stage2StartTime = _parseEventStartTime(
-        upcomingStage2Events.first.time,
-        year,
-        month,
-        day,
-      );
-
-      if (stage1StartTime.isBefore(stage2StartTime)) {
-        // Keep only stage1 events that start at the earliest time
-        upcomingStage2Events.clear();
-      } else if (stage2StartTime.isBefore(stage1StartTime)) {
-        // Keep only stage2 events that start at the earliest time
-        upcomingStage1Events.clear();
-      }
-    }
-
-    return CurrentAndUpcomingEvents(
-      currentStage1Events: currentStage1Events,
-      currentStage2Events: currentStage2Events,
-      upcomingStage1Events: upcomingStage1Events,
-      upcomingStage2Events: upcomingStage2Events,
-    );
-  }
-
-  // Helper method to parse event start time from time range string with full date
-  DateTime _parseEventStartTime(
-    String timeRange,
-    int year,
-    int month,
-    int day,
-  ) {
-    try {
-      final timePart = timeRange.split('-')[0].trim();
-      final parts = timePart.split(':');
-      if (parts.length != 2) {
-        // Return a default time far in the future if parsing fails
-        return DateTime(9999);
-      }
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-      return DateTime(year, month, day, hour, minute);
-    } catch (e) {
-      // Return a default time far in the future if parsing fails
-      print('Error parsing event start time: $e');
-      return DateTime(9999);
-    }
-  }
-
-  // 2) EVENT SECTION
-  Widget _buildEventSection(
-    String title,
-    List<EventItem> stage1Events,
-    List<EventItem> stage2Events,
-    double screenWidth, {
-    required bool isCurrent,
-    required bool isTablet,
-  }) {
-    final double titleFontSize = isTablet ? 24.0 : 20.0;
-    final double spacing = isTablet ? 12.0 : 8.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: isTablet ? 12 : 8),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: titleFontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.pinkAccent,
-            ),
-          ),
-        ),
-        SizedBox(height: spacing),
-        ...stage1Events.map(
-          (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
-        ),
-        ...stage2Events.map(
-          (e) => _buildEventCard(e, isCurrent, screenWidth, isTablet),
-        ),
-      ],
-    );
-  }
-
-  // 3) EVENT CARD
-  Widget _buildEventCard(
-    EventItem event,
-    bool isCurrent,
-    double screenWidth,
-    bool isTablet,
-  ) {
-    final double verticalPadding = isTablet ? 12.0 : 8.0;
-    final EdgeInsets cardPadding = EdgeInsets.all(isTablet ? 24 : 16);
-    final double borderRadius = isTablet ? 12.0 : 10.0;
-    final double stageFontSize =
-        screenWidth * (isTablet ? 0.055 : 0.045) + (isTablet ? 3 : 2);
-    final double titleFontSize = screenWidth * (isTablet ? 0.055 : 0.045);
-    final double iconDiameter = screenWidth * (isTablet ? 0.15 : 0.12);
-    final double iconOffset = isTablet ? -20.0 : -18.0;
-    final double iconPaddingLeft = isTablet ? 5.0 : 3.0;
-
-    return GestureDetector(
-      onTap: () {
-        // TODO: Someone pasted llM shit here without putting the navigation logic
-        // … your existing navigation logic …
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: verticalPadding),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: cardPadding,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(borderRadius),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: isTablet ? 8 : 5,
-                    spreadRadius: isTablet ? 3 : 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stage label
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      event.stage,
-                      style: TextStyle(
-                        color: Colors.pinkAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: stageFontSize,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: isTablet ? 8 : 5),
-                  // Title
-                  Text(
-                    event.performanceName,
-                    style: TextStyle(
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  // Time
-                  Text(event.time, style: TextStyle(color: Colors.grey)),
-                  // “Going on now” badge
-                  if (isCurrent)
-                    Padding(
-                      padding: EdgeInsets.only(top: isTablet ? 8.0 : 5.0),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTablet ? 6 : 4,
-                          horizontal: isTablet ? 12 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "Going on now!",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isTablet ? 14 : 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Floating icon
-            if (event.iconImage.isNotEmpty)
-              Positioned(
-                top: iconOffset,
-                left: iconPaddingLeft,
-                child: Container(
-                  padding: EdgeInsets.all(isTablet ? 8 : 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: isTablet ? 6 : 5,
-                        spreadRadius: isTablet ? 3 : 2,
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    event.iconImage,
-                    height: iconDiameter,
-                    width: iconDiameter,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -866,7 +367,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSponsorsSection(double screenWidth) {
+  Widget _buildSponsorsSection(double screenWidth, SponsorService service) {
+    Map<String, List<String>> groupedSponsors = {};
+
+    // 2. Iterate through the service data to populate the map
+    for (var sponsor in service.sponsors) {
+      if (!groupedSponsors.containsKey(sponsor.category)) {
+        groupedSponsors[sponsor.category] = [];
+      }
+      groupedSponsors[sponsor.category]!.add(sponsor.image);
+    }
+
     return Container(
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
@@ -881,60 +392,32 @@ class _HomePageState extends State<HomePage> {
         spacing: screenWidth * 0.02,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildSponsorCategory("Sustainability", "assets/sponsors/Takeda.jpg"),
-          _buildSponsorCategory("Airline", "assets/sponsors/jal.jpg"),
-          SizedBox(height: 7),
-          _buildSponsorCategory(
-            "Transportation",
-            "assets/sponsors/yamatotransport.jpg",
-          ),
-          SizedBox(height: 3),
-          _buildCorporateSponsors(),
-          _buildIndividualSponsors(),
-          _buildAuctionDonors(),
-          _buildJfbOrganizers(),
-          _buildSupportingSponsors(),
+          // _buildSponsorCategory("Sustainability", "assets/sponsors/Takeda.jpg"),
+          // _buildSponsorCategory("Airline", "assets/sponsors/jal.jpg"),
+          // SizedBox(height: 7),
+          // _buildSponsorCategory(
+          //   "Transportation",
+          //   "assets/sponsors/yamatotransport.jpg",
+          // ),
+          // SizedBox(height: 3),
+          ...groupedSponsors.entries.map((entry) {
+            String categoryName = entry.key;
+            List<String> images = entry.value;
+
+            return _buildSponsorSection(categoryName, images);
+          }),
+
+          // _buildIndividualSponsors(),
+          // _buildAuctionDonors(),
+          // _buildJfbOrganizers(),
+          // _buildSupportingSponsors(),
           SizedBox(height: 5),
         ],
       ),
     );
   }
 
-  Widget _buildSponsorCategory(String title, String imagePath) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 3, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            title,
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        Image.asset(imagePath, height: 65),
-      ],
-    );
-  }
-
-  Widget _buildCorporateSponsors() {
-    List<String> corporateLogos = [
-      "assets/sponsors/meetboston.jpg",
-      "assets/sponsors/sanipak.png",
-      "assets/sponsors/chopvalue.png",
-      "assets/sponsors/mitsubishi.jpg",
-      "assets/sponsors/SDT.jpg",
-      "assets/sponsors/senko.png",
-      "assets/sponsors/yamamoto.jpg",
-      "assets/sponsors/openwater.png",
-      "assets/sponsors/idamerica.png",
-      "assets/sponsors/downtown.png",
-      "assets/sponsors/redsox.png",
-    ];
-
+  Widget _buildSponsorSection(String categoryName, List<String> images) {
     return Column(
       children: [
         Container(
@@ -945,7 +428,7 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(40),
           ),
           child: Text(
-            "Corporate",
+            categoryName,
             style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
           ),
         ),
@@ -953,207 +436,19 @@ class _HomePageState extends State<HomePage> {
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.symmetric(horizontal: 10),
-          itemCount: corporateLogos.length,
+          itemCount: images.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+            crossAxisCount: images.length > 1 ? 2 : 1,
             crossAxisSpacing: 4,
             mainAxisSpacing: 10,
-            childAspectRatio: 3,
+            childAspectRatio: images.length > 1 ? 3 : 4,
           ),
           itemBuilder: (context, index) {
             return Center(
               child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.15,
                 width: MediaQuery.of(context).size.width * 0.3,
-                child: Image.asset(corporateLogos[index], fit: BoxFit.contain),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIndividualSponsors() {
-    return Padding(
-      padding: EdgeInsets.only(top: 10, bottom: 10),
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-            margin: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Text(
-              "Individual",
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text(
-                "   NK JPN\nFoundation",
-                style: TextStyle(fontSize: 19, height: 1.25),
-              ),
-              Text(
-                "William\nHawes",
-                style: TextStyle(fontSize: 19, height: 1.25),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJfbOrganizers() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "JFB Organizers",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 20,
-          runSpacing: 10,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.11,
-              width: MediaQuery.of(context).size.width * 0.25,
-              child: Image.asset(
-                "assets/sponsors/showa.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-            Column(
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.08,
-                  width: MediaQuery.of(context).size.width * 0.2,
-                  child: Image.asset(
-                    "assets/sponsors/bosJapan.png",
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Column(
-                  children: [
-                    Text(
-                      "Boston Japan",
-                      style: TextStyle(fontSize: 12, height: 1),
-                    ),
-                    Text(
-                      "Community Hub",
-                      style: TextStyle(fontSize: 12, height: 1.1),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.11,
-              width: MediaQuery.of(context).size.width * 0.25,
-              child: Image.asset(
-                "assets/sponsors/JAGB.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSupportingSponsors() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "Individual",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.12,
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: Image.asset(
-                "assets/sponsors/consultatejapan.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.12,
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: Image.asset(
-                "assets/sponsors/JSoc.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAuctionDonors() {
-    List<String> corporateLogos = [
-      "assets/sponsors/sapporostream.png",
-      "assets/sponsors/ogawashou.png",
-      "assets/sponsors/imperial.png",
-    ];
-
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "Our Silent Auction Donors",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 10),
-          itemCount: corporateLogos.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 10,
-            childAspectRatio: 2,
-          ),
-          itemBuilder: (context, index) {
-            return Center(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.15,
-                width: MediaQuery.of(context).size.width * 0.3,
-                child: Image.asset(corporateLogos[index], fit: BoxFit.contain),
+                child: Image.network(images[index], fit: BoxFit.contain),
               ),
             );
           },
