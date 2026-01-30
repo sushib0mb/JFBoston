@@ -392,16 +392,14 @@ class _HomePageState extends State<HomePage> {
         spacing: screenWidth * 0.02,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildSponsorCategory("Sustainability", "assets/sponsors/Takeda.jpg"),
-          _buildSponsorCategory("Airline", "assets/sponsors/jal.jpg"),
-          SizedBox(height: 7),
-          _buildSponsorCategory(
-            "Transportation",
-            "assets/sponsors/yamatotransport.jpg",
-          ),
-          SizedBox(height: 3),
-
-          // _buildCorporateSponsors(service),
+          // _buildSponsorCategory("Sustainability", "assets/sponsors/Takeda.jpg"),
+          // _buildSponsorCategory("Airline", "assets/sponsors/jal.jpg"),
+          // SizedBox(height: 7),
+          // _buildSponsorCategory(
+          //   "Transportation",
+          //   "assets/sponsors/yamatotransport.jpg",
+          // ),
+          // SizedBox(height: 3),
           ...groupedSponsors.entries.map((entry) {
             String categoryName = entry.key;
             List<String> images = entry.value;
@@ -409,33 +407,13 @@ class _HomePageState extends State<HomePage> {
             return _buildSponsorSection(categoryName, images);
           }),
 
-          _buildIndividualSponsors(),
-          _buildAuctionDonors(),
-          _buildJfbOrganizers(),
-          _buildSupportingSponsors(),
+          // _buildIndividualSponsors(),
+          // _buildAuctionDonors(),
+          // _buildJfbOrganizers(),
+          // _buildSupportingSponsors(),
           SizedBox(height: 5),
         ],
       ),
-    );
-  }
-
-  Widget _buildSponsorCategory(String title, String imagePath) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 3, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            title,
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        Image.asset(imagePath, height: 65),
-      ],
     );
   }
 
@@ -463,7 +441,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisCount: images.length > 1 ? 2 : 1,
             crossAxisSpacing: 4,
             mainAxisSpacing: 10,
-            childAspectRatio: 3,
+            childAspectRatio: images.length > 1 ? 3 : 4,
           ),
           itemBuilder: (context, index) {
             return Center(
@@ -471,257 +449,6 @@ class _HomePageState extends State<HomePage> {
                 height: MediaQuery.of(context).size.height * 0.15,
                 width: MediaQuery.of(context).size.width * 0.3,
                 child: Image.network(images[index], fit: BoxFit.contain),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCorporateSponsors(SponsorService service) {
-    // List<String> corporateLogos = [
-    //   "assets/sponsors/meetboston.jpg",
-    //   "assets/sponsors/sanipak.png",
-    //   "assets/sponsors/chopvalue.png",
-    //   "assets/sponsors/mitsubishi.jpg",
-    //   "assets/sponsors/SDT.jpg",
-    //   "assets/sponsors/senko.png",
-    //   "assets/sponsors/yamamoto.jpg",
-    //   "assets/sponsors/openwater.png",
-    //   "assets/sponsors/idamerica.png",
-    //   "assets/sponsors/downtown.png",
-    //   "assets/sponsors/redsox.png",
-    // ];
-
-    // List<String> corporateLogos = service.sponsors.map((e) => e.image).toList();
-
-    // TODO: Combine all of the functions into 1, handle case where it's just text(make a text box that's the same size as the sponsors and add text in)
-    // TODO: if there is only 1 sponsor in a category, center it
-    List<String> corporateLogos = [service.sponsors[0].image];
-
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "Corporate",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 10),
-          itemCount: corporateLogos.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 10,
-            childAspectRatio: 3,
-          ),
-          itemBuilder: (context, index) {
-            return Center(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.15,
-                width: MediaQuery.of(context).size.width * 0.3,
-                child: Image.network(
-                  corporateLogos[index],
-                  fit: BoxFit.contain,
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIndividualSponsors() {
-    return Padding(
-      padding: EdgeInsets.only(top: 10, bottom: 10),
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-            margin: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Text(
-              "Individual",
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text(
-                "   NK JPN\nFoundation",
-                style: TextStyle(fontSize: 19, height: 1.25),
-              ),
-              Text(
-                "William\nHawes",
-                style: TextStyle(fontSize: 19, height: 1.25),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJfbOrganizers() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "JFB Organizers",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 20,
-          runSpacing: 10,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.11,
-              width: MediaQuery.of(context).size.width * 0.25,
-              child: Image.asset(
-                "assets/sponsors/showa.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-            Column(
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.08,
-                  width: MediaQuery.of(context).size.width * 0.2,
-                  child: Image.asset(
-                    "assets/sponsors/bosJapan.png",
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Column(
-                  children: [
-                    Text(
-                      "Boston Japan",
-                      style: TextStyle(fontSize: 12, height: 1),
-                    ),
-                    Text(
-                      "Community Hub",
-                      style: TextStyle(fontSize: 12, height: 1.1),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.11,
-              width: MediaQuery.of(context).size.width * 0.25,
-              child: Image.asset(
-                "assets/sponsors/JAGB.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSupportingSponsors() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "Individual",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.12,
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: Image.asset(
-                "assets/sponsors/consultatejapan.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.12,
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: Image.asset(
-                "assets/sponsors/JSoc.jpg",
-                fit: BoxFit.contain,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAuctionDonors() {
-    List<String> corporateLogos = [
-      "assets/sponsors/sapporostream.png",
-      "assets/sponsors/ogawashou.png",
-      "assets/sponsors/imperial.png",
-    ];
-
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: Text(
-            "Our Silent Auction Donors",
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
-          ),
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 10),
-          itemCount: corporateLogos.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 10,
-            childAspectRatio: 2,
-          ),
-          itemBuilder: (context, index) {
-            return Center(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.15,
-                width: MediaQuery.of(context).size.width * 0.3,
-                child: Image.asset(corporateLogos[index], fit: BoxFit.contain),
               ),
             );
           },
