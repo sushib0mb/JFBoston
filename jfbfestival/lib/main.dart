@@ -141,57 +141,78 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _maybeShowAllergyDisclaimer() async {
     final prefs = await SharedPreferences.getInstance();
     final shown = prefs.getBool(_kAllergyDisclaimerKey) ?? false;
-    if (shown) return; // already shown
+    if (shown) return; // If already shown in the past, stop here.
 
-    // mark it shown so it never reappears
-    await prefs.setBool(_kAllergyDisclaimerKey, true);
+    if (!mounted) return; // Safety check before showing dialog
 
-    int secondsRemaining = 3;
-    Timer? timer;
-
-    showDialog(
+    await showDialog(
       context: context,
-      barrierDismissible: false, // force tap “OK”
+      barrierDismissible: false, // User must interact with the dialog
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx2, setState) {
-            // start the countdown on first build
-            timer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-              setState(() {
-                secondsRemaining--;
-                if (secondsRemaining == 0) {
-                  timer?.cancel();
-                }
-              });
-            });
+        // Define the state variable outside the builder
+        bool isChecked = false;
 
+        return StatefulBuilder(
+          builder: (context, setState) {
             return AlertDialog(
               title: const Text('Allergy Disclaimer'),
-              content: const Text(
-                'Please note: the allergen information on the Food Booth page '
-                'is provided for guidance only and may not be fully accurate. '
-                'Please check directly with vendors for any dietary concerns. '
-                'We cannot guarantee the absence of any allergens. '
-                'Use at your own discretion. \nImages are for illustration purposes only. Actual food items may vary in appearance.\n\n'
-                'By clicking "I Acknowledge", you confirm that you have read and '
-                'understand this disclaimer and agree to release JFB Festival, its '
-                'organizers, sponsors, and vendors from any liability arising from '
-                'allergen-related issues or inaccuracies.',
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'All allergen information displayed in this app is provided directly by the vendors and is presented exactly as received. '
+                      'This listing typically covers only the 9 major allergens (Milk, Eggs, Fish, Shellfish, Tree Nuts, Peanuts, Wheat, Soy, and Sesame).\n\n'
+                      'JFB and the app developers do not verify ingredients and cannot guarantee that food is allergen-free. '
+                      'Always confirm details directly with the vendor before consumption.\n\n'
+                      'Note on Images: Photos are provided by vendors or are for illustrative purposes only. Actual food items may vary in appearance.',
+                    ),
+                    const SizedBox(height: 20),
+                    // The Checkbox Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: Checkbox(
+                            value: isChecked,
+                            onChanged: (val) {
+                              setState(() {
+                                isChecked = val ?? false;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'I confirm that I have read and understand this disclaimer.',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
-                  // only allow pop when countdown is done
+                  // Button is disabled (null) if isChecked is false
                   onPressed:
-                      secondsRemaining == 0
-                          ? () {
-                            Navigator.of(ctx2).pop();
+                      isChecked
+                          ? () async {
+                            // 1. Save the preference permanently
+                            await prefs.setBool(_kAllergyDisclaimerKey, true);
+
+                            // 2. Close the dialog
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
                           }
                           : null,
-                  child: Text(
-                    secondsRemaining == 0
-                        ? 'I acknowledge'
-                        : 'I acknowledge ($secondsRemaining)',
-                  ),
+                  child: const Text('Confirm'),
                 ),
               ],
             );
@@ -212,7 +233,6 @@ class _MainScreenState extends State<MainScreen> {
     if (!shown) {
       // schedule 10-minute one-shot
       Timer(const Duration(minutes: 10), () {
-        if (!mounted) return;
         _showSurveyPrompt();
       });
     }
@@ -222,6 +242,9 @@ class _MainScreenState extends State<MainScreen> {
     // mark it in prefs so we never show again
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kSurveyShownKey, true);
+
+    if (!mounted) return;
+
     setState(() => _surveyPromptShown = true);
 
     return showDialog<void>(
