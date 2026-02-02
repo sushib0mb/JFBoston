@@ -4,7 +4,7 @@ This repository contains the full-stack infrastructure for the Official Japan Fe
 
 ## 🏗 Repository Layout
 
-/mobile: The attendee-facing app built with Flutter.
+/frontend: The attendee-facing app built with Flutter.
 
 /backend: The C# .NET Minimal API used for administrative tasks (Schedule management, cascading delays, etc.).
 
