@@ -8,8 +8,6 @@ This repository contains the full-stack infrastructure for the Official Japan Fe
 
 /backend: The C# .NET Minimal API used for administrative tasks (Schedule management, cascading delays, etc.).
 
-/database: (Optional) SQL scripts for Supabase triggers and Row-Level Security policies.
-
 ## 🚀 Local Development
 
 ### 1. Backend (Admin API)
