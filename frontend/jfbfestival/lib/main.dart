@@ -16,6 +16,7 @@ import 'settings_page.dart';
 import 'pages/food/food_page.dart';
 import 'pages/home/home_page.dart';
 import 'pages/map_page.dart';
+import 'pages/admin_page.dart';
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
 // import 'SplashScreen/video_splash_screen.dart';
@@ -336,6 +337,8 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
+      AdminPage(),
+
       HomePage(),
       FoodPage(selectedMapLetter: widget.selectedMapLetter),
       // Pass both event *and* day into TimetablePage:
@@ -343,7 +346,7 @@ class _MainScreenState extends State<MainScreen> {
         selectedEvent: widget.selectedEvent,
         selectedDay: _dayForTimetable,
       ),
-      MapPage(),
+      // MapPage(),
     ];
 
     return Scaffold(
