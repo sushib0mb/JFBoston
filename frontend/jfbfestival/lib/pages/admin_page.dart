@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../config/supabase_config.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -21,18 +23,37 @@ class AdminPageState extends State<AdminPage> {
   Future<void> _submitPerformance() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final url = Uri.parse('YOUR_BACKEND_URL/api/schedule/add');
+    final url = Uri.parse('${dotenv.env['API_URL_CHROME']!}/api/schedule/add');
+
+    final session = supabase.auth.currentSession;
+    final jwt = session?.accessToken;
 
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $jwt',
+        },
+
+        // body: jsonEncode({
+        //   'performance_name': _nameController.text,
+        //   'start_time': _selectedDate.toIso8601String(),
+        //   'stage_name': _stageController.text,
+        // }),
         body: jsonEncode({
-          'performance_name': _nameController.text,
-          'start_time': _selectedDate.toIso8601String(),
-          'stage_name': _stageController.text,
+          'Name': "de",
+          'StartTime': "23:00:00",
+          'StageName': "de",
+          'Duration': 90,
+          'Description': "Hi",
+          'EventImage': "te",
+          "IconImage": "te",
+          "Day": "2",
         }),
       );
+
+      print(response.statusCode);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
