@@ -13,10 +13,30 @@ public class Performance : BaseModel
     [Column("performance_name")]
     public string Name { get; set; } = null!;
 
-    [Column("start_time")]
-    public DateTime StartTime { get; set; }
+    [Column("time")]
+    public TimeSpan StartTime { get; set; }
 
-    [Column("stage_name")]
+    [Column("stage")]
 
     public string StageName { get; set; } = null!;
+
+    [Column("duration")]
+
+    public int Duration { get; set; }
+
+    [Column("description")]
+
+    public string Description { get; set; } = null!;
+
+    [Column("event_image")]
+
+    public string EventImage { get; set; } = null!;
+
+    [Column("icon_image")]
+
+    public string IconImage { get; set; } = null!;
+
+    [Column("day")]
+
+    public string Day { get; set; } = null!;
 }

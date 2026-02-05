@@ -3,17 +3,39 @@ using JFBostonAdminAPI.Models;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Supabase;
+using JFBostonAdminAPI.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Setup supabase as a service
-var url = builder.Configuration["SUPABASE_URL"];
-var key = builder.Configuration["SUPABASE_ANON_KEY"];
+var supabaseSettings = builder.Configuration
+    .GetSection(SupabaseSettings.SectionName)
+    .Get<SupabaseSettings>();
+
+// 2. Guard against missing config immediately
+if (supabaseSettings == null || string.IsNullOrEmpty(supabaseSettings.Url))
+{
+    throw new Exception("Supabase configuration is missing!");
+}
+
 var options = new Supabase.SupabaseOptions { AutoConnectRealtime = true };
 
-builder.Services.AddSingleton(provider => new Supabase.Client(url, key, options));
+builder.Services.AddSingleton(provider =>
+    new Supabase.Client(supabaseSettings.Url, supabaseSettings.AnonKey, options));
 
 var app = builder.Build();
+
+app.UseCors();
 
 // By default fetches all peformances across all stages, or fetches all performances belonging to a stage based on the stagename param
 app.MapGet("/api/schedule", async (Supabase.Client client, string? stagename = null) =>
@@ -41,19 +63,18 @@ app.MapPost("/api/schedule/add", async (Performance newPerformance, Supabase.Cli
 {
     try
     {
-        // Specifies the datetime's timezone to ensure Supabase doesn't get confused
-        newPerformance.StartTime = DateTime.SpecifyKind(newPerformance.StartTime, DateTimeKind.Utc);
         var response = await client.From<Performance>().Insert(newPerformance);
 
         var created = response.Models[0];
+        Console.WriteLine($"Status Code: {response.ResponseMessage.StatusCode}");
+        Console.WriteLine($"Content: {response.Content}");
 
-        // Map to object to avoid serialization error
         return Results.Ok(new
         {
             id = created.Id,
             name = created.Name,
             stageName = created.StageName,
-            startTime = created.StartTime
+            startTime = created.StartTime.ToString(@"hh\:mm\:ss") // Format for JSON
         });
     }
     catch (Exception e)
@@ -67,19 +88,16 @@ app.MapPost("/api/schedule/delay/{id}", async (int id, int minutes, Supabase.Cli
 {
     try
     {
-        // Fetches the performance according to id
         var result = await client.From<Performance>().Where(x => x.Id == id).Single();
+        if (result == null) return Results.NotFound($"No performance found with ID {id}");
 
-        // Delays the startTime variable by the inputted minutes if the id exists
-        if (result == null)
-        {
-            return Results.NotFound($"No performance found with ID {id}");
-        }
+        // Use .Add(TimeSpan) instead of .AddMinutes()
+        var oldTime = result.StartTime;
+        result.StartTime = result.StartTime.Add(TimeSpan.FromMinutes(minutes));
 
-        result.StartTime = result.StartTime.AddMinutes(minutes);
         await result.Update<Performance>();
 
-        return Results.Ok($"Performance {id} updated from {result.StartTime.AddMinutes(-minutes)} to {result.StartTime}");
+        return Results.Ok($"Performance {id} updated from {oldTime} to {result.StartTime}");
     }
     catch (Exception e)
     {
@@ -87,34 +105,31 @@ app.MapPost("/api/schedule/delay/{id}", async (int id, int minutes, Supabase.Cli
     }
 });
 
-// Delays all performance by x minutes starting from the performance
 app.MapPost("/api/schedule/shuffle/{id}", async (int id, int minutes, Supabase.Client client) =>
 {
     try
     {
-        // Fetch the performance with the id that starts the delay
         var result = await client.From<Performance>().Where(x => x.Id == id).Single();
         if (result == null) return Results.NotFound($"No performance found with ID {id}");
 
-        // Convert to UTC, which is the timezone supabase uses for comparisons
-        var safeStartTime = result.StartTime.ToUniversalTime().AddSeconds(-1);
+        // Simple comparison works for TimeSpan
+        var thresholdTime = result.StartTime;
 
-        // Fetches all performances starting after or at the same time as the selected performance
         var futurePerformances = await client.From<Performance>()
-        .Where(x => x.StartTime >= safeStartTime)
-        .Where(x => x.StageName == result.StageName)
-        .Get();
+            .Where(x => x.StartTime >= thresholdTime)
+            .Where(x => x.StageName == result.StageName)
+            .Get();
 
         var listToUpdate = futurePerformances.Models;
 
         foreach (var p in listToUpdate)
         {
-            p.StartTime = p.StartTime.AddMinutes(minutes);
+            p.StartTime = p.StartTime.Add(TimeSpan.FromMinutes(minutes));
         }
 
         await client.From<Performance>().Upsert(listToUpdate);
 
-        return Results.Ok($"Shifted {listToUpdate.Count} {(listToUpdate.Count > 1 ? "performances" : "performance")} by {minutes} minutes");
+        return Results.Ok($"Shifted {listToUpdate.Count} performances");
     }
     catch (Exception e)
     {
