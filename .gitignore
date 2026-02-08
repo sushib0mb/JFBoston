@@ -46,3 +46,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Ignore all generated plugin files
+**/generated_plugin_registrant.dart
+**/generated_plugin_registrant.cc
+**/generated_plugin_registrant.h
+**/generated_plugin_registrant.objc
+**/generated_plugin_registrant.swift
+
+/linux/flutter/ephemeral/
+/windows/flutter/ephemeral/
