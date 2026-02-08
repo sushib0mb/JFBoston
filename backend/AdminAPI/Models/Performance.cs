@@ -1,42 +1,45 @@
+using System.Text.Json.Serialization; // Required for JsonPropertyName
 using Postgrest.Attributes;
 using Postgrest.Models;
 
 namespace JFBostonAdminAPI.Models;
 
-// Name of supabase table holding stage events
 [Table("stage_events")]
 public class Performance : BaseModel
 {
     [PrimaryKey("id")]
+    [JsonPropertyName("Id")] // Matches Flutter JSON key
     public int Id { get; set; }
 
     [Column("performance_name")]
+    [JsonPropertyName("Name")]
     public string Name { get; set; } = null!;
 
     [Column("time")]
+    [JsonPropertyName("StartTime")]
     public TimeSpan StartTime { get; set; }
 
     [Column("stage")]
-
+    [JsonPropertyName("StageName")]
     public string StageName { get; set; } = null!;
 
     [Column("duration")]
-
+    [JsonPropertyName("Duration")]
     public int Duration { get; set; }
 
     [Column("description")]
-
+    [JsonPropertyName("Description")]
     public string Description { get; set; } = null!;
 
     [Column("event_image")]
-
+    [JsonPropertyName("EventImage")]
     public string EventImage { get; set; } = null!;
 
     [Column("icon_image")]
-
+    [JsonPropertyName("IconImage")]
     public string IconImage { get; set; } = null!;
 
     [Column("day")]
-
-    public string Day { get; set; } = null!;
+    [JsonPropertyName("Day")]
+    public int Day { get; set; }
 }

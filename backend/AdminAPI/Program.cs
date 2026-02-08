@@ -18,20 +18,51 @@ builder.Services.AddCors(options =>
 });
 
 // Setup supabase as a service
+// 1. Keep your settings check
 var supabaseSettings = builder.Configuration
     .GetSection(SupabaseSettings.SectionName)
     .Get<SupabaseSettings>();
 
-// 2. Guard against missing config immediately
 if (supabaseSettings == null || string.IsNullOrEmpty(supabaseSettings.Url))
 {
     throw new Exception("Supabase configuration is missing!");
 }
 
-var options = new Supabase.SupabaseOptions { AutoConnectRealtime = true };
+// 2. Add this so the code can access the headers
+builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddSingleton(provider =>
-    new Supabase.Client(supabaseSettings.Url, supabaseSettings.AnonKey, options));
+// 3. Register as SCOPED, not Singleton
+builder.Services.AddScoped(provider =>
+{
+    var httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
+    var context = httpContextAccessor.HttpContext;
+
+    var url = supabaseSettings.Url;
+    var key = supabaseSettings.AnonKey;
+
+    // Initialize with standard options
+    var options = new Supabase.SupabaseOptions
+    {
+        AutoConnectRealtime = true,
+        AutoRefreshToken = false // We don't want the backend trying to refresh a user's token
+    };
+
+    var client = new Supabase.Client(url, key, options);
+
+    // Extract the header
+    var authHeader = context?.Request.Headers["Authorization"].ToString();
+
+    if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+    {
+        var token = authHeader.Replace("Bearer ", "").Trim();
+
+        // Use "" for refresh token and false for 'isPersisted'
+        // This satisfies the 3-parameter requirement of the SDK
+        client.Auth.SetSession(token, "", false);
+    }
+
+    return client;
+});
 
 var app = builder.Build();
 
@@ -59,10 +90,20 @@ app.MapGet("/api/schedule", async (Supabase.Client client, string? stagename = n
 });
 
 // Adds a new performance to the database
-app.MapPost("/api/schedule/add", async (Performance newPerformance, Supabase.Client client) =>
+app.MapPost("/api/schedule/add", async (HttpRequest request, Performance newPerformance, Supabase.Client client) =>
 {
     try
     {
+        var authHeader = request.Headers.Authorization.ToString();
+
+        var currentToken = client.Auth.CurrentSession?.AccessToken;
+        Console.WriteLine($"Token in Client: {currentToken?.Substring(0, Math.Min(10, currentToken.Length))}...");
+
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        {
+            return Results.Unauthorized();
+        }
+
         var response = await client.From<Performance>().Insert(newPerformance);
 
         var created = response.Models[0];
