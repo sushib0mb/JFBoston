@@ -28,6 +28,8 @@ class AdminPageState extends State<AdminPage> {
     final session = supabase.auth.currentSession;
     final jwt = session?.accessToken;
 
+    print("JWT Being Sent: $jwt");
+
     try {
       final response = await http.post(
         url,

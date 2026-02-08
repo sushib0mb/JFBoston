@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
+import "../../core/constants/design_system.dart";
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
@@ -56,6 +57,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   // your original images
   final List<String> backgroundImages = [
     "assets/JFB-27.jpg",
@@ -127,6 +131,8 @@ class _HomePageState extends State<HomePage> {
     _autoScrollTimer?.cancel();
     _timetableUpdateTimer?.cancel();
     _pageController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -139,9 +145,9 @@ class _HomePageState extends State<HomePage> {
     // Adaptive dimensions
     final headerHeight = screenHeight * (isTablet ? 0.5 : 0.6);
     final verticalSpacing = screenHeight * (isTablet ? 0.03 : 0.02);
-    final settingsBtnSize = isTablet ? 70.0 : 55.0;
-    final settingsIconSize = isTablet ? 36.0 : 30.0;
-    final settingsIconPadding = isTablet ? 14.0 : 10.0;
+    final btnSize = isTablet ? 70.0 : 55.0;
+    final iconSize = isTablet ? 36.0 : 30.0;
+    final iconPadding = isTablet ? 14.0 : 8.0;
 
     final sponsorService = Provider.of<SponsorService>(context);
 
@@ -276,13 +282,11 @@ class _HomePageState extends State<HomePage> {
                       child: Material(
                         color: Colors.transparent,
                         child: Container(
-                          width: settingsBtnSize,
-                          height: settingsBtnSize,
+                          width: btnSize,
+                          height: btnSize,
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(
-                              settingsBtnSize / 2,
-                            ),
+                            borderRadius: BorderRadius.circular(btnSize / 2),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
@@ -292,12 +296,69 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           child: Padding(
-                            padding: EdgeInsets.all(settingsIconPadding),
+                            padding: EdgeInsets.all(iconPadding),
                             child: Icon(
                               Icons.settings,
-                              size: settingsIconSize,
+                              size: iconSize,
                               color: Colors.black,
                             ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: AppSpace.getSafeTop(context),
+                    left: AppSpace.getPageMargin(context),
+                    child: GestureDetector(
+                      onTap: () {
+                        showGeneralDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierLabel: "LoginPopup",
+                          useRootNavigator: true,
+                          transitionDuration: const Duration(milliseconds: 400),
+                          pageBuilder: (context, anim1, anim2) {
+                            return const SizedBox.shrink(); // Required but not used for custom transitions
+                          },
+                          transitionBuilder: (context, anim1, anim2, child) {
+                            // Create the Slide Transition from bottom
+                            final curvedValue =
+                                Curves.easeInOutBack.transform(anim1.value) -
+                                1.0;
+                            return Transform(
+                              transform: Matrix4.translationValues(
+                                0.0,
+                                -curvedValue * 200,
+                                0.0,
+                              ),
+                              child: Opacity(
+                                opacity: anim1.value,
+                                child: _buildLoginPopup(context),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          width: btnSize,
+                          height: btnSize,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(btnSize / 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: isTablet ? 12 : 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(iconPadding),
+                            child: Text("Login"),
                           ),
                         ),
                       ),
@@ -310,6 +371,82 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Widget _buildLoginPopup(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent, // Keeps the background dim visible
+      // This allows the popup to move up when the keyboard appears
+      resizeToAvoidBottomInset: true,
+      body: Center(
+        child: SingleChildScrollView(
+          // Prevents overflow when keyboard takes up space
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Admin Login",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  // Explicitly allow tapping to request focus
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(labelText: "Email"),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  TextField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(labelText: "Password"),
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed:
+                        () => _login(
+                          _emailController.text,
+                          _passwordController.text,
+                        ),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text("Login"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _login(String email, String password) async {
+    if (email.isEmpty || !email.contains('@')) {
+      // Show error: "Please enter a valid email"
+      return;
+    }
+
+    // Enter login logic here
   }
 
   Widget _buildSocialMediaIcons(double screenWidth) {
