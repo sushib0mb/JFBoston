@@ -28,8 +28,6 @@ class AdminPageState extends State<AdminPage> {
     final session = supabase.auth.currentSession;
     final jwt = session?.accessToken;
 
-    print("JWT Being Sent: $jwt");
-
     try {
       final response = await http.post(
         url,
@@ -54,8 +52,6 @@ class AdminPageState extends State<AdminPage> {
           "Day": "2",
         }),
       );
-
-      print(response.statusCode);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
