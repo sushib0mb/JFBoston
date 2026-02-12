@@ -95,7 +95,6 @@ app.MapPost("/api/schedule/add", async (HttpRequest request, Performance newPerf
     try
     {
         string authHeader = request.Headers.Authorization.ToString();
-        Console.WriteLine(authHeader);
 
         if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
         {
@@ -106,28 +105,28 @@ app.MapPost("/api/schedule/add", async (HttpRequest request, Performance newPerf
         // Get the raw token
         var token = authHeader.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase).Trim();
 
-        // 1. Validate the user with Supabase
-        Console.WriteLine("DEBUG: About to call GetUser...");
+        // Validate the user with Supabase
         var user = await client.Auth.GetUser(token);
-        Console.WriteLine("DEBUG: GetUser finished!"); // If this doesn't show, the SDK is stuck.
+
         if (user == null) return Results.Challenge();
 
-        // 2. IMPORTANT: Set the session so the Insert uses the user's permissions
+        // Set the session so the Insert uses the user's permissions
         await client.Auth.SetSession(token, "manual_backend_session", false);
 
+        // Debug
         Console.WriteLine($"User {user.Email} authenticated. Inserting: {newPerformance.Name}");
 
-        // 3. Perform the Insert
+        // Insert the performance
         var response = await client.From<Performance>().Insert(newPerformance);
 
         if (response.Models.Count == 0)
         {
-            Console.WriteLine($"Insert failed. Status: {response.ResponseMessage.StatusCode}");
+            Console.WriteLine($"Insert failed. Status: {response.ResponseMessage!.StatusCode}");
             return Results.Problem("Insert failed - check RLS policies.");
         }
 
         var created = response.Models[0];
-        return Results.Ok(new { id = created.Id, name = created.Name });
+        return Results.Ok(created);
     }
     catch (Exception ex)
     {
