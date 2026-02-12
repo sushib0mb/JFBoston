@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/admin_dashboard.dart';
+import 'package:jfbfestival/config/supabase_config.dart';
+import 'package:jfbfestival/pages/admin_page.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io' show Platform;
@@ -201,8 +204,78 @@ class _SettingsPageState extends State<SettingsPage> {
               SizedBox(height: padV * 2),
             ],
           ),
+          TextButton(
+            onPressed: () => _showLoginDialog(context),
+            child: Text('Admin login'),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showLoginDialog(BuildContext context) {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Admin Access'),
+            content: Column(
+              mainAxisSize:
+                  MainAxisSize.min, // Prevents dialog from taking full screen
+              children: [
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context), // Closes the dialog
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                // Inside your ElevatedButton in the Dialog
+                onPressed: () async {
+                  try {
+                    // 1. Log in
+                    await supabase.auth.signInWithPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
+                    );
+
+                    if (context.mounted) {
+                      // 2. Close the Login Dialog
+                      Navigator.pop(context);
+
+                      // 3. Navigate to the Admin Page (This puts it on top of your BottomNavBar)
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  const AdminPage(), // Use your admin class name
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Show the error if login fails
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Access Denied: $e")),
+                    );
+                  }
+                },
+                child: const Text('Login'),
+              ),
+            ],
+          ),
     );
   }
 }

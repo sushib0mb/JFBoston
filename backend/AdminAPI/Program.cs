@@ -94,34 +94,45 @@ app.MapPost("/api/schedule/add", async (HttpRequest request, Performance newPerf
 {
     try
     {
-        var authHeader = request.Headers.Authorization.ToString();
+        string authHeader = request.Headers.Authorization.ToString();
+        Console.WriteLine(authHeader);
 
-        var currentToken = client.Auth.CurrentSession?.AccessToken;
-        Console.WriteLine($"Token in Client: {currentToken?.Substring(0, Math.Min(10, currentToken.Length))}...");
-
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
         {
+            Console.WriteLine("Missing or invalid Authorization header");
             return Results.Unauthorized();
         }
 
+        // Get the raw token
+        var token = authHeader.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase).Trim();
+
+        // 1. Validate the user with Supabase
+        Console.WriteLine("DEBUG: About to call GetUser...");
+        var user = await client.Auth.GetUser(token);
+        Console.WriteLine("DEBUG: GetUser finished!"); // If this doesn't show, the SDK is stuck.
+        if (user == null) return Results.Challenge();
+
+        // 2. IMPORTANT: Set the session so the Insert uses the user's permissions
+        await client.Auth.SetSession(token, "manual_backend_session", false);
+
+        Console.WriteLine($"User {user.Email} authenticated. Inserting: {newPerformance.Name}");
+
+        // 3. Perform the Insert
         var response = await client.From<Performance>().Insert(newPerformance);
 
-        var created = response.Models[0];
-        Console.WriteLine($"Status Code: {response.ResponseMessage.StatusCode}");
-        Console.WriteLine($"Content: {response.Content}");
-
-        return Results.Ok(new
+        if (response.Models.Count == 0)
         {
-            id = created.Id,
-            name = created.Name,
-            stageName = created.StageName,
-            startTime = created.StartTime.ToString(@"hh\:mm\:ss") // Format for JSON
-        });
+            Console.WriteLine($"Insert failed. Status: {response.ResponseMessage.StatusCode}");
+            return Results.Problem("Insert failed - check RLS policies.");
+        }
+
+        var created = response.Models[0];
+        return Results.Ok(new { id = created.Id, name = created.Name });
     }
-    catch (Exception e)
+    catch (Exception ex)
     {
-        Console.WriteLine($"Error: {e.Message}");
-        return Results.Problem("Failed to add performance.");
+        Console.WriteLine($"CRITICAL ERROR: {ex.Message}");
+        return Results.Problem(ex.Message);
     }
 });
 
