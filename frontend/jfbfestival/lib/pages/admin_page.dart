@@ -42,7 +42,7 @@ class AdminPageState extends State<AdminPage> {
         //   'stage_name': _stageController.text,
         // }),
         body: jsonEncode({
-          'Name': "be",
+          'Name': "new performance!",
           'StartTime': "23:00:00",
           'StageName': "de",
           'Duration': 90,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/admin_dashboard.dart';
 import 'package:jfbfestival/config/supabase_config.dart';
 import 'package:jfbfestival/pages/admin_page.dart';
 import 'package:provider/provider.dart';
@@ -216,6 +215,10 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showLoginDialog(BuildContext context) {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
+
+    // TODO: ONLY FOR DEBUG!!! REMOVE BEFORE PRODUCTION!!
+    emailController.text = "jfbstudents@gmail.com";
+    passwordController.text = "jfbadmin";
 
     showDialog(
       context: context,
