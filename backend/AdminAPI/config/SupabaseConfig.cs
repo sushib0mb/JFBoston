@@ -1,5 +1,6 @@
 namespace JFBostonAdminAPI.Configuration;
 
+// Fetches supabase url and key
 public class SupabaseSettings
 {
     public const string SectionName = "Supabase";

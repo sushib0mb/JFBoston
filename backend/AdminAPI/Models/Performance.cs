@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization; // Required for JsonPropertyName
+using System.Text.Json.Serialization;
 using Postgrest.Attributes;
 using Postgrest.Models;
 
@@ -8,11 +8,11 @@ namespace JFBostonAdminAPI.Models;
 public class Performance : BaseModel
 {
     [PrimaryKey("id")]
-    [JsonPropertyName("Id")] // Matches Flutter JSON key
+    [JsonPropertyName("Id")]
     public int Id { get; set; }
 
-    [Column("performance_name")]
-    [JsonPropertyName("Name")]
+    [Column("performance_name")] // Supabase column name
+    [JsonPropertyName("Name")] // Property name from frontend
     public string Name { get; set; } = null!;
 
     [Column("time")]

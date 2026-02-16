@@ -1,9 +1,8 @@
-using JFBostonAdminAPI.Models; // Tells the interface what a "Performance" is
-using System.Collections.Generic; // For IEnumerable
-using System.Threading.Tasks; // For Task
+using JFBostonAdminAPI.Models;
 
-namespace JFBostonAdminAPI.Services; // Tells the rest of the app where this interface lives
+namespace JFBostonAdminAPI.Services;
 
+// Sets interface for schedule service
 public interface IScheduleService
 {
     Task<IEnumerable<object>> GetScheduleAsync(string? stageName);

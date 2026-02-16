@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using JFBostonAdminAPI.Services; // Also add this to find your interface
-using JFBostonAdminAPI.Models;   // Also add this to find Performance
+using JFBostonAdminAPI.Services;
+using JFBostonAdminAPI.Models;
 
+// Controller for modifying schedules
 [ApiController]
 [Route("api/[controller]")]
 public class ScheduleController : ControllerBase
@@ -13,6 +14,7 @@ public class ScheduleController : ControllerBase
         _scheduleService = scheduleService;
     }
 
+    // Call service to fetch the current schedule
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string? stageName)
     {
@@ -20,6 +22,7 @@ public class ScheduleController : ControllerBase
         return Ok(data);
     }
 
+    // Start service to post a new performance
     [HttpPost("add")]
     public async Task<IActionResult> Add([FromBody] Performance performance)
     {
@@ -33,17 +36,18 @@ public class ScheduleController : ControllerBase
         return Ok("Performance added successfully");
     }
 
+    // Start service to delay a single performance
     [HttpPost("delay/{id}")]
     public async Task<IActionResult> Delay(int id, [FromQuery] int minutes)
     {
         var message = await _scheduleService.DelayPerformanceAsync(id, minutes);
 
-        if (message == null)
+        if (message == "nullError")
         {
             return NotFound($"No performance found with ID {id}");
         }
 
-        if (message == "Error updating performance")
+        if (message == "postError")
         {
             return Problem(message);
         }
@@ -51,17 +55,18 @@ public class ScheduleController : ControllerBase
         return Ok(message);
     }
 
+    // Start service to delay all performances in the same stage starting from the specified performance
     [HttpPost("shuffle/{id}")]
     public async Task<IActionResult> Shuffle(int id, [FromQuery] int minutes)
     {
         var message = await _scheduleService.ShuffleScheduleAsync(id, minutes);
 
-        if (message == null)
+        if (message == "nullError")
         {
             return NotFound($"No performance found with ID {id}");
         }
 
-        if (message == "Error updating performance")
+        if (message == "postError")
         {
             return Problem(message);
         }
