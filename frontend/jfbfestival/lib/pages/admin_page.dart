@@ -16,8 +16,20 @@ class AdminPageState extends State<AdminPage> {
 
   // Controllers to capture text input
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _stageController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
+  final TextEditingController _durationController = TextEditingController();
+  final List<DropdownMenuEntry<String>> dayPicker = [
+    DropdownMenuEntry(value: "1", label: "1"),
+    DropdownMenuEntry(value: "2", label: "2"),
+  ];
+  TimeOfDay? picked;
+  String selectedValue = "";
+
+  TimeOfDay _startTime = TimeOfDay(hour: 11, minute: 0);
+
+  // TODO: Fetch performance intially to load when updating performance
+  Future<void> _fetchPerformance() async {}
 
   // Function to call your C# MapPost endpoint
   Future<void> _submitPerformance() async {
@@ -36,22 +48,20 @@ class AdminPageState extends State<AdminPage> {
           'Authorization': 'Bearer $jwt',
         },
 
-        // body: jsonEncode({
-        //   'performance_name': _nameController.text,
-        //   'start_time': _selectedDate.toIso8601String(),
-        //   'stage_name': _stageController.text,
-        // }),
         body: jsonEncode({
-          'Name': "new performance!",
-          'StartTime': "23:00:00",
-          'StageName': "de",
-          'Duration': 90,
-          'Description': "Hi",
+          'Name': _nameController.text,
+          'StartTime':
+              "${picked?.hour}:${picked?.minute.toString().padLeft(2, "0")}",
+          'StageName': _stageController.text,
+          'Duration': _durationController.text,
+          'Description': _descriptionController.text,
           'EventImage': "te",
           "IconImage": "te",
-          "Day": "2",
+          "Day": selectedValue,
         }),
       );
+
+      print(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,6 +106,19 @@ class AdminPageState extends State<AdminPage> {
                         validator: (v) => v!.isEmpty ? 'Enter a name' : null,
                       ),
                       const SizedBox(height: 15),
+                      ListTile(
+                        title: Text("Start Time: $_startTime".split('.')[0]),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () async {
+                          picked = await showTimePicker(
+                            context: context,
+                            initialTime: _startTime,
+                          );
+                          if (picked != null) {
+                            setState(() => _startTime = picked!);
+                          }
+                        },
+                      ),
                       TextFormField(
                         controller: _stageController,
                         decoration: const InputDecoration(
@@ -104,25 +127,39 @@ class AdminPageState extends State<AdminPage> {
                         validator: (v) => v!.isEmpty ? 'Enter a stage' : null,
                       ),
                       const SizedBox(height: 20),
-                      ListTile(
-                        title: Text(
-                          "Start Time: ${_selectedDate.toLocal()}".split(
-                            '.',
-                          )[0],
+                      TextFormField(
+                        controller: _durationController,
+                        decoration: const InputDecoration(
+                          labelText: 'Duration',
                         ),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedDate,
-                            firstDate: DateTime(2024),
-                            lastDate: DateTime(2030),
-                          );
-                          if (picked != null)
-                            setState(() => _selectedDate = picked);
-                        },
+                        validator:
+                            (v) => v!.isEmpty ? 'Enter a duration' : null,
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _descriptionController,
+                        decoration: const InputDecoration(
+                          labelText: 'Performance Description',
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        child: Row(
+                          children: [
+                            Text("Day: "),
+                            DropdownMenu<String>(
+                              initialSelection: "1",
+                              dropdownMenuEntries: dayPicker,
+                              onSelected: (value) {
+                                selectedValue = value!;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _submitPerformance,
                         style: ElevatedButton.styleFrom(
