@@ -20,13 +20,12 @@ class AdminPageState extends State<AdminPage> {
   final TextEditingController _stageController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
   final List<DropdownMenuEntry<String>> dayPicker = [
+    DropdownMenuEntry(value: "", label: ""),
     DropdownMenuEntry(value: "1", label: "1"),
     DropdownMenuEntry(value: "2", label: "2"),
   ];
-  TimeOfDay? picked;
-  String selectedValue = "";
-
-  TimeOfDay _startTime = TimeOfDay(hour: 11, minute: 0);
+  TimeOfDay? picked = null;
+  var selectedValue = "";
 
   // TODO: Fetch performance intially to load when updating performance
   Future<void> _fetchPerformance() async {}
@@ -67,6 +66,12 @@ class AdminPageState extends State<AdminPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Performance added successfully!')),
         );
+      } else {
+        // DEBUG
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${response.statusCode}")),
+        );
       }
     } catch (e) {
       print("Error: $e");
@@ -106,17 +111,57 @@ class AdminPageState extends State<AdminPage> {
                         validator: (v) => v!.isEmpty ? 'Enter a name' : null,
                       ),
                       const SizedBox(height: 15),
-                      ListTile(
-                        title: Text("Start Time: $_startTime".split('.')[0]),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () async {
-                          picked = await showTimePicker(
-                            context: context,
-                            initialTime: _startTime,
-                          );
-                          if (picked != null) {
-                            setState(() => _startTime = picked!);
+                      FormField<TimeOfDay>(
+                        initialValue: picked,
+                        validator: (value) {
+                          // Custom validation logic
+                          if (value == null) {
+                            return 'Please select a start time';
                           }
+                          return null;
+                        },
+                        builder: (FormFieldState<TimeOfDay> state) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                // Use the class-level variable directly
+                                title: Text(
+                                  "Start Time: ${picked?.format(context) ?? 'Not set'}",
+                                ),
+                                trailing: const Icon(Icons.access_time),
+                                onTap: () async {
+                                  final result = await showTimePicker(
+                                    context: context,
+                                    initialTime: picked ?? TimeOfDay.now(),
+                                  );
+
+                                  if (result != null) {
+                                    setState(() {
+                                      // Update the single source of truth
+                                      picked = result;
+                                    });
+                                    // Sync the FormField's state
+                                    state.didChange(result);
+                                  }
+                                },
+                              ),
+                              if (state.hasError)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                  ),
+                                  child: Text(
+                                    state.errorText!,
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
                         },
                       ),
                       TextFormField(
@@ -148,11 +193,50 @@ class AdminPageState extends State<AdminPage> {
                         child: Row(
                           children: [
                             Text("Day: "),
-                            DropdownMenu<String>(
-                              initialSelection: "1",
-                              dropdownMenuEntries: dayPicker,
-                              onSelected: (value) {
-                                selectedValue = value!;
+                            FormField<String>(
+                              initialValue: selectedValue,
+                              validator: (value) {
+                                // Check if the selection is empty or invalid
+                                if (selectedValue == "" ||
+                                    selectedValue.isEmpty) {
+                                  return 'Please select a day';
+                                }
+                                return null;
+                              },
+                              builder: (FormFieldState<String> state) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    DropdownMenu<String>(
+                                      initialSelection: selectedValue,
+                                      dropdownMenuEntries: dayPicker,
+                                      onSelected: (value) {
+                                        // Update the local state
+                                        selectedValue = value!;
+                                        // Tell the FormField that the value has changed
+                                        state.didChange(value);
+                                      },
+                                    ),
+                                    // Display the error text if validation fails
+                                    if (state.hasError)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 8,
+                                          left: 12,
+                                        ),
+                                        child: Text(
+                                          state.errorText!,
+                                          style: TextStyle(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.error,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
                               },
                             ),
                           ],
