@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jfbfestival/data/food_booths.dart';
+import 'package:jfbfestival/services/icon_service.dart';
 import 'package:jfbfestival/services/sponsor_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
@@ -60,6 +61,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ReminderProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
         ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
+        ChangeNotifierProvider(create: (_) => IconService(supabase)),
       ],
       child: const MyApp(),
     ),

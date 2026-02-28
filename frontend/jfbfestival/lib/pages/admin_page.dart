@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:jfbfestival/pages/timetable/components/image_dropdown.dart';
 import '../config/supabase_config.dart';
 
 class AdminPage extends StatefulWidget {
@@ -242,6 +243,8 @@ class AdminPageState extends State<AdminPage> {
                           ],
                         ),
                       ),
+
+                      PerformanceIconDropdown(),
 
                       const SizedBox(height: 20),
                       ElevatedButton(
