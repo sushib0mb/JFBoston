@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jfbfestival/data/food_booths.dart';
-import 'package:jfbfestival/services/icon_service.dart';
+import 'package:jfbfestival/services/db_image_service.dart';
 import 'package:jfbfestival/services/sponsor_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
@@ -17,7 +17,7 @@ import 'settings_page.dart';
 import 'pages/food/food_page.dart';
 import 'pages/home/home_page.dart';
 import 'pages/map_page.dart';
-import 'pages/admin_page.dart';
+import 'pages/admin/admin_page.dart';
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
 // import 'SplashScreen/video_splash_screen.dart';
@@ -61,7 +61,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ReminderProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
         ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
-        ChangeNotifierProvider(create: (_) => IconService(supabase)),
+        ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
       ],
       child: const MyApp(),
     ),

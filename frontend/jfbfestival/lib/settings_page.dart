@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jfbfestival/config/supabase_config.dart';
-import 'package:jfbfestival/pages/admin_page.dart';
+import 'package:jfbfestival/pages/admin/admin_page.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io' show Platform;
