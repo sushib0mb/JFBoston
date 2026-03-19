@@ -175,7 +175,7 @@ class ScheduleDataService extends ChangeNotifier {
 
       if (event.stage == 'Main Stage') {
         groupedByBracket[event.groupTime]!['stage1']!.add(event);
-      } else if (event.stage == 'Downtown') {
+      } else if (event.stage == 'Downtown Stage') {
         groupedByBracket[event.groupTime]!['stage2']!.add(event);
       }
     }
