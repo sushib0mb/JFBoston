@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:jfbfestival/pages/admin/components/image_dropdown.dart';
-import 'package:jfbfestival/pages/admin/components/string_dropdown.dart';
-import 'package:jfbfestival/pages/admin/components/time_picker.dart';
+// import 'package:jfbfestival/pages/admin/components/image_dropdown.dart';
+// import 'package:jfbfestival/pages/admin/components/string_dropdown.dart';
+// import 'package:jfbfestival/pages/admin/components/time_picker.dart';
 import '../../config/supabase_config.dart';
+
+// import 'package:jfbfestival/pages/admin/components/performance_table.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -85,10 +87,10 @@ class AdminPageState extends State<AdminPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Performance'),
+        title: const Text('Admin Page'),
         backgroundColor: Colors.indigo,
       ),
-      backgroundColor: Colors.grey[200],
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: FractionallySizedBox(
@@ -97,138 +99,140 @@ class AdminPageState extends State<AdminPage> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  // Prevents overflow on small screens
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Performance Name',
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- Main Column ---
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildHeaderPill('Main Stage'),
+                        const SizedBox(height: 16),
+                        _buildPerformanceBox(
+                          title: 'The Strokes',
+                          time: '7:00 PM',
+                          onTap: () {
+                            // Navigate to details page here
+                          },
                         ),
-                        validator: (v) => v!.isEmpty ? 'Enter a name' : null,
-                      ),
-
-                      const SizedBox(height: 15),
-
-                      TimePicker(
-                        label: "Start Time",
-                        errorMessage: "Please select a start time!",
-                        onChanged: (TimeOfDay newTime) {
-                          setState(() {
-                            _selectedStartTime = newTime;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      StringDropdown(
-                        label: 'Day',
-                        options: ["1", "2"],
-                        errorMessage:
-                            'Please select a day for this performance',
-                        onSelected: (String? newValue) {
-                          setState(() {
-                            if (newValue != null) {
-                              _selectedDay = int.tryParse(newValue);
-                            }
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      StringDropdown(
-                        label: 'Stage',
-                        options: ["Main Stage", "Downtown Stage"],
-                        initialSelection: _selectedStage,
-                        errorMessage:
-                            'Please select a stage for this performance', // The text that shows in red
-                        onSelected: (String? newValue) {
-                          setState(() {
-                            _selectedStage = newValue;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      TextFormField(
-                        controller: _durationController,
-                        decoration: const InputDecoration(
-                          labelText: 'Duration (minutes)',
+                        _buildPerformanceBox(
+                          title: 'Tame Impala',
+                          time: '9:00 PM',
+                          onTap: () {},
                         ),
-                        // 1. This automatically opens the number pad on mobile devices!
-                        keyboardType: TextInputType.number,
-
-                        validator: (v) {
-                          // 2. Safely check if it's empty
-                          if (v == null || v.isEmpty) {
-                            return 'Enter a duration';
-                          }
-
-                          // 3. Try to parse it into an integer
-                          if (int.tryParse(v) == null) {
-                            return 'Please enter a valid duration';
-                          }
-
-                          // 4. If it passes both checks, it's valid!
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Performance Description',
-                        ),
-                      ),
-
-                      const SizedBox(height: 25),
-
-                      ImageDropdown(
-                        label: "Peformance Icon: ",
-                        folderPath: "performanceIcons",
-                        errorMessage: "Please select a performance icon!",
-                        onChanged: (String? newUrl) {
-                          setState(() {
-                            _selectedPerformanceIcon = newUrl;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 25),
-
-                      ImageDropdown(
-                        label: "Peformance Images: ",
-                        folderPath: "performanceImages",
-                        errorMessage: "Please select a performance image!",
-                        onChanged: (String? newUrl) {
-                          setState(() {
-                            _selectedPerformanceImage = newUrl;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _submitPerformance,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: const Text('Add to Schedule'),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+
+                  const SizedBox(width: 16), // Spacing between columns
+                  // --- Downtown Column ---
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildHeaderPill('Downtown'),
+                        const SizedBox(height: 16),
+                        _buildPerformanceBox(
+                          title: 'Arctic Monkeys',
+                          time: '7:30 PM',
+                          onTap: () {},
+                        ),
+                        _buildPerformanceBox(
+                          title: 'Gorillaz',
+                          time: '9:30 PM',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[800], // Dark pill background for contrast
+        borderRadius: BorderRadius.circular(9999), // Perfect pill shape
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+      ),
+    );
+  }
+
+  // Helper method to create the Clickable Performance Boxes
+  Widget _buildPerformanceBox({
+    required String title,
+    required String time,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Text Content wrapped in Expanded to prevent overflow on small screens
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          time,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Click Indicator Arrow
+                  const Icon(Icons.chevron_right, color: Colors.grey),
+                ],
               ),
             ),
           ),
