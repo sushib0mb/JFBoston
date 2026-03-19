@@ -84,16 +84,13 @@ class AddPerformancePageState extends State<AddPerformancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Performance'),
-        backgroundColor: Colors.indigo,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent),
+
       backgroundColor: Colors.grey[200],
       body: SafeArea(
         child: Center(
           child: FractionallySizedBox(
             widthFactor: 0.9,
-            heightFactor: 0.8,
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(

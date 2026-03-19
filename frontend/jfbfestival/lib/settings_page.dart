@@ -259,12 +259,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       // 2. Close the Login Dialog
                       Navigator.pop(context);
 
-                      // 3. Navigate to the Admin Page (This puts it on top of your BottomNavBar)
+                      // 3. Navigate to the Admin Page
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  const AdminPage(), // Use your admin class name
+                          builder: (context) => const AdminPage(),
                         ),
                       );
                     }
