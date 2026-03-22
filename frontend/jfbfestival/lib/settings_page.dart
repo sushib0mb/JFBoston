@@ -7,7 +7,6 @@ import 'dart:io' show Platform;
 
 // import 'theme_notifier.dart';
 import 'pages/survey/survey_page.dart';
-import 'providers/reminder_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   static const routeName = '/settings';
@@ -31,7 +30,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final double headerSize = isTablet ? 24 : 20;
 
     // final theme = context.watch<ThemeNotifier>();
-    final reminderProv = context.watch<ReminderProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -40,26 +38,6 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
         children: [
-          // Event reminders
-          SwitchListTile(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: padH,
-              vertical: padV,
-            ),
-            title: Text(
-              'Event Reminders',
-              style: TextStyle(fontSize: titleSize),
-            ),
-            subtitle: Text(
-              reminderProv.enabled ? 'On' : 'Off',
-              style: TextStyle(fontSize: subtitleSize),
-            ),
-            value: reminderProv.enabled,
-            onChanged: (newVal) async {
-              await reminderProv.toggle(context);
-            },
-          ),
-
           // Share this app
           ListTile(
             contentPadding: EdgeInsets.symmetric(

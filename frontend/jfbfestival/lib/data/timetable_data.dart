@@ -65,20 +65,23 @@ class EventItem {
 // Schedule item model
 class ScheduleItem {
   final String time;
-  final List<EventItem>? stage1Events;
-  final List<EventItem>? stage2Events;
+  // A dynamic map holding all stages! e.g., {'Main Stage': [event1], 'Downtown 1': [event2]}
+  final Map<String, List<EventItem>> eventsByStage;
 
-  ScheduleItem({
-    required this.time,
-    required this.stage1Events,
-    required this.stage2Events,
-  });
+  ScheduleItem({required this.time, required this.eventsByStage});
 }
 
 // Service to manage schedule data
 class ScheduleDataService extends ChangeNotifier {
   // Supabase client
   final SupabaseClient _supabase;
+
+  // Stage options: Add new stages here
+  static const List<String> stageNames = [
+    'Main Stage 1',
+    'Downtown Stage 1',
+    'Downtown Stage 2',
+  ];
 
   // Data storage
   List<ScheduleItem> day1ScheduleData = [];
@@ -167,16 +170,18 @@ class ScheduleDataService extends ChangeNotifier {
       EventItem event = EventItem.fromSupabase(item);
       allEvents.add(event);
 
-      // Group by groupTime and stage
-      groupedByBracket.putIfAbsent(
-        event.groupTime,
-        () => {'stage1': [], 'stage2': []},
-      );
+      // Dynamically initialize the bracket map for all known stages
+      groupedByBracket.putIfAbsent(event.groupTime, () {
+        Map<String, List<EventItem>> stageMap = {};
+        for (var stage in stageNames) {
+          stageMap[stage] = [];
+        }
+        return stageMap;
+      });
 
-      if (event.stage == 'Main Stage') {
-        groupedByBracket[event.groupTime]!['stage1']!.add(event);
-      } else if (event.stage == 'Downtown Stage') {
-        groupedByBracket[event.groupTime]!['stage2']!.add(event);
+      // Dynamically add the event to its matching stage list
+      if (groupedByBracket[event.groupTime]!.containsKey(event.stage)) {
+        groupedByBracket[event.groupTime]![event.stage]!.add(event);
       }
     }
 
@@ -208,12 +213,22 @@ class ScheduleDataService extends ChangeNotifier {
     List<ScheduleItem> scheduleItems = [];
     for (int i = 0; i < allBrackets.length; i++) {
       final bracket = allBrackets[i];
-      final stage1List = groupedByBracket[bracket]?['stage1'] ?? [];
-      final stage2List = groupedByBracket[bracket]?['stage2'] ?? [];
+      final bracketEvents = groupedByBracket[bracket];
 
-      // If bracket is empty, create empty EventItems to preserve height
-      if (stage1List.isEmpty && stage2List.isEmpty) {
-        // Calculate duration to next bracket with events
+      // Check if this bracket is completely empty across ALL stages
+      bool isBracketCompletelyEmpty = true;
+      if (bracketEvents != null) {
+        for (var stageList in bracketEvents.values) {
+          if (stageList.isNotEmpty) {
+            isBracketCompletelyEmpty = false;
+            break;
+          }
+        }
+      }
+
+      Map<String, List<EventItem>> finalStageEventsForBracket = {};
+
+      if (isBracketCompletelyEmpty) {
         int nextEventMinutes = ceilMinutes + 30;
         for (var event in allEvents) {
           final eventMinutes = _timeToMinutes(event.time);
@@ -225,46 +240,35 @@ class ScheduleDataService extends ChangeNotifier {
 
         final durationToNextEvent = nextEventMinutes - _timeToMinutes(bracket);
 
-        final emptyStage1 = EventItem(
-          performanceName: '',
-          time: bracket,
-          groupTime: bracket,
-          duration: durationToNextEvent,
-          iconImage: '',
-          stage: '',
-          description: '',
-          eventImage: '',
-          day: -1,
-        );
-
-        final emptyStage2 = EventItem(
-          performanceName: '',
-          time: bracket,
-          groupTime: bracket,
-          duration: durationToNextEvent,
-          iconImage: '',
-          stage: '',
-          description: '',
-          eventImage: '',
-          day: -1,
-        );
-
-        scheduleItems.add(
-          ScheduleItem(
-            time: bracket,
-            stage1Events: [emptyStage1],
-            stage2Events: [emptyStage2],
-          ),
-        );
+        // Dynamically create an empty placeholder block for EVERY known stage
+        for (var stage in stageNames) {
+          finalStageEventsForBracket[stage] = [
+            EventItem(
+              performanceName: '',
+              time: bracket,
+              groupTime: bracket,
+              duration: durationToNextEvent,
+              iconImage: '',
+              stage: stage, // Assign the correct stage dynamically
+              description: '',
+              eventImage: '',
+              day: -1,
+            ),
+          ];
+        }
       } else {
-        scheduleItems.add(
-          ScheduleItem(
-            time: bracket,
-            stage1Events: stage1List.isEmpty ? null : stage1List,
-            stage2Events: stage2List.isEmpty ? null : stage2List,
-          ),
-        );
+        // Only attach stages that actually have events (or you can attach empty lists if your UI prefers)
+        for (var stage in stageNames) {
+          var eventsList = bracketEvents?[stage] ?? [];
+          if (eventsList.isNotEmpty) {
+            finalStageEventsForBracket[stage] = eventsList;
+          }
+        }
       }
+
+      scheduleItems.add(
+        ScheduleItem(time: bracket, eventsByStage: finalStageEventsForBracket),
+      );
     }
 
     return scheduleItems;

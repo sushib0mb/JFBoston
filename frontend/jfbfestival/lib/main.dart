@@ -37,7 +37,6 @@ import 'pages/survey/survey_list_page.dart';
 import 'models/feedback_entry.dart';
 import 'models/survey_entry.dart';
 
-import 'providers/reminder_provider.dart';
 import 'config/supabase_config.dart';
 
 void main() async {
@@ -69,7 +68,6 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-        ChangeNotifierProvider(create: (_) => ReminderProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
         ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
         ChangeNotifierProvider(create: (_) => DbImageService(supabase)),

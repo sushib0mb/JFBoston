@@ -38,17 +38,21 @@ class _TimetablePageState extends State<TimetablePage> {
     final svc = Provider.of<ScheduleDataService>(context, listen: false);
     final schedule =
         selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
+
     for (var slot in schedule) {
-      for (var e in [...?slot.stage1Events, ...?slot.stage2Events]) {
-        if (e.performanceName == selected.performanceName &&
-            e.time == selected.time &&
-            e.stage == selected.stage) {
-          setState(() {
-            selectedEvent = e;
-            isShowingDetail = true;
-          });
-          _scrollToEventTime(e.time);
-          return;
+      final eventsForStage = slot.eventsByStage[selected.stage];
+
+      if (eventsForStage != null) {
+        for (var e in eventsForStage) {
+          if (e.performanceName == selected.performanceName &&
+              e.time == selected.time) {
+            setState(() {
+              selectedEvent = e;
+              isShowingDetail = true;
+            });
+            _scrollToEventTime(e.time);
+            return;
+          }
         }
       }
     }
@@ -287,20 +291,12 @@ class ScheduleList extends StatelessWidget {
     for (var item in scheduleItems) {
       final itemStartTime = _parseTimeToMinutes(item.time);
 
-      // Check stage 1 events
-      if (item.stage1Events != null) {
-        for (var event in item.stage1Events!) {
-          final eventEndTime = itemStartTime + event.duration;
-          if (eventEndTime > latestEventEndTime) {
-            latestEventEndTime = eventEndTime;
-          }
-        }
-      }
+      for (var eventList in item.eventsByStage.values) {
+        if (eventList.isEmpty) continue;
 
-      // Check stage 2 events
-      if (item.stage2Events != null) {
-        for (var event in item.stage2Events!) {
+        for (var event in eventList) {
           final eventEndTime = itemStartTime + event.duration;
+
           if (eventEndTime > latestEventEndTime) {
             latestEventEndTime = eventEndTime;
           }
@@ -380,7 +376,7 @@ class ScheduleList extends StatelessWidget {
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: _buildEventColumn(
-                        1,
+                        "Main Stage 1",
                         pixelsPerMinute,
                         baseTime,
                         latestTime,
@@ -412,7 +408,7 @@ class ScheduleList extends StatelessWidget {
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: _buildEventColumn(
-                        2,
+                        "Downtown Stage 1",
                         pixelsPerMinute,
                         baseTime,
                         latestTime,
@@ -466,22 +462,16 @@ class ScheduleList extends StatelessWidget {
   }
 
   List<Widget> _buildEventColumn(
-    int stage,
+    String stageName,
     double pixelsPerMinute,
     int baseTime,
     int latestTime,
   ) {
     final events =
         scheduleItems
-            .expand(
-              (item) =>
-                  stage == 1
-                      ? item.stage1Events ?? []
-                      : item.stage2Events ?? [],
-            )
+            .expand((item) => item.eventsByStage[stageName] ?? [])
             .where((e) => e.performanceName.isNotEmpty)
             .toList();
-
     // Sort events by time if needed
     events.sort((a, b) => a.time.compareTo(b.time));
 

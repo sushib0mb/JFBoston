@@ -11,7 +11,8 @@ class AdminPage extends StatefulWidget {
 }
 
 class AdminPageState extends State<AdminPage> {
-  String selectedStage = 'Main Stage';
+  String selectedStage = 'Main Stage 1';
+  int selectedDay = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,7 @@ class AdminPageState extends State<AdminPage> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
                       decoration: BoxDecoration(
@@ -79,21 +81,21 @@ class AdminPageState extends State<AdminPage> {
                         itemBuilder:
                             (BuildContext context) => <PopupMenuEntry<String>>[
                               const PopupMenuItem<String>(
-                                value: 'Main Stage',
+                                value: 'Main Stage 1',
                                 child: Text(
-                                  'Main Stage',
+                                  'Main Stage 1',
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
                               const PopupMenuItem<String>(
-                                value: 'Downtown 1',
+                                value: 'Downtown Stage 1',
                                 child: Text(
                                   'Downtown 1',
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
                               const PopupMenuItem<String>(
-                                value: 'Downtown 2',
+                                value: 'Downtown Stage 2',
                                 child: Text(
                                   'Downtown 2',
                                   style: TextStyle(color: Colors.white),
@@ -103,35 +105,22 @@ class AdminPageState extends State<AdminPage> {
                       ),
                     ),
 
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Colors.black, // The solid black background
-                        foregroundColor:
-                            Colors.white, // Makes the text white for contrast
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 17.5,
-                          vertical: 10,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            12,
-                          ), // Controls the roundness
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const EditPerformancePage(),
-                          ),
-                        );
+                    SegmentedButton<int>(
+                      segments: const [
+                        ButtonSegment(value: 1, label: Text('Day 1')),
+                        ButtonSegment(value: 2, label: Text('Day 2')),
+                      ],
+                      selected: {selectedDay},
+                      onSelectionChanged: (Set<int> newSelection) {
+                        setState(() {
+                          selectedDay = newSelection.first;
+                        });
                       },
-                      child: const Text(
-                        "Add Performance",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      style: SegmentedButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        selectedBackgroundColor: Colors.black,
+                        selectedForegroundColor: Colors.white,
+                        iconColor: Colors.white,
                       ),
                     ),
                   ],
@@ -154,32 +143,48 @@ class AdminPageState extends State<AdminPage> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _buildHeaderPill(selectedStage),
+                                Row(
+                                  children: [
+                                    _buildHeaderPill(selectedStage),
+
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.black,
+                                        iconColor: Colors.white,
+                                        padding: const EdgeInsets.all(12),
+                                        shape:
+                                            const CircleBorder(), // Makes the button a perfect circle
+                                        minimumSize:
+                                            Size.zero, // Overrides default sizing to allow for a smaller button
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) =>
+                                                    const EditPerformancePage(),
+                                          ),
+                                        );
+                                      },
+                                      child: const Icon(Icons.add, size: 24),
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 16),
 
                                 // Dynamically populate the events based on the selected stage
                                 ...scheduleData.expand((scheduleItem) {
-                                  // 1. Figure out which list of events to use based on the dropdown variable
+                                  // Figure out which list of events to use based on the dropdown variable
                                   List<EventItem>? eventsForSelectedStage;
 
-                                  switch (selectedStage) {
-                                    case 'Main Stage':
-                                      eventsForSelectedStage =
-                                          scheduleItem.stage1Events;
-                                      break;
-                                    case 'Downtown 1':
-                                      eventsForSelectedStage =
-                                          scheduleItem.stage2Events;
-                                      break;
-                                    case 'Downtown 2':
-                                      // Note: Your ScheduleDataService currently only processes 2 stages.
-                                      // This will safely return empty until you add 'stage3Events' to your service!
-                                      eventsForSelectedStage = [];
-                                      break;
-                                    default:
-                                      eventsForSelectedStage =
-                                          scheduleItem.stage1Events;
-                                  }
+                                  print(
+                                    scheduleItem.eventsByStage.keys.toList(),
+                                  );
+
+                                  eventsForSelectedStage =
+                                      scheduleItem.eventsByStage[selectedStage];
 
                                   // 2. If there are no events for this time bracket on this stage, render nothing
                                   if (eventsForSelectedStage == null)
@@ -195,6 +200,7 @@ class AdminPageState extends State<AdminPage> {
                                         return _buildPerformanceBox(
                                           title: event.performanceName,
                                           time: event.time,
+                                          // '${event.time} - ${int.parse(event.time) + event.duration}',
                                           onTap: () {
                                             // Navigate to details page here
                                           },
