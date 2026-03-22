@@ -31,99 +31,23 @@ class AdminPageState extends State<AdminPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: PopupMenuButton<String>(
-                        initialValue: selectedStage,
-                        // Pushes the dropdown menu items down
-                        offset: const Offset(0, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: Colors.grey[900],
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 17.5,
-                            vertical: 10,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                selectedStage,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ), // Little space between text and arrow
-                              const Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
-                        ),
-                        onSelected: (String newValue) {
-                          setState(() {
-                            selectedStage = newValue;
-                          });
-                        },
-                        itemBuilder:
-                            (BuildContext context) => <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
-                                value: 'Main Stage 1',
-                                child: Text(
-                                  'Main Stage 1',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Downtown Stage 1',
-                                child: Text(
-                                  'Downtown 1',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Downtown Stage 2',
-                                child: Text(
-                                  'Downtown 2',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                      ),
-                    ),
-
-                    SegmentedButton<int>(
-                      segments: const [
-                        ButtonSegment(value: 1, label: Text('Day 1')),
-                        ButtonSegment(value: 2, label: Text('Day 2')),
-                      ],
-                      selected: {selectedDay},
-                      onSelectionChanged: (Set<int> newSelection) {
-                        setState(() {
-                          selectedDay = newSelection.first;
-                        });
-                      },
-                      style: SegmentedButton.styleFrom(
-                        backgroundColor: Colors.grey[200],
-                        selectedBackgroundColor: Colors.black,
-                        selectedForegroundColor: Colors.white,
-                        iconColor: Colors.white,
-                      ),
-                    ),
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 1, label: Text('Day 1')),
+                    ButtonSegment(value: 2, label: Text('Day 2')),
                   ],
+                  selected: {selectedDay},
+                  onSelectionChanged: (Set<int> newSelection) {
+                    setState(() {
+                      selectedDay = newSelection.first;
+                    });
+                  },
+                  style: SegmentedButton.styleFrom(
+                    backgroundColor: Colors.grey[200],
+                    selectedBackgroundColor: Colors.black,
+                    selectedForegroundColor: Colors.white,
+                    iconColor: Colors.white,
+                  ),
                 ),
 
                 SizedBox(height: 10),
@@ -138,12 +62,13 @@ class AdminPageState extends State<AdminPage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- Main Column ---
                           Expanded(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     _buildHeaderPill(selectedStage),
 
@@ -225,18 +150,63 @@ class AdminPageState extends State<AdminPage> {
 
   Widget _buildHeaderPill(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.grey[800], // Dark pill background for contrast
         borderRadius: BorderRadius.circular(9999), // Perfect pill shape
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
+      child: PopupMenuButton<String>(
+        initialValue: selectedStage,
+        // Pushes the dropdown menu items down
+        offset: const Offset(0, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: Colors.grey[900],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 17.5, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                selectedStage,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+            ],
+          ),
         ),
+        onSelected: (String newValue) {
+          setState(() {
+            selectedStage = newValue;
+          });
+        },
+        itemBuilder:
+            (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'Main Stage 1',
+                child: Text(
+                  'Main Stage 1',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'Downtown Stage 1',
+                child: Text(
+                  'Downtown 1',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'Downtown Stage 2',
+                child: Text(
+                  'Downtown 2',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
       ),
     );
   }
