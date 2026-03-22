@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/pages/admin/add_performance_page.dart';
+import 'package:jfbfestival/pages/admin/edit_performance_page.dart';
+import 'package:jfbfestival/data/timetable_data.dart';
+import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -9,8 +11,13 @@ class AdminPage extends StatefulWidget {
 }
 
 class AdminPageState extends State<AdminPage> {
+  String selectedStage = 'Main Stage';
+
   @override
   Widget build(BuildContext context) {
+    final scheduleService = Provider.of<ScheduleDataService>(context);
+    final scheduleData = scheduleService.day1ScheduleData;
+
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
       backgroundColor: Colors.white,
@@ -23,32 +30,111 @@ class AdminPageState extends State<AdminPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black, // The solid black background
-                    foregroundColor:
-                        Colors.white, // Makes the text white for contrast
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 17.5,
-                      vertical: 10,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        12,
-                      ), // Controls the roundness
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AddPerformancePage(),
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    );
-                  },
-                  child: const Text(
-                    "Add Performance",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
+                      child: PopupMenuButton<String>(
+                        initialValue: selectedStage,
+                        // Pushes the dropdown menu items down
+                        offset: const Offset(0, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        color: Colors.grey[900],
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 17.5,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                selectedStage,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ), // Little space between text and arrow
+                              const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onSelected: (String newValue) {
+                          setState(() {
+                            selectedStage = newValue;
+                          });
+                        },
+                        itemBuilder:
+                            (BuildContext context) => <PopupMenuEntry<String>>[
+                              const PopupMenuItem<String>(
+                                value: 'Main Stage',
+                                child: Text(
+                                  'Main Stage',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              const PopupMenuItem<String>(
+                                value: 'Downtown 1',
+                                child: Text(
+                                  'Downtown 1',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              const PopupMenuItem<String>(
+                                value: 'Downtown 2',
+                                child: Text(
+                                  'Downtown 2',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                      ),
+                    ),
+
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Colors.black, // The solid black background
+                        foregroundColor:
+                            Colors.white, // Makes the text white for contrast
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 17.5,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ), // Controls the roundness
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const EditPerformancePage(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Add Performance",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 SizedBox(height: 10),
@@ -68,42 +154,53 @@ class AdminPageState extends State<AdminPage> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _buildHeaderPill('Main Stage'),
+                                _buildHeaderPill(selectedStage),
                                 const SizedBox(height: 16),
-                                _buildPerformanceBox(
-                                  title: 'The Strokes',
-                                  time: '7:00 PM',
-                                  onTap: () {
-                                    // Navigate to details page here
-                                  },
-                                ),
-                                _buildPerformanceBox(
-                                  title: 'Tame Impala',
-                                  time: '9:00 PM',
-                                  onTap: () {},
-                                ),
-                              ],
-                            ),
-                          ),
 
-                          const SizedBox(width: 16), // Spacing between columns
-                          // --- Downtown Column ---
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildHeaderPill('Downtown'),
-                                const SizedBox(height: 16),
-                                _buildPerformanceBox(
-                                  title: 'Arctic Monkeys',
-                                  time: '7:30 PM',
-                                  onTap: () {},
-                                ),
-                                _buildPerformanceBox(
-                                  title: 'Gorillaz',
-                                  time: '9:30 PM',
-                                  onTap: () {},
-                                ),
+                                // Dynamically populate the events based on the selected stage
+                                ...scheduleData.expand((scheduleItem) {
+                                  // 1. Figure out which list of events to use based on the dropdown variable
+                                  List<EventItem>? eventsForSelectedStage;
+
+                                  switch (selectedStage) {
+                                    case 'Main Stage':
+                                      eventsForSelectedStage =
+                                          scheduleItem.stage1Events;
+                                      break;
+                                    case 'Downtown 1':
+                                      eventsForSelectedStage =
+                                          scheduleItem.stage2Events;
+                                      break;
+                                    case 'Downtown 2':
+                                      // Note: Your ScheduleDataService currently only processes 2 stages.
+                                      // This will safely return empty until you add 'stage3Events' to your service!
+                                      eventsForSelectedStage = [];
+                                      break;
+                                    default:
+                                      eventsForSelectedStage =
+                                          scheduleItem.stage1Events;
+                                  }
+
+                                  // 2. If there are no events for this time bracket on this stage, render nothing
+                                  if (eventsForSelectedStage == null)
+                                    return <Widget>[];
+
+                                  // Filter out the empty placeholder events and map the real ones to UI
+                                  return eventsForSelectedStage
+                                      .where(
+                                        (event) =>
+                                            event.performanceName.isNotEmpty,
+                                      )
+                                      .map((event) {
+                                        return _buildPerformanceBox(
+                                          title: event.performanceName,
+                                          time: event.time,
+                                          onTap: () {
+                                            // Navigate to details page here
+                                          },
+                                        );
+                                      });
+                                }),
                               ],
                             ),
                           ),

@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:jfbfestival/data/timetable_data.dart';
 import 'package:jfbfestival/pages/admin/components/image_dropdown.dart';
 import 'package:jfbfestival/pages/admin/components/string_dropdown.dart';
 import 'package:jfbfestival/pages/admin/components/time_picker.dart';
 import '../../config/supabase_config.dart';
 
-class AddPerformancePage extends StatefulWidget {
-  const AddPerformancePage({super.key});
+class EditPerformancePage extends StatefulWidget {
+  final ScheduleItem? existingData;
+  const EditPerformancePage({super.key, this.existingData});
 
   @override
-  AddPerformancePageState createState() => AddPerformancePageState();
+  EditPerformancePageState createState() => EditPerformancePageState();
 }
 
-class AddPerformancePageState extends State<AddPerformancePage> {
+class EditPerformancePageState extends State<EditPerformancePage> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers to capture text input

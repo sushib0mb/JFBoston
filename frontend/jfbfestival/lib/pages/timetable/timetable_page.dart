@@ -9,8 +9,7 @@ class TimetablePage extends StatefulWidget {
   final EventItem? selectedEvent;
   final int? selectedDay;
 
-  const TimetablePage({Key? key, this.selectedEvent, this.selectedDay})
-    : super(key: key);
+  const TimetablePage({super.key, this.selectedEvent, this.selectedDay});
 
   @override
   _TimetablePageState createState() => _TimetablePageState();

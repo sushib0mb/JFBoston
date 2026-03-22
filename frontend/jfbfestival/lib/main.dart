@@ -26,7 +26,7 @@ import 'pages/home/home_page.dart';
 import 'pages/map_page.dart';
 
 import 'pages/admin/admin_page.dart';
-import 'pages/admin/add_performance_page.dart';
+import 'pages/admin/edit_performance_page.dart';
 
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
