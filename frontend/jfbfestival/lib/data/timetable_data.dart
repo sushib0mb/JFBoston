@@ -112,6 +112,8 @@ class ScheduleDataService extends ChangeNotifier {
 
       final allEvents = List<Map<String, dynamic>>.from(response);
 
+      print(allEvents);
+
       day1ScheduleData = _processEventData(
         allEvents.where((e) => e['day'] == 1).toList(),
       );
@@ -197,7 +199,7 @@ class ScheduleDataService extends ChangeNotifier {
     int floorMinutes = (minMinutes ~/ 30) * 30;
 
     // Ceil last time to nearest bracket
-    int ceilMinutes = ((maxMinutes - 29) ~/ 30) * 30;
+    int ceilMinutes = (maxMinutes ~/ 30) * 30;
 
     // Generate all 30-minute brackets
     List<String> allBrackets = [];

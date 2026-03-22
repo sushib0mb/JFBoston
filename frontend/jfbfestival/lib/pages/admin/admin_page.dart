@@ -17,7 +17,12 @@ class AdminPageState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     final scheduleService = Provider.of<ScheduleDataService>(context);
-    final scheduleData = scheduleService.day1ScheduleData;
+    final scheduleData =
+        selectedDay == 1
+            ? scheduleService.day1ScheduleData
+            : scheduleService.day2ScheduleData;
+
+    print("Day $selectedDay total brackets loaded: ${scheduleData.length}");
 
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
@@ -103,10 +108,6 @@ class AdminPageState extends State<AdminPage> {
                                 ...scheduleData.expand((scheduleItem) {
                                   // Figure out which list of events to use based on the dropdown variable
                                   List<EventItem>? eventsForSelectedStage;
-
-                                  print(
-                                    scheduleItem.eventsByStage.keys.toList(),
-                                  );
 
                                   eventsForSelectedStage =
                                       scheduleItem.eventsByStage[selectedStage];
