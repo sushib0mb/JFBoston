@@ -4,12 +4,14 @@ class TimePicker extends StatefulWidget {
   final String label;
   final String errorMessage;
   final ValueChanged<TimeOfDay> onChanged;
+  final TimeOfDay? initialTime;
 
   const TimePicker({
     super.key,
     required this.label,
     required this.errorMessage,
     required this.onChanged,
+    this.initialTime,
   });
 
   @override
@@ -22,6 +24,7 @@ class _TimePickerState extends State<TimePicker> {
   @override
   void initState() {
     super.initState();
+    _selectedTime = widget.initialTime;
   }
 
   @override

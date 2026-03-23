@@ -22,8 +22,6 @@ class AdminPageState extends State<AdminPage> {
             ? scheduleService.day1ScheduleData
             : scheduleService.day2ScheduleData;
 
-    print("Day $selectedDay total brackets loaded: ${scheduleData.length}");
-
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
       backgroundColor: Colors.white,
@@ -128,7 +126,15 @@ class AdminPageState extends State<AdminPage> {
                                           time: event.time,
                                           // '${event.time} - ${int.parse(event.time) + event.duration}',
                                           onTap: () {
-                                            // Navigate to details page here
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        EditPerformancePage(
+                                                          existingData: event,
+                                                        ),
+                                              ),
+                                            );
                                           },
                                         );
                                       });

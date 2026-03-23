@@ -9,7 +9,7 @@ import 'package:jfbfestival/pages/admin/components/time_picker.dart';
 import '../../config/supabase_config.dart';
 
 class EditPerformancePage extends StatefulWidget {
-  final ScheduleItem? existingData;
+  final EventItem? existingData;
   const EditPerformancePage({super.key, this.existingData});
 
   @override
@@ -20,9 +20,9 @@ class EditPerformancePageState extends State<EditPerformancePage> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers to capture text input
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _durationController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _durationController;
   final List<DropdownMenuEntry<String>> dayPicker = [
     DropdownMenuEntry(value: "", label: ""),
     DropdownMenuEntry(value: "1", label: "1"),
@@ -34,6 +34,51 @@ class EditPerformancePageState extends State<EditPerformancePage> {
   String? _selectedPerformanceImage;
   TimeOfDay? _selectedStartTime;
 
+  @override
+  void initState() {
+    super.initState();
+
+    _nameController = TextEditingController(
+      text: widget.existingData?.performanceName ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: widget.existingData?.description ?? '',
+    );
+    _durationController = TextEditingController(
+      text: widget.existingData?.duration.toString() ?? '',
+    );
+    _selectedStartTime = parseTimeOfDay(widget.existingData?.time);
+    _selectedDay = widget.existingData?.day;
+    _selectedStage = widget.existingData?.stage;
+    _selectedPerformanceIcon = widget.existingData?.iconImage;
+    _selectedPerformanceImage = widget.existingData?.eventImage;
+  }
+
+  TimeOfDay? parseTimeOfDay(String? timeString) {
+    if (timeString == null || timeString.isEmpty) return null;
+
+    try {
+      final parts = timeString.split(':');
+      if (parts.length >= 2) {
+        final int hour = int.parse(parts[0]);
+        final int minute = int.parse(parts[1]);
+        return TimeOfDay(hour: hour, minute: minute);
+      }
+    } catch (e) {
+      // Handle parsing errors if the string is malformed
+      debugPrint("Error parsing time: $e");
+    }
+    return null;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _durationController.dispose();
+    super.dispose();
+  }
+
   // Function to call your C# MapPost endpoint
   Future<void> _submitPerformance() async {
     if (!_formKey.currentState!.validate()) return;
@@ -43,9 +88,6 @@ class EditPerformancePageState extends State<EditPerformancePage> {
     final session = supabase.auth.currentSession;
     final jwt = session?.accessToken;
 
-    print(
-      "${_selectedStartTime?.hour}:${_selectedStartTime?.minute.toString().padLeft(2, "0")}",
-    );
     try {
       final response = await http.post(
         url,
@@ -85,6 +127,8 @@ class EditPerformancePageState extends State<EditPerformancePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.existingData != null;
+
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
 
@@ -108,7 +152,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                       const SizedBox(height: 7.5),
 
                       Text(
-                        "Add New Performance",
+                        isEditing ? "Add New Performance" : "Edit Performance",
                         style: TextStyle(fontSize: 30),
                         textAlign: TextAlign.center,
                       ),
@@ -126,6 +170,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                       const SizedBox(height: 15),
 
                       TimePicker(
+                        initialTime: _selectedStartTime,
                         label: "Start Time",
                         errorMessage: "Please select a start time!",
                         onChanged: (TimeOfDay newTime) {
@@ -138,6 +183,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                       const SizedBox(height: 20),
 
                       StringDropdown(
+                        initialSelection: _selectedDay.toString(),
                         label: 'Day',
                         options: ["1", "2"],
                         errorMessage:
@@ -204,6 +250,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                       const SizedBox(height: 25),
 
                       ImageDropdown(
+                        initialValue: _selectedPerformanceIcon,
                         label: "Peformance Icon: ",
                         folderPath: "performanceIcons",
                         errorMessage: "Please select a performance icon!",
@@ -217,6 +264,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                       const SizedBox(height: 25),
 
                       ImageDropdown(
+                        initialValue: _selectedPerformanceImage,
                         label: "Peformance Images: ",
                         folderPath: "performanceImages",
                         errorMessage: "Please select a performance image!",
