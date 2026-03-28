@@ -1,22 +1,45 @@
+using System.Text.Json.Serialization;
 using Postgrest.Attributes;
 using Postgrest.Models;
 
 namespace JFBostonAdminAPI.Models;
 
-// Name of supabase table holding stage events
 [Table("stage_events")]
 public class Performance : BaseModel
 {
     [PrimaryKey("id")]
+    [JsonPropertyName("Id")]
     public int Id { get; set; }
 
-    [Column("performance_name")]
+    [Column("performance_name")] // Supabase column name
+    [JsonPropertyName("Name")] // Property name from frontend
     public string Name { get; set; } = null!;
 
-    [Column("start_time")]
-    public DateTime StartTime { get; set; }
+    [Column("time")]
+    [JsonPropertyName("StartTime")]
+    public TimeSpan StartTime { get; set; }
 
-    [Column("stage_name")]
-
+    [Column("stage")]
+    [JsonPropertyName("StageName")]
     public string StageName { get; set; } = null!;
+
+    [Column("duration")]
+    [JsonPropertyName("Duration")]
+    public int Duration { get; set; }
+
+    [Column("description")]
+    [JsonPropertyName("Description")]
+    public string Description { get; set; } = null!;
+
+    [Column("event_image")]
+    [JsonPropertyName("EventImage")]
+    public string EventImage { get; set; } = null!;
+
+    [Column("icon_image")]
+    [JsonPropertyName("IconImage")]
+    public string IconImage { get; set; } = null!;
+
+    [Column("day")]
+    [JsonPropertyName("Day")]
+    public int Day { get; set; }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/config/supabase_config.dart';
+import 'package:jfbfestival/pages/admin/admin_page.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io' show Platform;
 
 // import 'theme_notifier.dart';
 import 'pages/survey/survey_page.dart';
-import 'providers/reminder_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   static const routeName = '/settings';
@@ -29,7 +30,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final double headerSize = isTablet ? 24 : 20;
 
     // final theme = context.watch<ThemeNotifier>();
-    final reminderProv = context.watch<ReminderProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -38,26 +38,6 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
         children: [
-          // Event reminders
-          SwitchListTile(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: padH,
-              vertical: padV,
-            ),
-            title: Text(
-              'Event Reminders',
-              style: TextStyle(fontSize: titleSize),
-            ),
-            subtitle: Text(
-              reminderProv.enabled ? 'On' : 'Off',
-              style: TextStyle(fontSize: subtitleSize),
-            ),
-            value: reminderProv.enabled,
-            onChanged: (newVal) async {
-              await reminderProv.toggle(context);
-            },
-          ),
-
           // Share this app
           ListTile(
             contentPadding: EdgeInsets.symmetric(
@@ -201,8 +181,80 @@ class _SettingsPageState extends State<SettingsPage> {
               SizedBox(height: padV * 2),
             ],
           ),
+          TextButton(
+            onPressed: () => _showLoginDialog(context),
+            child: Text('Admin login'),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showLoginDialog(BuildContext context) {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+
+    // TODO: ONLY FOR DEBUG!!! REMOVE BEFORE PRODUCTION!!
+    emailController.text = "jfbstudents@gmail.com";
+    passwordController.text = "jfbadmin";
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Admin Access'),
+            content: Column(
+              mainAxisSize:
+                  MainAxisSize.min, // Prevents dialog from taking full screen
+              children: [
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context), // Closes the dialog
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                // Inside your ElevatedButton in the Dialog
+                onPressed: () async {
+                  try {
+                    // 1. Log in
+                    await supabase.auth.signInWithPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
+                    );
+
+                    if (context.mounted) {
+                      // 2. Close the Login Dialog
+                      Navigator.pop(context);
+
+                      // 3. Navigate to the Admin Page
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AdminPage(),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Show the error if login fails
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Access Denied: $e")),
+                    );
+                  }
+                },
+                child: const Text('Login'),
+              ),
+            ],
+          ),
     );
   }
 }

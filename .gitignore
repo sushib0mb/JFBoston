@@ -46,3 +46,33 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Ignore all generated plugin files
+**/generated_plugin_registrant.dart
+**/generated_plugin_registrant.cc
+**/generated_plugin_registrant.h
+**/generated_plugin_registrant.objc
+**/generated_plugin_registrant.swift
+
+# Platform-specific Flutter build files
+/linux/flutter/
+/macos/Flutter/
+/ios/Flutter/
+/windows/flutter/
+/windows/flutter/generated_runtime_configs.cmake
+
+# Backend build and object files (.NET)
+**/bin/
+**/obj/
+*.user
+.vs/
+
+# Package lock files
+pubspec.lock
+
+# Generated files and caches
+.gradle/
+.idea/
+local.properties
+*.jks
+*.keystore

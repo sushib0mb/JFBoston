@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
+import "../../core/constants/design_system.dart";
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
@@ -56,6 +57,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   // your original images
   final List<String> backgroundImages = [
     "assets/JFB-27.jpg",
@@ -127,6 +131,8 @@ class _HomePageState extends State<HomePage> {
     _autoScrollTimer?.cancel();
     _timetableUpdateTimer?.cancel();
     _pageController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -139,9 +145,9 @@ class _HomePageState extends State<HomePage> {
     // Adaptive dimensions
     final headerHeight = screenHeight * (isTablet ? 0.5 : 0.6);
     final verticalSpacing = screenHeight * (isTablet ? 0.03 : 0.02);
-    final settingsBtnSize = isTablet ? 70.0 : 55.0;
-    final settingsIconSize = isTablet ? 36.0 : 30.0;
-    final settingsIconPadding = isTablet ? 14.0 : 10.0;
+    final btnSize = isTablet ? 70.0 : 55.0;
+    final iconSize = isTablet ? 36.0 : 30.0;
+    final iconPadding = isTablet ? 14.0 : 8.0;
 
     final sponsorService = Provider.of<SponsorService>(context);
 
@@ -276,13 +282,11 @@ class _HomePageState extends State<HomePage> {
                       child: Material(
                         color: Colors.transparent,
                         child: Container(
-                          width: settingsBtnSize,
-                          height: settingsBtnSize,
+                          width: btnSize,
+                          height: btnSize,
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(
-                              settingsBtnSize / 2,
-                            ),
+                            borderRadius: BorderRadius.circular(btnSize / 2),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
@@ -292,10 +296,10 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           child: Padding(
-                            padding: EdgeInsets.all(settingsIconPadding),
+                            padding: EdgeInsets.all(iconPadding),
                             child: Icon(
                               Icons.settings,
-                              size: settingsIconSize,
+                              size: iconSize,
                               color: Colors.black,
                             ),
                           ),

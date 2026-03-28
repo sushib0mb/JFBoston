@@ -336,28 +336,24 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
     // Process all events from all schedule items
     for (final item in scheduleList) {
-      if (item.stage1Events == null && item.stage2Events == null) continue;
+      // Skip if the dynamic map is empty
+      if (item.eventsByStage.isEmpty) continue;
 
-      // Categorize stage 1 and stage 2 events using the same logic
-      _categorizeEventList(
-        item.stage1Events,
-        now,
-        year,
-        month,
-        day,
-        currentEvents,
-        upcomingEvents,
-      );
+      // Iterate through EVERY stage list dynamically
+      for (final eventList in item.eventsByStage.values) {
+        // If the list is null or empty, skip it
+        if (eventList.isEmpty) continue;
 
-      _categorizeEventList(
-        item.stage2Events,
-        now,
-        year,
-        month,
-        day,
-        currentEvents,
-        upcomingEvents,
-      );
+        _categorizeEventList(
+          eventList,
+          now,
+          year,
+          month,
+          day,
+          currentEvents,
+          upcomingEvents,
+        );
+      }
     }
 
     // Sort upcoming events by start time

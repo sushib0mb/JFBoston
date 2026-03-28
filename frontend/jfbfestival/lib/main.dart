@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jfbfestival/data/food_booths.dart';
+import 'package:jfbfestival/services/db_image_service.dart';
 import 'package:jfbfestival/services/sponsor_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
@@ -10,22 +11,33 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/rendering.dart';
 
 import 'theme_notifier.dart';
+
+// import 'SplashScreen/video_splash_screen.dart';
+
 import 'settings_page.dart';
+
 import 'pages/food/food_page.dart';
+
 import 'pages/home/home_page.dart';
+
 import 'pages/map_page.dart';
+
+import 'pages/admin/admin_page.dart';
+import 'pages/admin/edit_performance_page.dart';
+
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
-// import 'SplashScreen/video_splash_screen.dart';
-import 'models/feedback_entry.dart';
-import 'models/survey_entry.dart';
+
 import 'pages/survey/survey_page.dart';
 import 'pages/survey/survey_list_page.dart';
-import 'providers/reminder_provider.dart';
+
+import 'models/feedback_entry.dart';
+import 'models/survey_entry.dart';
+
 import 'config/supabase_config.dart';
-import 'package:flutter/rendering.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,9 +68,9 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-        ChangeNotifierProvider(create: (_) => ReminderProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
         ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
+        ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
       ],
       child: const MyApp(),
     ),
