@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/data/timetable_data.dart';
+import '../../../data/timetable_data.dart';
 
 class EventDetailPopup extends StatefulWidget {
   final EventItem event;

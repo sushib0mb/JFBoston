@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jfbfestival/data/food_booths.dart';
-import 'package:jfbfestival/services/db_image_service.dart';
-import 'package:jfbfestival/services/sponsor_service.dart';
+import 'data/food_booths.dart';
+import 'services/db_image_service.dart';
+import 'services/sponsor_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,6 +18,7 @@ import 'theme_notifier.dart';
 // import 'SplashScreen/video_splash_screen.dart';
 
 import 'settings_page.dart';
+import 'pages/survey/quick_survey_popup.dart';
 
 import 'pages/food/food_page.dart';
 
@@ -140,9 +141,10 @@ class _MainScreenState extends State<MainScreen> {
     _currentIndex = widget.initialIndex;
     _dayForTimetable = widget.selectedDay ?? 1;
     _loadSurveyFlagAndMaybeSchedule();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
-        _maybeShowAllergyDisclaimer();
+        await _maybeShowAllergyDisclaimer();
+        if (mounted) await QuickSurveyPopup.show(context);
       }
     }); // default to Day 1
   }

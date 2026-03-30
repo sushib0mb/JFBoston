@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/pages/home/home_page.dart';
+import '../home_page.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
 

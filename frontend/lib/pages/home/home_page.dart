@@ -2,12 +2,13 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/pages/home/components/live_timetable.dart';
-import 'package:jfbfestival/services/sponsor_service.dart';
+import 'components/live_timetable.dart';
+import '../../services/sponsor_service.dart';
+import '../../services/db_image_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
-import 'package:jfbfestival/settings_page.dart';
+import '../../settings_page.dart';
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
@@ -59,38 +60,36 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // your original images
   final List<String> backgroundImages = [
-    "assets/JFB-27.jpg",
-    "assets/JFB-4.jpg",
-    "assets/JFB-3.jpg",
-    "assets/JFB-8.jpg",
-    "assets/JFB-15.jpg",
-    "assets/JFB-10.jpg",
-    "assets/JFB-22.jpg",
-    "assets/JFB-6.jpg",
+    "assets/HomeImage1.jpg",
+    "assets/HomeImage2.jpg",
+    "assets/HomeImage3.jpg",
+    "assets/HomeImage4.jpg",
+    "assets/HomeImage5.jpg",
+    "assets/HomeImage6.jpg",
   ];
 
-  // build an “extended” list with dummy first/last
-  List<String> get _extendedBackgroundImages => [
-    backgroundImages.last,
-    ...backgroundImages,
-    backgroundImages.first,
-  ];
+  static const int _virtualPageCount = 100000;
 
   late final PageController _pageController;
-  int _currentPage = 0; // real index [0..backgroundImages.length-1]
+  int _currentPage = 0;
   Timer? _autoScrollTimer;
   Timer? _timetableUpdateTimer;
+
+  int get _initialVirtualPage =>
+      (_virtualPageCount ~/ 2) -
+      (_virtualPageCount ~/ 2) % backgroundImages.length;
 
   @override
   void initState() {
     super.initState();
-    // start on page 1, which is actually backgroundImages[0]
-    _pageController = PageController(initialPage: 1);
+    _pageController = PageController(initialPage: _initialVirtualPage);
     _startAutoScroll();
     _timetableUpdateTimer = Timer.periodic(Duration(minutes: 1), (timer) {
       if (mounted) setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<DbImageService>(context, listen: false).fetchFolder('homeImages');
     });
   }
 
@@ -98,10 +97,7 @@ class _HomePageState extends State<HomePage> {
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(Duration(seconds: 5), (_) {
       if (_pageController.hasClients) {
-        final int current = _pageController.page!.round();
-        final int next = current + 1;
-        _pageController.animateToPage(
-          next,
+        _pageController.nextPage(
           duration: Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
@@ -110,19 +106,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handlePageChanged(int page) {
-    final int realCount = backgroundImages.length;
-    if (page == 0) {
-      // wrapped to duplicate last → jump to real last
-      _pageController.jumpToPage(realCount);
-      setState(() => _currentPage = realCount - 1);
-    } else if (page == realCount + 1) {
-      // wrapped to duplicate first → jump to real first
-      _pageController.jumpToPage(1);
-      setState(() => _currentPage = 0);
-    } else {
-      // normal case
-      setState(() => _currentPage = page - 1);
-    }
+    setState(() => _currentPage = page % backgroundImages.length);
   }
 
   @override
@@ -142,7 +126,7 @@ class _HomePageState extends State<HomePage> {
     final isTablet = screenWidth >= 600;
 
     // Adaptive dimensions
-    final headerHeight = screenHeight * (isTablet ? 0.5 : 0.6);
+    final headerHeight = screenHeight * (isTablet ? 0.5 : 0.7);
     final verticalSpacing = screenHeight * (isTablet ? 0.03 : 0.02);
     final btnSize = isTablet ? 70.0 : 55.0;
     final iconSize = isTablet ? 36.0 : 30.0;
@@ -181,33 +165,17 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               PageView.builder(
                                 controller: _pageController,
-                                itemCount: _extendedBackgroundImages.length,
+                                itemCount: _virtualPageCount,
                                 onPageChanged: _handlePageChanged,
                                 itemBuilder: (context, index) {
-                                  final imagePath =
-                                      _extendedBackgroundImages[index];
-                                  final isLady =
-                                      imagePath == "assets/JFB-27.jpg";
-                                  Widget image = Image.asset(
+                                  final imagePath = backgroundImages[index % backgroundImages.length];
+                                  return Image.asset(
                                     imagePath,
                                     fit: BoxFit.cover,
                                     width: double.infinity,
                                     height: headerHeight,
-                                    alignment:
-                                        isLady
-                                            ? Alignment.topCenter
-                                            : Alignment.center,
+                                    alignment: Alignment.center,
                                   );
-                                  if (isLady) {
-                                    image = Transform.scale(
-                                      scale: isTablet ? 1.2 : 1.1,
-                                      child: Align(
-                                        alignment: Alignment.topCenter,
-                                        child: image,
-                                      ),
-                                    );
-                                  }
-                                  return image;
                                 },
                               ),
                               Positioned(

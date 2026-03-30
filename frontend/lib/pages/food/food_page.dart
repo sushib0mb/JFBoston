@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/pages/food/components/payment_filter.dart';
-import 'package:jfbfestival/pages/food/components/vegan_filter.dart';
-import 'package:jfbfestival/pages/food/components/allergy_filter.dart';
-import 'package:jfbfestival/pages/food/components/booth_details.dart';
-import 'package:jfbfestival/data/food_booths.dart';
-import 'package:jfbfestival/models/food_booth.dart';
-import 'package:jfbfestival/pages/food/components/top_action_buttons.dart';
-import 'package:jfbfestival/pages/food/components/search_bar.dart';
+import 'components/payment_filter.dart';
+import 'components/vegan_filter.dart';
+import 'components/allergy_filter.dart';
+import 'components/booth_details.dart';
+import '../../data/food_booths.dart';
+import '../../models/food_booth.dart';
+import 'components/top_action_buttons.dart';
+import 'components/search_bar.dart';
 
 class AnimatedBoothDetailWrapper extends StatefulWidget {
   final FoodBooth booth;

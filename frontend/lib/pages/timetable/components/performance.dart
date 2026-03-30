@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/data/timetable_data.dart';
+import '../../../data/timetable_data.dart';
 
 class Performance extends StatefulWidget {
   final EventItem eventItem;
@@ -26,6 +26,22 @@ class _PerformanceState extends State<Performance>
     return '${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}';
   }
 
+  Widget _labelBox(String text, double fontSize, FontWeight fontWeight, {Color textColor = Colors.black, int maxLines = 2, TextAlign textAlign = TextAlign.center}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: textColor, height: 1.1),
+        maxLines: maxLines,
+        textAlign: textAlign,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -37,8 +53,7 @@ class _PerformanceState extends State<Performance>
     final eventHeight =
         widget.eventItem.duration / 60 * timeSectionHeight +
         (isTablet ? 3 : 6.7);
-    final containerWidth = screenWidth * (isTablet ? 0.5 : 0.30);
-    final horizontalPadding = containerWidth * (isTablet ? 0.06 : 0.05);
+    final horizontalPadding = isTablet ? 8.0 : 6.0;
     final verticalPadding = isTablet ? 8.0 : 9.0;
     final responsiveScale = screenWidth / (isTablet ? 600 : 380);
 
@@ -54,7 +69,7 @@ class _PerformanceState extends State<Performance>
         scale: isPressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 150),
         child: Container(
-          width: containerWidth,
+          width: double.infinity,
           height: eventHeight,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -67,17 +82,38 @@ class _PerformanceState extends State<Performance>
               ),
             ],
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: verticalPadding,
-              horizontal: horizontalPadding,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _buildBackground(),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: verticalPadding,
+                    horizontal: horizontalPadding,
+                  ),
+                  child: _buildInnerContent(isTablet, responsiveScale, eventHeight),
+                ),
+              ],
             ),
-            // pass eventHeight into the builder
-            child: _buildInnerContent(isTablet, responsiveScale, eventHeight),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildBackground() {
+    final imageUrl = widget.eventItem.stageBackground;
+    if (imageUrl.isNotEmpty) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        alignment: Alignment.topCenter,
+        errorBuilder: (_, __, ___) => Container(color: Colors.white),
+      );
+    }
+    return Container(color: Colors.white);
   }
 
   Widget _buildInnerContent(bool isTablet, double scale, double eventHeight) {
@@ -122,28 +158,18 @@ class _PerformanceState extends State<Performance>
         children: [
           _buildIcon(iconSize + 20),
           SizedBox(height: eventHeight * 0.05),
-          Text(
+          _labelBox(
             widget.eventItem.performanceName.length > 27
                 ? "${widget.eventItem.performanceName.substring(0, 27)}..."
                 : widget.eventItem.performanceName,
-            style: TextStyle(
-              fontSize: scale * 12,
-              fontWeight: FontWeight.w500,
-              height: 1.1,
-            ),
-            maxLines: 2,
-            textAlign: TextAlign.center,
+            scale * 12, FontWeight.w500,
           ),
           SizedBox(height: isTablet ? 12 : 8),
-          Text(
+          _labelBox(
             '${widget.eventItem.time} - ${calculateEndTime(widget.eventItem.time, widget.eventItem.duration)}',
-            style: TextStyle(
-              fontSize: scale * 10,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-              height: 1.1,
-            ),
-            textAlign: TextAlign.center,
+            scale * 10, FontWeight.w500,
+            textColor: Colors.grey[700]!,
+            maxLines: 1,
           ),
         ],
       );
@@ -182,28 +208,20 @@ class _PerformanceState extends State<Performance>
         crossAxisAlignment:
             isTablet ? CrossAxisAlignment.start : CrossAxisAlignment.start,
         children: [
-          Text(
+          _labelBox(
             widget.eventItem.performanceName.length > maxTitle
                 ? "${widget.eventItem.performanceName.substring(0, maxTitle)}..."
                 : widget.eventItem.performanceName,
-            style: TextStyle(
-              fontSize: titleScale,
-              fontWeight: FontWeight.w500,
-              height: lineHeight,
-            ),
-            maxLines: 2,
+            titleScale, FontWeight.w500,
             textAlign: TextAlign.left,
           ),
           SizedBox(height: isTablet ? 6 : 4),
-          Text(
+          _labelBox(
             '${widget.eventItem.time} - ${calculateEndTime(widget.eventItem.time, widget.eventItem.duration)}',
-            style: TextStyle(
-              fontSize: timeScale,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-              height: timeLineHeight,
-            ),
-            textAlign: TextAlign.right,
+            timeScale, FontWeight.w500,
+            textColor: Colors.grey[700]!,
+            maxLines: 1,
+            textAlign: TextAlign.left,
           ),
         ],
       ),

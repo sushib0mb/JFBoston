@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:jfbfestival/data/timetable_data.dart';
-import 'package:jfbfestival/pages/admin/components/image_dropdown.dart';
-import 'package:jfbfestival/pages/admin/components/string_dropdown.dart';
-import 'package:jfbfestival/pages/admin/components/time_picker.dart';
+import '../../data/timetable_data.dart';
+import 'components/image_dropdown.dart';
+import 'components/string_dropdown.dart';
+import 'components/time_picker.dart';
 import '../../config/supabase_config.dart';
 
 class EditPerformancePage extends StatefulWidget {

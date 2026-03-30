@@ -87,6 +87,12 @@ flutter:
     - assets/allergens/soy.png
     - assets/allergens/egg.png
     - assets/vegan.png
+    - assets/HomeImage1.jpg
+    - assets/HomeImage2.jpg
+    - assets/HomeImage3.jpg
+    - assets/HomeImage4.jpg
+    - assets/HomeImage5.jpg
+    - assets/HomeImage6.jpg
 
     # Page selection bar
     - assets/bottomBar/Map.png

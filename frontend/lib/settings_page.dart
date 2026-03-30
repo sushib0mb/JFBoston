@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/config/supabase_config.dart';
-import 'package:jfbfestival/pages/admin/admin_page.dart';
+import 'config/supabase_config.dart';
+import 'pages/admin/admin_page.dart';
 import 'package:share_plus/share_plus.dart';
 
 // import 'theme_notifier.dart';

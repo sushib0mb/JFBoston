@@ -12,6 +12,7 @@ class EventItem {
   final String stage;
   final String description;
   final String eventImage;
+  final String stageBackground;
   final int day;
 
   EventItem({
@@ -24,6 +25,7 @@ class EventItem {
     required this.stage,
     required this.description,
     required this.eventImage,
+    required this.stageBackground,
     required this.day,
   });
 
@@ -43,7 +45,8 @@ class EventItem {
       stage: data['stage'] ?? '',
       description: data['description'] ?? '',
       eventImage: data['event_image'] ?? '',
-      day: data['day'] ?? '',
+      stageBackground: data['StageBackground'] ?? '',
+      day: data['day'] ?? 0,
     );
   }
 
@@ -84,6 +87,7 @@ class ScheduleDataService extends ChangeNotifier {
     'Main Stage 1',
     'Downtown Stage 1',
     'Downtown Stage 2',
+    'Stage 3',
   ];
 
   // Data storage
@@ -256,6 +260,7 @@ class ScheduleDataService extends ChangeNotifier {
               stage: stage,
               description: '',
               eventImage: '',
+              stageBackground: '',
               day: -1,
             ),
           ];

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/data/timetable_data.dart';
-import 'package:jfbfestival/pages/timetable/components/event_detail_popup.dart';
-import 'package:jfbfestival/pages/timetable/components/performance.dart';
+import '../../data/timetable_data.dart';
+import 'components/event_detail_popup.dart';
+import 'components/performance.dart';
 import 'package:provider/provider.dart';
-import 'components/stage_header.dart';
 
 class TimetablePage extends StatefulWidget {
   final EventItem? selectedEvent;
@@ -17,10 +16,14 @@ class TimetablePage extends StatefulWidget {
 
 class _TimetablePageState extends State<TimetablePage> {
   int selectedDay = 1;
+  String selectedStage = 'Main Stage 1';
   EventItem? selectedEvent;
   bool isShowingDetail = false;
   late ScrollController _scrollController;
   bool _fromHomeTap = true;
+
+  static const List<String> _stageNames = ['Main Stage 1', 'Downtown Stage 1', 'Stage 3'];
+  static const List<String> _stageLabels = ['Boston Common', 'Downtown', 'Stage 3'];
 
   @override
   void initState() {
@@ -168,16 +171,43 @@ class _TimetablePageState extends State<TimetablePage> {
                         child: Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.only(
-                                left: w * (tablet ? 0.12 : 0.1),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                              child: Row(
+                                children: List.generate(_stageNames.length, (i) {
+                                  final isSelected = selectedStage == _stageNames[i];
+                                  return Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(() => selectedStage = _stageNames[i]),
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(horizontal: 4),
+                                        padding: EdgeInsets.symmetric(vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
+                                          borderRadius: BorderRadius.circular(36),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          _stageLabels[i],
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: tablet ? 15 : 12,
+                                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ),
-                              child: StageHeader(fontSize: tablet ? 20 : 17),
                             ),
                             Expanded(
                               child: SingleChildScrollView(
                                 controller: _scrollController,
                                 child: ScheduleList(
                                   scheduleItems: schedule,
+                                  stageName: selectedStage,
                                   onEventTap: (e) {
                                     setState(() {
                                       selectedEvent = e;
@@ -263,10 +293,12 @@ class _TimetablePageState extends State<TimetablePage> {
 class ScheduleList extends StatelessWidget {
   final List<ScheduleItem> scheduleItems;
   final void Function(EventItem) onEventTap;
+  final String stageName;
 
   const ScheduleList({
     required this.scheduleItems,
     required this.onEventTap,
+    required this.stageName,
     super.key,
   });
   @override
@@ -361,58 +393,23 @@ class ScheduleList extends StatelessWidget {
           child: SizedBox(
             height: timelineHeight,
             child: Stack(
-              clipBehavior: Clip.none, // Prevent clipping of children
+              clipBehavior: Clip.none,
               children: [
                 _buildTimelineLines(
                   baseTime: baseTime,
                   latestTime: latestTime,
                   pixelsPerMinute: pixelsPerMinute,
-                  width: screenWidth * 0,
+                  width: screenWidth,
                 ),
-                SingleChildScrollView(
-                  physics: BouncingScrollPhysics(),
-                  child: SizedBox(
-                    height: timelineHeight,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: _buildEventColumn(
-                        "Main Stage 1",
-                        pixelsPerMinute,
-                        baseTime,
-                        latestTime,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        Expanded(
-          child: SizedBox(
-            height: timelineHeight,
-            child: Stack(
-              clipBehavior: Clip.none, // Prevent clipping of children
-              children: [
-                _buildTimelineLines(
-                  baseTime: baseTime,
-                  latestTime: latestTime,
-                  pixelsPerMinute: pixelsPerMinute,
-                  width: screenWidth / 2,
-                ),
-                SingleChildScrollView(
-                  physics: NeverScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: timelineHeight,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: _buildEventColumn(
-                        "Downtown Stage 1",
-                        pixelsPerMinute,
-                        baseTime,
-                        latestTime,
-                      ),
+                SizedBox(
+                  height: timelineHeight,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: _buildEventColumn(
+                      stageName,
+                      pixelsPerMinute,
+                      baseTime,
+                      latestTime,
                     ),
                   ),
                 ),
@@ -482,6 +479,8 @@ class ScheduleList extends StatelessWidget {
               (_parseTimeToMinutes(events[i].time) - baseTime) *
                   pixelsPerMinute +
               4,
+          left: 3,
+          right: 3,
           child: SizedBox(
             height: (events[i].duration) * pixelsPerMinute - 4,
             child: Performance(eventItem: events[i], onTap: onEventTap),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jfbfestival/pages/admin/edit_performance_page.dart';
-import 'package:jfbfestival/data/timetable_data.dart';
+import 'edit_performance_page.dart';
+import '../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
 
 class AdminPage extends StatefulWidget {

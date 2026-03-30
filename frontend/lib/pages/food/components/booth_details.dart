@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '/models/food_booth.dart';
-import '/models/dish.dart';
+import '../../../models/food_booth.dart';
+import '../../../models/dish.dart';
 
 class BoothDetails extends StatelessWidget {
   final FoodBooth booth;
