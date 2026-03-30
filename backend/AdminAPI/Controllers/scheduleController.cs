@@ -36,6 +36,32 @@ public class ScheduleController : ControllerBase
         return Ok("Performance added successfully");
     }
 
+    [HttpPut("update/{id}")]
+    public async Task<IActionResult> UpdatePerformance(int id, [FromBody] Performance performance)
+    {
+        try
+        {
+            // Ensure the ID in the URL matches the ID in the model (if your frontend sends it)
+            // If your frontend doesn't send the ID in the body, map it here:
+            performance.Id = id;
+
+            bool isSuccess = await _scheduleService.UpdatePerformanceAsync(performance);
+
+            if (isSuccess)
+            {
+                return Ok(new { message = "Performance updated successfully." });
+            }
+            else
+            {
+                return BadRequest(new { message = "Failed to update the performance." });
+            }
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
+        }
+    }
+
     // Start service to delay a single performance
     [HttpPost("delay/{id}")]
     public async Task<IActionResult> Delay(int id, [FromQuery] int minutes)

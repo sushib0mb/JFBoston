@@ -41,6 +41,27 @@ public class ScheduleService : IScheduleService
         }
     }
 
+    public async Task<bool> UpdatePerformanceAsync(Performance performance)
+    {
+        try
+        {
+            Console.WriteLine(performance.Id);
+            var response = await _client.From<Performance>().Update(performance);
+
+            if (response.Models.Count == 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CRITICAL ERROR: {ex.Message}");
+            return false;
+        }
+    }
+
     // Delays a single performance using id by min minutes
     public async Task<string> DelayPerformanceAsync(int id, int min)
     {

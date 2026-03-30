@@ -79,49 +79,81 @@ class EditPerformancePageState extends State<EditPerformancePage> {
     super.dispose();
   }
 
-  // Function to call your C# MapPost endpoint
   Future<void> _submitPerformance() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final url = Uri.parse('${dotenv.env['API_URL_CHROME']!}/api/schedule/add');
+    final isEditing = widget.existingData != null;
+    final baseUrl = dotenv.env['API_URL_CHROME']!;
+
+    final url =
+        isEditing
+            ? Uri.parse(
+              '$baseUrl/api/schedule/update/${widget.existingData?.id}',
+            )
+            : Uri.parse('$baseUrl/api/schedule/add');
 
     final session = supabase.auth.currentSession;
     final jwt = session?.accessToken;
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $jwt',
-        },
+      final Map<String, dynamic> requestBody = {
+        'Name': _nameController.text,
+        'StartTime':
+            "${_selectedStartTime?.hour}:${_selectedStartTime?.minute.toString().padLeft(2, "0")}",
+        'StageName': _selectedStage,
+        'Duration': _durationController.text,
+        'Description': _descriptionController.text,
+        'EventImage': _selectedPerformanceImage,
+        "IconImage": _selectedPerformanceIcon,
+        "Day": _selectedDay,
+      };
 
-        body: jsonEncode({
-          'Name': _nameController.text,
-          'StartTime':
-              "${_selectedStartTime?.hour}:${_selectedStartTime?.minute.toString().padLeft(2, "0")}",
-          'StageName': _selectedStage,
-          'Duration': _durationController.text,
-          'Description': _descriptionController.text,
-          'EventImage': _selectedPerformanceImage,
-          "IconImage": _selectedPerformanceIcon,
-          "Day": _selectedDay,
-        }),
-      );
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      };
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Performance added successfully!')),
+      http.Response response;
+
+      if (isEditing) {
+        response = await http.put(
+          url,
+          headers: headers,
+          body: jsonEncode(requestBody),
         );
       } else {
-        // DEBUG
+        // Using POST for new additions
+        response = await http.post(
+          url,
+          headers: headers,
+          body: jsonEncode(requestBody),
+        );
+      }
 
+      // 3. Handle the response
+      if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${response.statusCode}")),
+          SnackBar(
+            content: Text(
+              isEditing
+                  ? 'Performance updated successfully!'
+                  : 'Performance added successfully!',
+            ),
+          ),
+        );
+      } else {
+        print("Error: ${response.statusCode} - ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${response.statusCode} - ${response.body}"),
+          ),
         );
       }
     } catch (e) {
       print("Error: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Network error occurred")));
     }
   }
 
@@ -152,7 +184,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                       const SizedBox(height: 7.5),
 
                       Text(
-                        isEditing ? "Add New Performance" : "Edit Performance",
+                        isEditing ? "Edit Performance" : "Add New Performance",
                         style: TextStyle(fontSize: 30),
                         textAlign: TextAlign.center,
                       ),
@@ -201,7 +233,11 @@ class EditPerformancePageState extends State<EditPerformancePage> {
 
                       StringDropdown(
                         label: 'Stage',
-                        options: ["Main Stage", "Downtown Stage"],
+                        options: [
+                          "Main Stage 1",
+                          "Downtown Stage 1",
+                          "Downtown Stage 2",
+                        ],
                         initialSelection: _selectedStage,
                         errorMessage:
                             'Please select a stage for this performance', // The text that shows in red
@@ -281,7 +317,9 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 50),
                         ),
-                        child: const Text('Add to Schedule'),
+                        child: Text(
+                          isEditing ? 'Edit Schedule' : 'Add to Schedule',
+                        ),
                       ),
                     ],
                   ),

@@ -3,6 +3,7 @@ import 'package:supabase/supabase.dart';
 
 // Event item model
 class EventItem {
+  final int id;
   final String performanceName;
   final String time; // actual start time in HH:MM format
   final String groupTime; // 30-minute bracket in HH:MM format (xx:00 or xx:30)
@@ -14,6 +15,7 @@ class EventItem {
   final int day;
 
   EventItem({
+    required this.id,
     required this.performanceName,
     required this.time,
     required this.groupTime,
@@ -32,6 +34,7 @@ class EventItem {
     final String groupTime = _calculateGroupTime(timetz);
 
     return EventItem(
+      id: data['id'] ?? 0,
       performanceName: data['performance_name'] ?? '',
       time: timetz,
       groupTime: groupTime,
@@ -246,12 +249,13 @@ class ScheduleDataService extends ChangeNotifier {
         for (var stage in stageNames) {
           finalStageEventsForBracket[stage] = [
             EventItem(
+              id: -1,
               performanceName: '',
               time: bracket,
               groupTime: bracket,
               duration: durationToNextEvent,
               iconImage: '',
-              stage: stage, // Assign the correct stage dynamically
+              stage: stage,
               description: '',
               eventImage: '',
               day: -1,
