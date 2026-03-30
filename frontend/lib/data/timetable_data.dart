@@ -115,8 +115,6 @@ class ScheduleDataService extends ChangeNotifier {
 
       final allEvents = List<Map<String, dynamic>>.from(response);
 
-      print(allEvents);
-
       day1ScheduleData = _processEventData(
         allEvents.where((e) => e['day'] == 1).toList(),
       );

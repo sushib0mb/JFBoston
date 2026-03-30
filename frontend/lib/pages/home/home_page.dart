@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
 import 'package:jfbfestival/settings_page.dart';
-import "../../core/constants/design_system.dart";
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
@@ -274,11 +273,13 @@ class _HomePageState extends State<HomePage> {
                         screenHeight * (isTablet ? 0.02 : 0.015),
                     right: screenWidth * (isTablet ? 0.07 : 0.05),
                     child: GestureDetector(
-                      onTap:
-                          () => Navigator.pushNamed(
-                            context,
-                            SettingsPage.routeName,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
                           ),
+                        );
+                      },
                       child: Material(
                         color: Colors.transparent,
                         child: Container(
