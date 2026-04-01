@@ -4,6 +4,7 @@ import '../../services/location_service.dart';
 import 'components/event_detail_popup.dart';
 import 'components/performance.dart';
 import 'package:provider/provider.dart';
+import '../../utils/time_utils.dart';
 
 class TimetablePage extends StatefulWidget {
   final EventItem? selectedEvent;
@@ -23,8 +24,16 @@ class _TimetablePageState extends State<TimetablePage> {
   late ScrollController _scrollController;
   bool _fromHomeTap = true;
 
-  static const List<String> _stageNames = ['Main Stage 1', 'Downtown Stage 1', 'Stage 3'];
-  static const List<String> _stageLabels = ['Boston Common', 'Downtown', 'Stage 3'];
+  static const List<String> _stageNames = [
+    'Main Stage 1',
+    'Downtown Stage 1',
+    'Stage 3',
+  ];
+  static const List<String> _stageLabels = [
+    'Boston Common',
+    'Downtown',
+    'Stage 3',
+  ];
 
   @override
   void initState() {
@@ -62,24 +71,9 @@ class _TimetablePageState extends State<TimetablePage> {
     }
   }
 
-  int _parseTimeToMinutes(String s) {
-    try {
-      var parts = s.split(' ');
-      var hm = parts[0].split(':');
-      var h = int.parse(hm[0]);
-      var m = hm.length > 1 ? int.parse(hm[1]) : 0;
-      var pm = parts.length > 1 && parts[1].toLowerCase() == 'pm';
-      if (pm && h < 12) h += 12;
-      if (!pm && h == 12) h = 0;
-      return h * 60 + m;
-    } catch (_) {
-      return 0;
-    }
-  }
-
   void _scrollToEventTime(String time) {
     // Parse time in HH:MM format to minutes
-    var start = _parseTimeToMinutes(time);
+    var start = parseTimeToMinutes(time);
     // Use 11:00 as base reference (11*60 = 660 minutes)
     var base = 660; // 11:00 in minutes
     var offset = (start - base) * (isTablet(context) ? 12.0 : 10.0);
@@ -186,19 +180,37 @@ class _TimetablePageState extends State<TimetablePage> {
                             Padding(
                               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                               child: Row(
-                                children: List.generate(_stageNames.length, (i) {
-                                  final isSelected = selectedStage == _stageNames[i];
+                                children: List.generate(_stageNames.length, (
+                                  i,
+                                ) {
+                                  final isSelected =
+                                      selectedStage == _stageNames[i];
                                   final loc = context.watch<LocationService>();
-                                  final dist = loc.formatDistance(_stageNames[i]);
+                                  final dist = loc.formatDistance(
+                                    _stageNames[i],
+                                  );
                                   return Expanded(
                                     child: GestureDetector(
-                                      onTap: () => setState(() => selectedStage = _stageNames[i]),
+                                      onTap:
+                                          () => setState(
+                                            () =>
+                                                selectedStage = _stageNames[i],
+                                          ),
                                       child: Container(
-                                        margin: EdgeInsets.symmetric(horizontal: 4),
-                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        margin: EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
-                                          borderRadius: BorderRadius.circular(36),
+                                          color:
+                                              isSelected
+                                                  ? const Color(0xFF0B3775)
+                                                  : const Color(0xFF8D8D97),
+                                          borderRadius: BorderRadius.circular(
+                                            36,
+                                          ),
                                         ),
                                         alignment: Alignment.center,
                                         child: Column(
@@ -209,7 +221,10 @@ class _TimetablePageState extends State<TimetablePage> {
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: tablet ? 15 : 12,
-                                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                fontWeight:
+                                                    isSelected
+                                                        ? FontWeight.w700
+                                                        : FontWeight.w500,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
@@ -218,7 +233,8 @@ class _TimetablePageState extends State<TimetablePage> {
                                               Text(
                                                 dist,
                                                 style: TextStyle(
-                                                  color: Colors.white.withValues(alpha: 0.85),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.85),
                                                   fontSize: tablet ? 11 : 9,
                                                   fontWeight: FontWeight.w400,
                                                 ),
@@ -346,13 +362,13 @@ class ScheduleList extends StatelessWidget {
 
     // Get all bracket times from schedule items (these are the 30-min brackets)
     final timelineSlots = scheduleItems.map((item) => item.time).toList();
-    final baseTime = _parseTimeToMinutes(timelineSlots.first);
+    final baseTime = parseTimeToMinutes(timelineSlots.first);
 
     // Get the last event's duration from both stages based on scheduleItems
     int latestEventEndTime = baseTime;
 
     for (var item in scheduleItems) {
-      final itemStartTime = _parseTimeToMinutes(item.time);
+      final itemStartTime = parseTimeToMinutes(item.time);
 
       for (var eventList in item.eventsByStage.values) {
         if (eventList.isEmpty) continue;
@@ -383,7 +399,7 @@ class ScheduleList extends StatelessWidget {
             child: Stack(
               children:
                   timelineSlots.map((timeString) {
-                    final timeInMinutes = _parseTimeToMinutes(timeString);
+                    final timeInMinutes = parseTimeToMinutes(timeString);
                     final displayLabel = _minutesToDisplayFormat(timeInMinutes);
                     final timeParts = displayLabel.split(" ");
                     final timeText =
@@ -507,7 +523,7 @@ class ScheduleList extends StatelessWidget {
       for (var i = 0; i < events.length; i++)
         Positioned(
           top:
-              (_parseTimeToMinutes(events[i].time) - baseTime) *
+              (parseTimeToMinutes(events[i].time) - baseTime) *
                   pixelsPerMinute +
               4,
           left: 3,
@@ -518,31 +534,6 @@ class ScheduleList extends StatelessWidget {
           ),
         ),
     ];
-  }
-}
-
-// Parse time string in HH:MM or HH:MM am/pm format to minutes since midnight
-int _parseTimeToMinutes(String timeString) {
-  try {
-    final hourAndMinute = timeString.split(':');
-    int hour = int.parse(hourAndMinute[0]);
-    final int minute =
-        hourAndMinute.length > 1 ? int.parse(hourAndMinute[1]) : 0;
-
-    final isPM = int.tryParse(hourAndMinute[0])! >= 12;
-
-    // Convert to 24-hour format if PM
-    if (isPM && hour < 12) {
-      hour += 12;
-    }
-    // Handle 12 AM edge case
-    if (!isPM && hour == 12) {
-      hour = 0;
-    }
-
-    return hour * 60 + minute;
-  } catch (e) {
-    return 0; // Default fallback
   }
 }
 

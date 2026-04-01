@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'edit_performance_page.dart';
 import '../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
+import '../../utils/time_utils.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -124,8 +125,8 @@ class AdminPageState extends State<AdminPage> {
                                       .map((event) {
                                         return _buildPerformanceBox(
                                           title: event.performanceName,
-                                          time: event.time,
-                                          // '${event.time} - ${int.parse(event.time) + event.duration}',
+                                          startTime: event.time,
+                                          duration: event.duration,
                                           onTap: () {
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
@@ -222,9 +223,11 @@ class AdminPageState extends State<AdminPage> {
   // Helper method to create the Clickable Performance Boxes
   Widget _buildPerformanceBox({
     required String title,
-    required String time,
+    required String startTime,
+    required int duration,
     required VoidCallback onTap,
   }) {
+    String endTime = findEndTime(startTime, duration);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Container(
@@ -264,7 +267,7 @@ class AdminPageState extends State<AdminPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          time,
+                          "$startTime - $endTime",
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,

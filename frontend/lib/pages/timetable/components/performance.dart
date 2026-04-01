@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../data/timetable_data.dart';
 import '../../../services/location_service.dart';
 import '../../../services/notification_service.dart';
+import '../../../utils/time_utils.dart';
 
 class Performance extends StatefulWidget {
   final EventItem eventItem;
@@ -41,7 +42,8 @@ class _PerformanceState extends State<Performance>
     await notificationService.schedule(
       id: widget.eventItem.id,
       title: '${widget.eventItem.performanceName} is starting soon!',
-      body: '$minutes min until ${widget.eventItem.time} · ${widget.eventItem.stage}',
+      body:
+          '$minutes min until ${widget.eventItem.time} · ${widget.eventItem.stage}',
       when: widget.eventItem.startDateTime,
       leadTime: Duration(minutes: minutes),
     );
@@ -49,10 +51,14 @@ class _PerformanceState extends State<Performance>
     await prefs.setInt(_prefsKey, minutes);
     if (mounted) {
       setState(() => _reminderMinutes = minutes);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Reminder set: $minutes min before ${widget.eventItem.performanceName}'),
-        duration: const Duration(seconds: 2),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Reminder set: $minutes min before ${widget.eventItem.performanceName}',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -73,124 +79,149 @@ class _PerformanceState extends State<Performance>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Set Reminder',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text(
-                '${widget.eventItem.performanceName}  ·  ${widget.eventItem.stage}',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 16),
-              // Quick chips
-              Wrap(
-                spacing: 8,
-                children: [5, 10, 15, 20].map((min) {
-                  final isChipSelected = selected == min;
-                  return GestureDetector(
-                    onTap: () {
-                      setSheet(() => selected = min);
-                      scrollCtrl.animateToItem(
-                        min - 1,
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeOut,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isChipSelected
-                            ? const Color(0xFF0B3775)
-                            : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isChipSelected
-                              ? const Color(0xFF0B3775)
-                              : Colors.grey[300]!,
-                        ),
-                      ),
-                      child: Text(
-                        '$min min',
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setSheet) => Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Set Reminder',
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: isChipSelected ? Colors.white : Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-              // Scroll wheel
-              SizedBox(
-                height: 150,
-                child: CupertinoPicker(
-                  scrollController: scrollCtrl,
-                  itemExtent: 40,
-                  selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
-                    background: const Color(0xFF0B3775).withValues(alpha: 0.08),
-                  ),
-                  onSelectedItemChanged: (i) {
-                    setSheet(() => selected = i + 1);
-                  },
-                  children: List.generate(
-                    60,
-                    (i) => Center(
-                      child: Text(
-                        '${i + 1} ${i + 1 == 1 ? "minute" : "minutes"}',
-                        style: const TextStyle(fontSize: 15),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${widget.eventItem.performanceName}  ·  ${widget.eventItem.stage}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      // Quick chips
+                      Wrap(
+                        spacing: 8,
+                        children:
+                            [5, 10, 15, 20].map((min) {
+                              final isChipSelected = selected == min;
+                              return GestureDetector(
+                                onTap: () {
+                                  setSheet(() => selected = min);
+                                  scrollCtrl.animateToItem(
+                                    min - 1,
+                                    duration: const Duration(milliseconds: 250),
+                                    curve: Curves.easeOut,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isChipSelected
+                                            ? const Color(0xFF0B3775)
+                                            : Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color:
+                                          isChipSelected
+                                              ? const Color(0xFF0B3775)
+                                              : Colors.grey[300]!,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '$min min',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          isChipSelected
+                                              ? Colors.white
+                                              : Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      // Scroll wheel
+                      SizedBox(
+                        height: 150,
+                        child: CupertinoPicker(
+                          scrollController: scrollCtrl,
+                          itemExtent: 40,
+                          selectionOverlay:
+                              CupertinoPickerDefaultSelectionOverlay(
+                                background: const Color(
+                                  0xFF0B3775,
+                                ).withValues(alpha: 0.08),
+                              ),
+                          onSelectedItemChanged: (i) {
+                            setSheet(() => selected = i + 1);
+                          },
+                          children: List.generate(
+                            60,
+                            (i) => Center(
+                              child: Text(
+                                '${i + 1} ${i + 1 == 1 ? "minute" : "minutes"}',
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Set button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _scheduleReminder(selected);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0B3775),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Remind me $selected min before',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_reminderMinutes != null) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _cancelReminder();
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text('Remove reminder'),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Set button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _scheduleReminder(selected);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0B3775),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    'Remind me $selected min before',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-              if (_reminderMinutes != null) ...[
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _cancelReminder();
-                    },
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    child: const Text('Remove reminder'),
-                  ),
-                ),
-              ],
-            ],
           ),
-        ),
-      ),
     ).whenComplete(() => scrollCtrl.dispose());
   }
 
@@ -201,9 +232,10 @@ class _PerformanceState extends State<Performance>
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: hasReminder
-              ? const Color(0xFF0B3775)
-              : Colors.white.withValues(alpha: 0.92),
+          color:
+              hasReminder
+                  ? const Color(0xFF0B3775)
+                  : Colors.white.withValues(alpha: 0.92),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -222,18 +254,14 @@ class _PerformanceState extends State<Performance>
     );
   }
 
-  String calculateEndTime(String time, int duration) {
-    List<String> timeParts = time.split(":");
-    int totalMinutes =
-        int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]) + duration;
-
-    final endHour = (totalMinutes ~/ 60) % 24; // % 24 handles midnight wrapping
-    final endMinute = totalMinutes % 60;
-
-    return '${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}';
-  }
-
-  Widget _labelBox(String text, double fontSize, FontWeight fontWeight, {Color textColor = Colors.black, int maxLines = 2, TextAlign textAlign = TextAlign.center}) {
+  Widget _labelBox(
+    String text,
+    double fontSize,
+    FontWeight fontWeight, {
+    Color textColor = Colors.black,
+    int maxLines = 2,
+    TextAlign textAlign = TextAlign.center,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
@@ -242,7 +270,12 @@ class _PerformanceState extends State<Performance>
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: textColor, height: 1.1),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: textColor,
+          height: 1.1,
+        ),
         maxLines: maxLines,
         textAlign: textAlign,
       ),
@@ -305,7 +338,11 @@ class _PerformanceState extends State<Performance>
                             vertical: verticalPadding,
                             horizontal: horizontalPadding,
                           ),
-                          child: _buildInnerContent(isTablet, responsiveScale, eventHeight),
+                          child: _buildInnerContent(
+                            isTablet,
+                            responsiveScale,
+                            eventHeight,
+                          ),
                         ),
                       ],
                     ),
@@ -314,11 +351,7 @@ class _PerformanceState extends State<Performance>
               ),
               if (widget.eventItem.performanceName.isNotEmpty &&
                   widget.eventItem.duration >= 10)
-                Positioned(
-                  top: 18,
-                  right: 8,
-                  child: _buildReminderButton(),
-                ),
+                Positioned(top: 18, right: 8, child: _buildReminderButton()),
             ],
           ),
         ),
@@ -385,12 +418,14 @@ class _PerformanceState extends State<Performance>
             widget.eventItem.performanceName.length > 27
                 ? "${widget.eventItem.performanceName.substring(0, 27)}..."
                 : widget.eventItem.performanceName,
-            scale * 12, FontWeight.w500,
+            scale * 12,
+            FontWeight.w500,
           ),
           SizedBox(height: isTablet ? 12 : 8),
           _labelBox(
-            '${widget.eventItem.time} - ${calculateEndTime(widget.eventItem.time, widget.eventItem.duration)}',
-            scale * 10, FontWeight.w500,
+            '${widget.eventItem.time} - ${findEndTime(widget.eventItem.time, widget.eventItem.duration)}',
+            scale * 10,
+            FontWeight.w500,
             textColor: Colors.grey[700]!,
             maxLines: 1,
           ),
@@ -435,13 +470,15 @@ class _PerformanceState extends State<Performance>
             widget.eventItem.performanceName.length > maxTitle
                 ? "${widget.eventItem.performanceName.substring(0, maxTitle)}..."
                 : widget.eventItem.performanceName,
-            titleScale, FontWeight.w500,
+            titleScale,
+            FontWeight.w500,
             textAlign: TextAlign.left,
           ),
           SizedBox(height: isTablet ? 6 : 4),
           _labelBox(
-            '${widget.eventItem.time} - ${calculateEndTime(widget.eventItem.time, widget.eventItem.duration)}',
-            timeScale, FontWeight.w500,
+            '${widget.eventItem.time} - ${findEndTime(widget.eventItem.time, widget.eventItem.duration)}',
+            timeScale,
+            FontWeight.w500,
             textColor: Colors.grey[700]!,
             maxLines: 1,
             textAlign: TextAlign.left,
