@@ -305,7 +305,7 @@ class _TimetablePageState extends State<TimetablePage> {
                     labels[i],
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: tablet ? 15 : 12,
+                      fontSize: tablet ? 13 : 10.5,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
