@@ -37,6 +37,8 @@
  <string>LaunchScreen</string>
  <key>UIMainStoryboardFile</key>
  <string>Main</string>
+ <key>NSLocationWhenInUseUsageDescription</key>
+ <string>JFBoston uses your location to show how far you are from each festival stage.</string>
  <key>UIRequiresFullScreen</key>
  <true/>
  <key>UIStatusBarStyle</key>

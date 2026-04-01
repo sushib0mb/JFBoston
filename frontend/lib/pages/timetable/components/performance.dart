@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../../../data/timetable_data.dart';
+import '../../../services/location_service.dart';
 import '../../../services/notification_service.dart';
 
 class Performance extends StatefulWidget {
@@ -34,6 +36,8 @@ class _PerformanceState extends State<Performance>
   }
 
   Future<void> _scheduleReminder(int minutes) async {
+    // Start GPS tracking the first time a reminder is set
+    context.read<LocationService>().start();
     await notificationService.schedule(
       id: widget.eventItem.id,
       title: '${widget.eventItem.performanceName} is starting soon!',

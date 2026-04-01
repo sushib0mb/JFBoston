@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/timetable_data.dart';
+import '../../services/location_service.dart';
 import 'components/event_detail_popup.dart';
 import 'components/performance.dart';
 import 'package:provider/provider.dart';
@@ -187,26 +188,44 @@ class _TimetablePageState extends State<TimetablePage> {
                               child: Row(
                                 children: List.generate(_stageNames.length, (i) {
                                   final isSelected = selectedStage == _stageNames[i];
+                                  final loc = context.watch<LocationService>();
+                                  final dist = loc.formatDistance(_stageNames[i]);
                                   return Expanded(
                                     child: GestureDetector(
                                       onTap: () => setState(() => selectedStage = _stageNames[i]),
                                       child: Container(
                                         margin: EdgeInsets.symmetric(horizontal: 4),
-                                        padding: EdgeInsets.symmetric(vertical: 10),
+                                        padding: EdgeInsets.symmetric(vertical: 8),
                                         decoration: BoxDecoration(
                                           color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
                                           borderRadius: BorderRadius.circular(36),
                                         ),
                                         alignment: Alignment.center,
-                                        child: Text(
-                                          _stageLabels[i],
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: tablet ? 15 : 12,
-                                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _stageLabels[i],
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: tablet ? 15 : 12,
+                                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                            if (dist.isNotEmpty)
+                                              Text(
+                                                dist,
+                                                style: TextStyle(
+                                                  color: Colors.white.withValues(alpha: 0.85),
+                                                  fontSize: tablet ? 11 : 9,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                          ],
                                         ),
                                       ),
                                     ),
