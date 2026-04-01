@@ -32,7 +32,11 @@ class _PerformanceState extends State<Performance>
   Future<void> _loadReminderState() async {
     final prefs = await SharedPreferences.getInstance();
     final val = prefs.getInt(_prefsKey);
-    if (mounted) setState(() => _reminderMinutes = val);
+    if (mounted) {
+      setState(() => _reminderMinutes = val);
+      // Restart GPS on app relaunch if this event has a saved reminder
+      if (val != null) context.read<LocationService>().start();
+    }
   }
 
   Future<void> _scheduleReminder(int minutes) async {
@@ -61,6 +65,10 @@ class _PerformanceState extends State<Performance>
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefsKey);
     if (mounted) setState(() => _reminderMinutes = null);
+
+    // Stop GPS if no other reminders remain
+    final hasOthers = prefs.getKeys().any((k) => k.startsWith('reminder_'));
+    if (!hasOthers && mounted) context.read<LocationService>().stop();
   }
 
   void _showReminderPicker(BuildContext context) {

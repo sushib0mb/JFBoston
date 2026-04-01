@@ -24,7 +24,7 @@ class _TimetablePageState extends State<TimetablePage> {
   bool _fromHomeTap = true;
 
   static const List<String> _stageNames = ['Main Stage 1', 'Downtown Stage 1', 'Stage 3'];
-  static const List<String> _stageLabels = ['Boston Common', 'Downtown', 'Stage 3'];
+  static const List<String> _stageLabels = ['Boston Common', 'Sakura Stage', 'Fuji Stage'];
 
   @override
   void initState() {
@@ -185,53 +185,7 @@ class _TimetablePageState extends State<TimetablePage> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                              child: Row(
-                                children: List.generate(_stageNames.length, (i) {
-                                  final isSelected = selectedStage == _stageNames[i];
-                                  final loc = context.watch<LocationService>();
-                                  final dist = loc.formatDistance(_stageNames[i]);
-                                  return Expanded(
-                                    child: GestureDetector(
-                                      onTap: () => setState(() => selectedStage = _stageNames[i]),
-                                      child: Container(
-                                        margin: EdgeInsets.symmetric(horizontal: 4),
-                                        padding: EdgeInsets.symmetric(vertical: 8),
-                                        decoration: BoxDecoration(
-                                          color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
-                                          borderRadius: BorderRadius.circular(36),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _stageLabels[i],
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: tablet ? 15 : 12,
-                                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                            ),
-                                            if (dist.isNotEmpty)
-                                              Text(
-                                                dist,
-                                                style: TextStyle(
-                                                  color: Colors.white.withValues(alpha: 0.85),
-                                                  fontSize: tablet ? 11 : 9,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
+                              child: _buildStageButtons(context, tablet),
                             ),
                             Expanded(
                               child: SingleChildScrollView(
@@ -280,7 +234,11 @@ class _TimetablePageState extends State<TimetablePage> {
     final font = isTablet ? fs * 1.2 : fs;
 
     return GestureDetector(
-      onTap: () => setState(() => selectedDay = day),
+      onTap: () => setState(() {
+        selectedDay = day;
+        // Day 2 only has Boston Common
+        if (day == 2) selectedStage = 'Main Stage 1';
+      }),
       child: Container(
         width: width,
         height: height,
@@ -317,6 +275,59 @@ class _TimetablePageState extends State<TimetablePage> {
           style: TextStyle(fontSize: font, fontWeight: FontWeight.w400),
         ),
       ),
+    );
+  }
+
+  Widget _buildStageButtons(BuildContext context, bool tablet) {
+    final loc = context.watch<LocationService>();
+    final names = selectedDay == 1 ? _stageNames : [_stageNames[0]];
+    final labels = selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
+
+    return Row(
+      children: List.generate(names.length, (i) {
+        final isSelected = selectedStage == names[i];
+        final dist = loc.formatDistance(names[i]);
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => selectedStage = names[i]),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
+                borderRadius: BorderRadius.circular(36),
+              ),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    labels[i],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: tablet ? 15 : 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  if (dist.isNotEmpty)
+                    Text(
+                      dist,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: tablet ? 11 : 9,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
