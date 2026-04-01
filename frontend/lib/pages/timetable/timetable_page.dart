@@ -17,14 +17,22 @@ class TimetablePage extends StatefulWidget {
 
 class _TimetablePageState extends State<TimetablePage> {
   int selectedDay = 1;
-  String selectedStage = 'Main Stage 1';
+  String selectedStage = 'Main Stage';
   EventItem? selectedEvent;
   bool isShowingDetail = false;
   late ScrollController _scrollController;
   bool _fromHomeTap = true;
 
-  static const List<String> _stageNames = ['Main Stage 1', 'Downtown Stage 1', 'Stage 3'];
-  static const List<String> _stageLabels = ['Boston Common', 'Sakura Stage', 'Fuji Stage'];
+  static const List<String> _stageNames = [
+    'Main Stage',
+    'Sakura Stage',
+    'Fuji Stage',
+  ];
+  static const List<String> _stageLabels = [
+    'Boston Common',
+    'Sakura Stage',
+    'Fuji Stage',
+  ];
 
   @override
   void initState() {
@@ -234,11 +242,12 @@ class _TimetablePageState extends State<TimetablePage> {
     final font = isTablet ? fs * 1.2 : fs;
 
     return GestureDetector(
-      onTap: () => setState(() {
-        selectedDay = day;
-        // Day 2 only has Boston Common
-        if (day == 2) selectedStage = 'Main Stage 1';
-      }),
+      onTap:
+          () => setState(() {
+            selectedDay = day;
+            // Day 2 only has Boston Common
+            if (day == 2) selectedStage = 'Main Stage';
+          }),
       child: Container(
         width: width,
         height: height,
@@ -294,7 +303,10 @@ class _TimetablePageState extends State<TimetablePage> {
               margin: const EdgeInsets.symmetric(horizontal: 4),
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
+                color:
+                    isSelected
+                        ? const Color(0xFF0B3775)
+                        : const Color(0xFF8D8D97),
                 borderRadius: BorderRadius.circular(36),
               ),
               alignment: Alignment.center,
@@ -306,7 +318,8 @@ class _TimetablePageState extends State<TimetablePage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: tablet ? 13 : 10.5,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,

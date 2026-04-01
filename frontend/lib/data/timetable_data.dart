@@ -40,8 +40,13 @@ class EventItem {
     final base = FestivalDates.forDay(day);
     final parts = time.split(':');
     if (parts.length < 2) return base;
-    return DateTime(base.year, base.month, base.day,
-        int.parse(parts[0]), int.parse(parts[1]));
+    return DateTime(
+      base.year,
+      base.month,
+      base.day,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
   }
 
   factory EventItem.fromSupabase(Map<String, dynamic> data) {
@@ -99,10 +104,9 @@ class ScheduleDataService extends ChangeNotifier {
 
   // Stage options: Add new stages here
   static const List<String> stageNames = [
-    'Main Stage 1',
-    'Downtown Stage 1',
-    'Downtown Stage 2',
-    'Stage 3',
+    'Main Stage',
+    'Sakura Stage',
+    'Fuji Stage',
   ];
 
   // Data storage

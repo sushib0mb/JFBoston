@@ -81,7 +81,7 @@ class NotificationService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
 
     /* 3. Android 13+ POST_NOTIFICATIONS runtime permission */
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       await fln
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
