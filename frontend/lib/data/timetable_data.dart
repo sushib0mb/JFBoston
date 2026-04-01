@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase/supabase.dart';
 
+class FestivalDates {
+  static final DateTime day1 = DateTime(2026, 4, 25);
+  static final DateTime day2 = DateTime(2026, 4, 26);
+  static DateTime forDay(int day) => day == 2 ? day2 : day1;
+}
+
 // Event item model
 class EventItem {
   final int id;
@@ -28,6 +34,15 @@ class EventItem {
     required this.stageBackground,
     required this.day,
   });
+
+  /// Full [DateTime] when this event starts, based on [FestivalDates].
+  DateTime get startDateTime {
+    final base = FestivalDates.forDay(day);
+    final parts = time.split(':');
+    if (parts.length < 2) return base;
+    return DateTime(base.year, base.month, base.day,
+        int.parse(parts[0]), int.parse(parts[1]));
+  }
 
   factory EventItem.fromSupabase(Map<String, dynamic> data) {
     String rawTime = data['time'] ?? '';

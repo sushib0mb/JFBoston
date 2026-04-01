@@ -114,7 +114,7 @@ class _TimetablePageState extends State<TimetablePage> {
         selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar:
           (isShowingDetail && _fromHomeTap)
@@ -126,6 +126,18 @@ class _TimetablePageState extends State<TimetablePage> {
               : null,
       body: Stack(
         children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF0B3775).withValues(alpha: 0.15),
+                  const Color(0xFFBF1D23).withValues(alpha: 0.15),
+                ],
+              ),
+            ),
+          ),
           Padding(
             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
             child: Stack(

@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/timetable_data.dart';
+import '../../../services/notification_service.dart';
 
 class Performance extends StatefulWidget {
   final EventItem eventItem;
@@ -14,6 +17,206 @@ class Performance extends StatefulWidget {
 class _PerformanceState extends State<Performance>
     with SingleTickerProviderStateMixin {
   bool isPressed = false;
+  int? _reminderMinutes;
+
+  String get _prefsKey => 'reminder_${widget.eventItem.id}';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReminderState();
+  }
+
+  Future<void> _loadReminderState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final val = prefs.getInt(_prefsKey);
+    if (mounted) setState(() => _reminderMinutes = val);
+  }
+
+  Future<void> _scheduleReminder(int minutes) async {
+    await notificationService.schedule(
+      id: widget.eventItem.id,
+      title: '${widget.eventItem.performanceName} is starting soon!',
+      body: '$minutes min until ${widget.eventItem.time} · ${widget.eventItem.stage}',
+      when: widget.eventItem.startDateTime,
+      leadTime: Duration(minutes: minutes),
+    );
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsKey, minutes);
+    if (mounted) {
+      setState(() => _reminderMinutes = minutes);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Reminder set: $minutes min before ${widget.eventItem.performanceName}'),
+        duration: const Duration(seconds: 2),
+      ));
+    }
+  }
+
+  Future<void> _cancelReminder() async {
+    await notificationService.cancel(widget.eventItem.id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefsKey);
+    if (mounted) setState(() => _reminderMinutes = null);
+  }
+
+  void _showReminderPicker(BuildContext context) {
+    int selected = _reminderMinutes ?? 10;
+    final scrollCtrl = FixedExtentScrollController(initialItem: selected - 1);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Set Reminder',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 2),
+              Text(
+                '${widget.eventItem.performanceName}  ·  ${widget.eventItem.stage}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+              // Quick chips
+              Wrap(
+                spacing: 8,
+                children: [5, 10, 15, 20].map((min) {
+                  final isChipSelected = selected == min;
+                  return GestureDetector(
+                    onTap: () {
+                      setSheet(() => selected = min);
+                      scrollCtrl.animateToItem(
+                        min - 1,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isChipSelected
+                            ? const Color(0xFF0B3775)
+                            : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isChipSelected
+                              ? const Color(0xFF0B3775)
+                              : Colors.grey[300]!,
+                        ),
+                      ),
+                      child: Text(
+                        '$min min',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isChipSelected ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+              // Scroll wheel
+              SizedBox(
+                height: 150,
+                child: CupertinoPicker(
+                  scrollController: scrollCtrl,
+                  itemExtent: 40,
+                  selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
+                    background: const Color(0xFF0B3775).withValues(alpha: 0.08),
+                  ),
+                  onSelectedItemChanged: (i) {
+                    setSheet(() => selected = i + 1);
+                  },
+                  children: List.generate(
+                    60,
+                    (i) => Center(
+                      child: Text(
+                        '${i + 1} ${i + 1 == 1 ? "minute" : "minutes"}',
+                        style: const TextStyle(fontSize: 15),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Set button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _scheduleReminder(selected);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0B3775),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    'Remind me $selected min before',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              if (_reminderMinutes != null) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _cancelReminder();
+                    },
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Remove reminder'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    ).whenComplete(() => scrollCtrl.dispose());
+  }
+
+  Widget _buildReminderButton() {
+    final hasReminder = _reminderMinutes != null;
+    return GestureDetector(
+      onTap: () => _showReminderPicker(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: hasReminder
+              ? const Color(0xFF0B3775)
+              : Colors.white.withValues(alpha: 0.92),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.22),
+              blurRadius: 5,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Icon(
+          hasReminder ? Icons.notifications_active : Icons.notifications_none,
+          size: 22,
+          color: hasReminder ? Colors.white : Colors.grey[700],
+        ),
+      ),
+    );
+  }
 
   String calculateEndTime(String time, int duration) {
     List<String> timeParts = time.split(":");
@@ -68,35 +271,51 @@ class _PerformanceState extends State<Performance>
       child: AnimatedScale(
         scale: isPressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 150),
-        child: Container(
+        child: SizedBox(
           width: double.infinity,
           height: eventHeight,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isPressed ? 0.05 : 0.1),
-                blurRadius: isPressed ? 1 : 3,
-                offset: Offset(0, isPressed ? 0 : 1),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _buildBackground(),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: verticalPadding,
-                    horizontal: horizontalPadding,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isPressed ? 0.05 : 0.1),
+                        blurRadius: isPressed ? 1 : 3,
+                        offset: Offset(0, isPressed ? 0 : 1),
+                      ),
+                    ],
                   ),
-                  child: _buildInnerContent(isTablet, responsiveScale, eventHeight),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _buildBackground(),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: verticalPadding,
+                            horizontal: horizontalPadding,
+                          ),
+                          child: _buildInnerContent(isTablet, responsiveScale, eventHeight),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+              if (widget.eventItem.performanceName.isNotEmpty &&
+                  widget.eventItem.duration >= 10)
+                Positioned(
+                  top: 18,
+                  right: 8,
+                  child: _buildReminderButton(),
+                ),
+            ],
           ),
         ),
       ),

@@ -58,7 +58,7 @@ flutter:
 
     # Splash Screen
     - assets/Intro1.mp4
-
+    
     # Home Page Socials
     - assets/instagram.png
     - assets/facebook.png

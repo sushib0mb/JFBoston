@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/supabase_config.dart';
 
 class QuickSurveyPopup extends StatefulWidget {
   const QuickSurveyPopup({super.key});
 
-  static Future<void> show(BuildContext context) {
-    return showDialog(
+  static const _kShownKey = 'quickSurveyShown';
+
+  static Future<void> show(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_kShownKey) ?? false) return;
+
+    if (!context.mounted) return;
+    await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const QuickSurveyPopup(),
@@ -37,6 +44,8 @@ class _QuickSurveyPopupState extends State<QuickSurveyPopup> {
         'gender': gender,
         'amount': amount,
       });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(QuickSurveyPopup._kShownKey, true);
     } catch (e) {
       debugPrint('Quick survey error: $e');
     } finally {
@@ -121,14 +130,6 @@ class _QuickSurveyPopupState extends State<QuickSurveyPopup> {
                 child: _submitting
                     ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Text('Submit', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-                child: Text('Skip', style: TextStyle(color: Colors.grey[500])),
               ),
             ),
           ],
