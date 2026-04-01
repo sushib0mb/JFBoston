@@ -1,11 +1,12 @@
 // lib/services/notification_service.dart
 import 'dart:io';
-import 'dart:ui'; // for Color
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class NotificationService {
   /// public so you can call pendingNotificationRequests() in debug
@@ -81,7 +82,7 @@ class NotificationService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
 
     /* 3. Android 13+ POST_NOTIFICATIONS runtime permission */
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       await fln
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
