@@ -11,7 +11,7 @@ class AdminPage extends StatefulWidget {
 }
 
 class AdminPageState extends State<AdminPage> {
-  String selectedStage = 'Main Stage 1';
+  String selectedStage = ScheduleDataService.stageNames.first;
   int selectedDay = 1;
 
   @override
@@ -191,30 +191,17 @@ class AdminPageState extends State<AdminPage> {
             selectedStage = newValue;
           });
         },
-        itemBuilder:
-            (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'Main Stage 1',
-                child: Text(
-                  'Main Stage 1',
-                  style: TextStyle(color: Colors.white),
-                ),
+        itemBuilder: (BuildContext context) {
+          return ScheduleDataService.stageNames.map((String stageName) {
+            return PopupMenuItem<String>(
+              value: stageName,
+              child: Text(
+                stageName,
+                style: const TextStyle(color: Colors.white),
               ),
-              const PopupMenuItem<String>(
-                value: 'Downtown Stage 1',
-                child: Text(
-                  'Downtown 1',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'Downtown Stage 2',
-                child: Text(
-                  'Downtown 2',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+            );
+          }).toList();
+        },
       ),
     );
   }

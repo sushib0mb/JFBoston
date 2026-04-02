@@ -81,7 +81,7 @@ class NotificationService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
 
     /* 3. Android 13+ POST_NOTIFICATIONS runtime permission */
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       await fln
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
@@ -124,4 +124,8 @@ class NotificationService {
 
   /* ─────────────────── cancel helpers ─────────────────── */
   Future<void> cancelAll() => fln.cancelAll();
+  Future<void> cancel(int id) => fln.cancel(id);
 }
+
+/// Global singleton — import this file and call [notificationService.init()] once in main().
+final notificationService = NotificationService();

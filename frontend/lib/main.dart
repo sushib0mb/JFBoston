@@ -36,6 +36,8 @@ import 'models/feedback_entry.dart';
 import 'models/survey_entry.dart';
 
 import 'config/supabase_config.dart';
+import 'services/notification_service.dart';
+import 'services/location_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +59,9 @@ void main() async {
   await Hive.openBox<FeedbackEntry>('feedback');
   await Hive.openBox<SurveyEntry>('survey');
 
+  // Initialize local notifications
+  await notificationService.init();
+
   // Supabase is now initialized via supabase_config.dart
   developer.log('Supabase client initialized: $supabase', name: 'SupabaseInit');
 
@@ -69,6 +74,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
         ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
         ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
+        ChangeNotifierProvider(create: (_) => LocationService()),
       ],
       child: const MyApp(),
     ),
