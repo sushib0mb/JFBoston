@@ -233,14 +233,10 @@ class EditPerformancePageState extends State<EditPerformancePage> {
 
                       StringDropdown(
                         label: 'Stage',
-                        options: [
-                          "Main Stage 1",
-                          "Downtown Stage 1",
-                          "Downtown Stage 2",
-                        ],
+                        options: ScheduleDataService.stageNames,
                         initialSelection: _selectedStage,
                         errorMessage:
-                            'Please select a stage for this performance', // The text that shows in red
+                            'Please select a stage for this performance',
                         onSelected: (String? newValue) {
                           setState(() {
                             _selectedStage = newValue;

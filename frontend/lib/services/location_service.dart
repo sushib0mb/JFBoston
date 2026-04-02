@@ -21,9 +21,13 @@ class LocationService extends ChangeNotifier {
   final Map<String, double?> distances = {};
 
   bool permissionDenied = false;
+  bool _started = false;
   StreamSubscription<Position>? _sub;
 
   Future<void> start() async {
+    if (_started) return; // already running
+    _started = true;
+
     LocationPermission perm = await Geolocator.checkPermission();
     if (perm == LocationPermission.denied) {
       perm = await Geolocator.requestPermission();
@@ -31,13 +35,14 @@ class LocationService extends ChangeNotifier {
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
       permissionDenied = true;
+      _started = false;
       notifyListeners();
       return;
     }
 
     const settings = LocationSettings(
       accuracy: LocationAccuracy.medium,
-      distanceFilter: 10, // only recalculate after moving 10 m
+      distanceFilter: 10,
     );
 
     _sub = Geolocator.getPositionStream(locationSettings: settings).listen(
@@ -50,8 +55,16 @@ class LocationService extends ChangeNotifier {
         }
         notifyListeners();
       },
-      onError: (_) {}, // silently ignore stream errors
+      onError: (_) {},
     );
+  }
+
+  void stop() {
+    _sub?.cancel();
+    _sub = null;
+    _started = false;
+    distances.clear();
+    notifyListeners();
   }
 
   /// Human-readable distance string for a stage, e.g. "0.3 mi" or "280 ft".

@@ -18,7 +18,7 @@ class AdminPage extends StatefulWidget {
 }
 
 class AdminPageState extends State<AdminPage> {
-  String selectedStage = 'Main Stage 1';
+  String selectedStage = ScheduleDataService.stageNames.first;
   int selectedDay = 1;
   Set<int> selectedPerformanceIds = {};
 
@@ -239,31 +239,28 @@ class AdminPageState extends State<AdminPage> {
                 keyboardType: TextInputType.number,
                 onChanged: (value) => hours = int.tryParse(value) ?? 0,
               ),
-              const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: "Minutes to delay",
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) => minutes = int.tryParse(value) ?? 0,
-              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.keyboard_arrow_down, color: Colors.white),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                _processDelay(hours, minutes); // Call the backend logic
-              },
-              child: const Text("Confirm"),
-            ),
-          ],
-        );
-      },
+        ),
+        onSelected: (String newValue) {
+          setState(() {
+            selectedStage = newValue;
+          });
+        },
+        itemBuilder: (BuildContext context) {
+          return ScheduleDataService.stageNames.map((String stageName) {
+            return PopupMenuItem<String>(
+              value: stageName,
+              child: Text(
+                stageName,
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
+          }).toList();
+        },
+      ),
     );
   }
 
