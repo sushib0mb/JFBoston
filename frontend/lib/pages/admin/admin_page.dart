@@ -5,8 +5,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'edit_performance_page.dart';
 import '../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
-import '../../utils/time_utils.dart';
 import '../../config/supabase_config.dart';
+import './components/stage_selector_pill.dart';
+import './components/performance_box.dart';
 import 'package:http/http.dart' as http;
 
 class AdminPage extends StatefulWidget {
@@ -28,6 +29,12 @@ class AdminPageState extends State<AdminPage> {
         selectedDay == 1
             ? scheduleService.day1ScheduleData
             : scheduleService.day2ScheduleData;
+
+    final Map<String, String> stageOptions = {
+      for (String stageName in ScheduleDataService.stageNames)
+        stageName:
+            stageName, // Sets both the key and the display value to the stageName
+    };
 
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
@@ -80,7 +87,15 @@ class AdminPageState extends State<AdminPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    _stageSelectorPill(selectedStage),
+                                    StageSelectorPill(
+                                      selectedValue: selectedStage,
+                                      options: stageOptions,
+                                      onSelected: (String newValue) {
+                                        setState(() {
+                                          selectedStage = newValue;
+                                        });
+                                      },
+                                    ),
 
                                     ElevatedButton(
                                       // If the set is empty, onPressed is null (disables the button)
@@ -157,7 +172,7 @@ class AdminPageState extends State<AdminPage> {
                                             event.performanceName.isNotEmpty,
                                       )
                                       .map((event) {
-                                        return _buildPerformanceBox(
+                                        return PerformanceBox(
                                           title: event.performanceName,
                                           startTime: event.time,
                                           duration: event.duration,
@@ -174,7 +189,6 @@ class AdminPageState extends State<AdminPage> {
                                           },
                                           isChecked: selectedPerformanceIds
                                               .contains(event.id),
-
                                           onCheckboxChanged: (bool? value) {
                                             setState(() {
                                               if (value == true) {
@@ -200,149 +214,6 @@ class AdminPageState extends State<AdminPage> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _stageSelectorPill(String text) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[800], // Dark pill background for contrast
-        borderRadius: BorderRadius.circular(9999), // Perfect pill shape
-      ),
-      child: PopupMenuButton<String>(
-        initialValue: selectedStage,
-        // Pushes the dropdown menu items down
-        offset: const Offset(0, 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 17.5, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                selectedStage,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-            ],
-          ),
-        ),
-        onSelected: (String newValue) {
-          setState(() {
-            selectedStage = newValue;
-          });
-        },
-        itemBuilder:
-            (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'Main Stage 1',
-                child: Text(
-                  'Main Stage 1',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'Downtown Stage 1',
-                child: Text(
-                  'Downtown 1',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'Downtown Stage 2',
-                child: Text(
-                  'Downtown 2',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-      ),
-    );
-  }
-
-  // Helper method to create the Clickable Performance Boxes
-  Widget _buildPerformanceBox({
-    required String title,
-    required String startTime,
-    required int duration,
-    required VoidCallback onTap,
-    required bool isChecked,
-    required ValueChanged<bool?> onCheckboxChanged,
-  }) {
-    String endTime = findEndTime(startTime, duration);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Checkbox added on the left
-                  Checkbox(
-                    value: isChecked,
-                    onChanged: onCheckboxChanged,
-                    activeColor:
-                        Colors.blue, // Feel free to customize the color
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "$startTime - $endTime",
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Click Indicator Arrow
-                  const Icon(Icons.chevron_right, color: Colors.grey),
-                ],
-              ),
             ),
           ),
         ),
