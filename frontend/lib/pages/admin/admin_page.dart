@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'edit_performance_page.dart';
 import '../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
 import '../../utils/time_utils.dart';
+import '../../config/supabase_config.dart';
+import 'package:http/http.dart' as http;
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -14,6 +19,7 @@ class AdminPage extends StatefulWidget {
 class AdminPageState extends State<AdminPage> {
   String selectedStage = 'Main Stage 1';
   int selectedDay = 1;
+  Set<int> selectedPerformanceIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -74,17 +80,46 @@ class AdminPageState extends State<AdminPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    _buildHeaderPill(selectedStage),
+                                    _stageSelectorPill(selectedStage),
+
+                                    ElevatedButton(
+                                      // If the set is empty, onPressed is null (disables the button)
+                                      onPressed:
+                                          selectedPerformanceIds.isEmpty
+                                              ? null
+                                              : () => _showDelayDialog(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey[800],
+                                        foregroundColor: Colors.white,
+                                        disabledBackgroundColor:
+                                            Colors.grey[300],
+                                        disabledForegroundColor:
+                                            Colors.grey[500],
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 17.5,
+                                          vertical: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            9999,
+                                          ),
+                                        ),
+                                        textStyle: const TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      child: const Text("Delay Performance"),
+                                    ),
 
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.black,
                                         iconColor: Colors.white,
                                         padding: const EdgeInsets.all(12),
-                                        shape:
-                                            const CircleBorder(), // Makes the button a perfect circle
-                                        minimumSize:
-                                            Size.zero, // Overrides default sizing to allow for a smaller button
+                                        shape: const CircleBorder(),
+                                        minimumSize: Size.zero,
                                         tapTargetSize:
                                             MaterialTapTargetSize.shrinkWrap,
                                       ),
@@ -105,13 +140,12 @@ class AdminPageState extends State<AdminPage> {
 
                                 // Dynamically populate the events based on the selected stage
                                 ...scheduleData.expand((scheduleItem) {
-                                  // Figure out which list of events to use based on the dropdown variable
                                   List<EventItem>? eventsForSelectedStage;
 
                                   eventsForSelectedStage =
                                       scheduleItem.eventsByStage[selectedStage];
 
-                                  // 2. If there are no events for this time bracket on this stage, render nothing
+                                  // If there are no events for this time bracket on this stage, render nothing
                                   if (eventsForSelectedStage == null) {
                                     return <Widget>[];
                                   }
@@ -138,6 +172,22 @@ class AdminPageState extends State<AdminPage> {
                                               ),
                                             );
                                           },
+                                          isChecked: selectedPerformanceIds
+                                              .contains(event.id),
+
+                                          onCheckboxChanged: (bool? value) {
+                                            setState(() {
+                                              if (value == true) {
+                                                selectedPerformanceIds.add(
+                                                  event.id,
+                                                );
+                                              } else {
+                                                selectedPerformanceIds.remove(
+                                                  event.id,
+                                                );
+                                              }
+                                            });
+                                          },
                                         );
                                       });
                                 }),
@@ -157,7 +207,7 @@ class AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildHeaderPill(String text) {
+  Widget _stageSelectorPill(String text) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[800], // Dark pill background for contrast
@@ -226,8 +276,11 @@ class AdminPageState extends State<AdminPage> {
     required String startTime,
     required int duration,
     required VoidCallback onTap,
+    required bool isChecked,
+    required ValueChanged<bool?> onCheckboxChanged,
   }) {
     String endTime = findEndTime(startTime, duration);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Container(
@@ -252,7 +305,16 @@ class AdminPageState extends State<AdminPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Text Content wrapped in Expanded to prevent overflow on small screens
+                  // Checkbox added on the left
+                  Checkbox(
+                    value: isChecked,
+                    onChanged: onCheckboxChanged,
+                    activeColor:
+                        Colors.blue, // Feel free to customize the color
+                  ),
+
+                  const SizedBox(width: 8),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,6 +338,7 @@ class AdminPageState extends State<AdminPage> {
                       ],
                     ),
                   ),
+
                   // Click Indicator Arrow
                   const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
@@ -285,5 +348,97 @@ class AdminPageState extends State<AdminPage> {
         ),
       ),
     );
+  }
+
+  // Popup dialogue when delay button is clicked
+  Future<void> _showDelayDialog(BuildContext context) async {
+    int hours = 0;
+    int minutes = 0;
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delay Performances"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(labelText: "Hours to delay"),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => hours = int.tryParse(value) ?? 0,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: "Minutes to delay",
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => minutes = int.tryParse(value) ?? 0,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                _processDelay(hours, minutes); // Call the backend logic
+              },
+              child: const Text("Confirm"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Process delay with call to backend
+  Future<void> _processDelay(int hours, int minutes) async {
+    final baseUrl = dotenv.env['API_URL_CHROME']!;
+    final url = Uri.parse('$baseUrl/api/schedule/delay');
+    final session = supabase.auth.currentSession;
+    final jwt = session?.accessToken;
+
+    if (hours == 0 && minutes == 0) return; // Prevent unnecessary calls
+
+    int totalMinutes = hours * 60 + minutes;
+    List<int> idsList = selectedPerformanceIds.toList();
+
+    try {
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      };
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode({'ids': idsList, 'minutes': totalMinutes}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              idsList.length == 1
+                  ? "Successfully delayed performance"
+                  : "Successfully delayed performances",
+            ),
+          ),
+        );
+      }
+
+      // Once finished, clear the selection and rebuild the UI
+      setState(() {
+        selectedPerformanceIds.clear();
+      });
+    } catch (e) {
+      // Handle backend errors
+      print("Error updating performances: $e");
+    }
   }
 }

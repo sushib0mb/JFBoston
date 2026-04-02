@@ -43,3 +43,5 @@ public class Performance : BaseModel
     [JsonPropertyName("Day")]
     public int Day { get; set; }
 }
+
+public record DelayRequest(int[] Ids, int Minutes);
