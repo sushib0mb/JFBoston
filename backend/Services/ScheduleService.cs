@@ -62,29 +62,41 @@ public class ScheduleService : IScheduleService
         }
     }
 
-    // Delays a single performance using id by min minutes
-    public async Task<string> DelayPerformanceAsync(int id, int min)
+    // Delays all performances in an array using id by min minutes
+    public async Task<List<string>> DelayPerformancesAsync(int[] ids, int min)
     {
-        try
+        var logResults = new List<string>();
+
+        foreach (int id in ids)
         {
-            // Fetches selected performance
-            var result = await _client.From<Performance>().Where(x => x.Id == id).Single();
-            if (result == null) return "nullError";
+            try
+            {
+                // Fetches selected performance
+                var result = await _client.From<Performance>().Where(x => x.Id == id).Single();
 
-            // Adds $minutes to the fetched time and updates the object
-            var oldTime = result.StartTime;
-            result.StartTime = result.StartTime.Add(TimeSpan.FromMinutes(min));
+                if (result == null)
+                {
+                    logResults.Add($"Performance {id}: nullError (Not Found)");
+                    continue; // Skip to the next ID
+                }
 
-            // Posts the new event object to database
-            await result.Update<Performance>();
+                // Adds $minutes to the fetched time and updates the object
+                var oldTime = result.StartTime;
+                result.StartTime = result.StartTime.Add(TimeSpan.FromMinutes(min));
 
-            return $"Performance {id} updated from {oldTime} to {result.StartTime}";
+                // Posts the new event object to database
+                await result.Update<Performance>();
+
+                logResults.Add($"Performance {id} updated from {oldTime} to {result.StartTime}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error delaying performance {id}: {e.Message}");
+                logResults.Add($"Performance {id}: postError ({e.Message})");
+            }
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return "postError";
-        }
+
+        return logResults;
     }
 
     // Delays all performances at the same stage as the selected performance by minutes

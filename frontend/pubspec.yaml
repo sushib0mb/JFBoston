@@ -1,5 +1,5 @@
 name: jfbfestival
-description: "A new Flutter project."
+description: "The official mobile application for the Japan Festival Boston"
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
@@ -28,6 +28,7 @@ dependencies:
   geolocator: ^13.0.0
   collection: ^1.19.1
   cached_network_image: ^3.4.1
+  http: ^1.6.0
 
 # dependency_overrides:
 #   sign_in_with_apple: ^4.0.0
@@ -59,7 +60,7 @@ flutter:
 
     # Splash Screen
     - assets/Intro1.mp4
-    
+
     # Home Page Socials
     - assets/instagram.png
     - assets/facebook.png

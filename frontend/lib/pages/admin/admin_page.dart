@@ -1,7 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'edit_performance_page.dart';
 import '../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
+import '../../config/supabase_config.dart';
+import './components/stage_selector_pill.dart';
+import './components/performance_box.dart';
+import 'package:http/http.dart' as http;
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -13,6 +20,7 @@ class AdminPage extends StatefulWidget {
 class AdminPageState extends State<AdminPage> {
   String selectedStage = ScheduleDataService.stageNames.first;
   int selectedDay = 1;
+  Set<int> selectedPerformanceIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +29,12 @@ class AdminPageState extends State<AdminPage> {
         selectedDay == 1
             ? scheduleService.day1ScheduleData
             : scheduleService.day2ScheduleData;
+
+    final Map<String, String> stageOptions = {
+      for (String stageName in ScheduleDataService.stageNames)
+        stageName:
+            stageName, // Sets both the key and the display value to the stageName
+    };
 
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
@@ -73,17 +87,54 @@ class AdminPageState extends State<AdminPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    _buildHeaderPill(selectedStage),
+                                    StageSelectorPill(
+                                      selectedValue: selectedStage,
+                                      options: stageOptions,
+                                      onSelected: (String newValue) {
+                                        setState(() {
+                                          selectedStage = newValue;
+                                        });
+                                      },
+                                    ),
+
+                                    ElevatedButton(
+                                      // If the set is empty, onPressed is null (disables the button)
+                                      onPressed:
+                                          selectedPerformanceIds.isEmpty
+                                              ? null
+                                              : () => _showDelayDialog(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey[800],
+                                        foregroundColor: Colors.white,
+                                        disabledBackgroundColor:
+                                            Colors.grey[300],
+                                        disabledForegroundColor:
+                                            Colors.grey[500],
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 17.5,
+                                          vertical: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            9999,
+                                          ),
+                                        ),
+                                        textStyle: const TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      child: const Text("Delay Performance"),
+                                    ),
 
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.black,
                                         iconColor: Colors.white,
                                         padding: const EdgeInsets.all(12),
-                                        shape:
-                                            const CircleBorder(), // Makes the button a perfect circle
-                                        minimumSize:
-                                            Size.zero, // Overrides default sizing to allow for a smaller button
+                                        shape: const CircleBorder(),
+                                        minimumSize: Size.zero,
                                         tapTargetSize:
                                             MaterialTapTargetSize.shrinkWrap,
                                       ),
@@ -104,13 +155,12 @@ class AdminPageState extends State<AdminPage> {
 
                                 // Dynamically populate the events based on the selected stage
                                 ...scheduleData.expand((scheduleItem) {
-                                  // Figure out which list of events to use based on the dropdown variable
                                   List<EventItem>? eventsForSelectedStage;
 
                                   eventsForSelectedStage =
                                       scheduleItem.eventsByStage[selectedStage];
 
-                                  // 2. If there are no events for this time bracket on this stage, render nothing
+                                  // If there are no events for this time bracket on this stage, render nothing
                                   if (eventsForSelectedStage == null) {
                                     return <Widget>[];
                                   }
@@ -122,10 +172,10 @@ class AdminPageState extends State<AdminPage> {
                                             event.performanceName.isNotEmpty,
                                       )
                                       .map((event) {
-                                        return _buildPerformanceBox(
+                                        return PerformanceBox(
                                           title: event.performanceName,
-                                          time: event.time,
-                                          // '${event.time} - ${int.parse(event.time) + event.duration}',
+                                          startTime: event.time,
+                                          duration: event.duration,
                                           onTap: () {
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
@@ -136,6 +186,21 @@ class AdminPageState extends State<AdminPage> {
                                                         ),
                                               ),
                                             );
+                                          },
+                                          isChecked: selectedPerformanceIds
+                                              .contains(event.id),
+                                          onCheckboxChanged: (bool? value) {
+                                            setState(() {
+                                              if (value == true) {
+                                                selectedPerformanceIds.add(
+                                                  event.id,
+                                                );
+                                              } else {
+                                                selectedPerformanceIds.remove(
+                                                  event.id,
+                                                );
+                                              }
+                                            });
                                           },
                                         );
                                       });
@@ -156,30 +221,23 @@ class AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildHeaderPill(String text) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[800], // Dark pill background for contrast
-        borderRadius: BorderRadius.circular(9999), // Perfect pill shape
-      ),
-      child: PopupMenuButton<String>(
-        initialValue: selectedStage,
-        // Pushes the dropdown menu items down
-        offset: const Offset(0, 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 17.5, vertical: 10),
-          child: Row(
+  // Popup dialogue when delay button is clicked
+  Future<void> _showDelayDialog(BuildContext context) async {
+    int hours = 0;
+    int minutes = 0;
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delay Performances"),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                selectedStage,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+              TextField(
+                decoration: const InputDecoration(labelText: "Hours to delay"),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => hours = int.tryParse(value) ?? 0,
               ),
               const SizedBox(width: 8),
               const Icon(Icons.keyboard_arrow_down, color: Colors.white),
@@ -206,68 +264,49 @@ class AdminPageState extends State<AdminPage> {
     );
   }
 
-  // Helper method to create the Clickable Performance Boxes
-  Widget _buildPerformanceBox({
-    required String title,
-    required String time,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Text Content wrapped in Expanded to prevent overflow on small screens
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          time,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Click Indicator Arrow
-                  const Icon(Icons.chevron_right, color: Colors.grey),
-                ],
-              ),
+  // Process delay with call to backend
+  Future<void> _processDelay(int hours, int minutes) async {
+    final baseUrl = dotenv.env['API_URL_CHROME']!;
+    final url = Uri.parse('$baseUrl/api/schedule/delay');
+    final session = supabase.auth.currentSession;
+    final jwt = session?.accessToken;
+
+    if (hours == 0 && minutes == 0) return; // Prevent unnecessary calls
+
+    int totalMinutes = hours * 60 + minutes;
+    List<int> idsList = selectedPerformanceIds.toList();
+
+    try {
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      };
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode({'ids': idsList, 'minutes': totalMinutes}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              idsList.length == 1
+                  ? "Successfully delayed performance"
+                  : "Successfully delayed performances",
             ),
           ),
-        ),
-      ),
-    );
+        );
+      }
+
+      // Once finished, clear the selection and rebuild the UI
+      setState(() {
+        selectedPerformanceIds.clear();
+      });
+    } catch (e) {
+      // Handle backend errors
+      print("Error updating performances: $e");
+    }
   }
 }

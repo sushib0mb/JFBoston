@@ -62,23 +62,32 @@ public class ScheduleController : ControllerBase
         }
     }
 
-    // Start service to delay a single performance
-    [HttpPost("delay/{id}")]
-    public async Task<IActionResult> Delay(int id, [FromQuery] int minutes)
+    // Delay all performances in an array by x minutes
+    [HttpPost("delay")]
+    public async Task<IActionResult> DelayPerformances([FromBody] DelayRequest request)
     {
-        var message = await _scheduleService.DelayPerformanceAsync(id, minutes);
+        Console.Write("hi");
 
-        if (message == "nullError")
+        try
         {
-            return NotFound($"No performance found with ID {id}");
-        }
+            if (request.Ids == null || request.Ids.Length == 0)
+            {
+                return BadRequest(new { message = "No performance IDs provided." });
+            }
 
-        if (message == "postError")
+            // Call the updated service method
+            List<string> results = await _scheduleService.DelayPerformancesAsync(request.Ids, request.Minutes);
+
+            return Ok(new
+            {
+                message = "Delay process completed.",
+                details = results
+            });
+        }
+        catch (Exception ex)
         {
-            return Problem(message);
+            return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
         }
-
-        return Ok(message);
     }
 
     // Start service to delay all performances in the same stage starting from the specified performance

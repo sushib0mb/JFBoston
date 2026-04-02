@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../home_page.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
+import '../../../utils/time_utils.dart';
 
 class CurrentAndUpcomingEvents {
   final List<EventItem> currentStageEvents;
@@ -263,32 +264,6 @@ class _LiveTimetableState extends State<LiveTimetable> {
     }
   }
 
-  // Calculate event start and end times from event time and duration
-  T _calculateEventTimes<T>(
-    EventItem event,
-    int year,
-    int month,
-    int day, {
-    bool returnAsString = false,
-  }) {
-    final eventTimeParts = event.time.split(':');
-    final eventStartHour = int.parse(eventTimeParts[0]);
-    final eventStartMinute = int.parse(eventTimeParts[1]);
-
-    final start = DateTime(year, month, day, eventStartHour, eventStartMinute);
-    final end = start.add(Duration(minutes: event.duration));
-
-    if (returnAsString) {
-      String startTime =
-          "${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}";
-      String endTime =
-          "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}";
-      return ("$startTime - $endTime") as T;
-    }
-
-    return (start: start, end: end) as T;
-  }
-
   // Categorize a list of events as current or upcoming
   void _categorizeEventList(
     List<EventItem>? events,
@@ -306,7 +281,7 @@ class _LiveTimetableState extends State<LiveTimetable> {
       if (event.performanceName.isEmpty || !event.time.contains(':')) continue;
 
       try {
-        final times = _calculateEventTimes(event, year, month, day);
+        final times = calculateEventTimes(event, year, month, day);
 
         // Categorize as current or upcoming
         if (now.isAfter(times.start) && now.isBefore(times.end)) {
@@ -529,7 +504,7 @@ class _LiveTimetableState extends State<LiveTimetable> {
                   ),
                   // Time
                   Text(
-                    (_calculateEventTimes(
+                    (calculateEventTimes(
                       event,
                       festivalStartYear,
                       festivalStartMonth,

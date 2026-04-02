@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/timetable_data.dart';
+import '../../../utils/time_utils.dart';
 
 class EventDetailPopup extends StatefulWidget {
   final EventItem event;
@@ -126,18 +127,6 @@ class _EventDetailPopupState extends State<EventDetailPopup>
     double descFont,
     double avatarR,
   ) {
-    String calculateEndTime(String time, int duration) {
-      List<String> timeParts = time.split(":");
-      int totalMinutes =
-          int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]) + duration;
-
-      final endHour =
-          (totalMinutes ~/ 60) % 24; // % 24 handles midnight wrapping
-      final endMinute = totalMinutes % 60;
-
-      return '${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}';
-    }
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -202,7 +191,7 @@ class _EventDetailPopupState extends State<EventDetailPopup>
                     infoFont,
                   ),
                   _infoChip(
-                    '${widget.event.time} - ${calculateEndTime(widget.event.time, widget.event.duration)}',
+                    '${widget.event.time} - ${findEndTime(widget.event.time, widget.event.duration)}',
                     Colors.white,
                     infoFont,
                   ),

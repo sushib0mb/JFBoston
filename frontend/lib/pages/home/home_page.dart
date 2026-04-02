@@ -13,8 +13,8 @@ import '../../settings_page.dart';
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
 const int festivalStartYear = 2026;
-const int festivalStartMonth = 1;
-const int festivalStartDay = 30;
+const int festivalStartMonth = 4;
+const int festivalStartDay = 1;
 const String festivalLocation = "Boston Common";
 
 /// Returns the current festival day (1-based), or 0 if not during the festival.
@@ -89,7 +89,10 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DbImageService>(context, listen: false).fetchFolder('homeImages');
+      Provider.of<DbImageService>(
+        context,
+        listen: false,
+      ).fetchFolder('homeImages');
     });
   }
 
@@ -168,7 +171,9 @@ class _HomePageState extends State<HomePage> {
                                 itemCount: _virtualPageCount,
                                 onPageChanged: _handlePageChanged,
                                 itemBuilder: (context, index) {
-                                  final imagePath = backgroundImages[index % backgroundImages.length];
+                                  final imagePath =
+                                      backgroundImages[index %
+                                          backgroundImages.length];
                                   return Image.asset(
                                     imagePath,
                                     fit: BoxFit.cover,
