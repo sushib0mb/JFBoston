@@ -30,6 +30,17 @@ class AdminPageState extends State<AdminPage> {
             ? scheduleService.day1ScheduleData
             : scheduleService.day2ScheduleData;
 
+    List<EventItem> sortedStageEvents =
+        scheduleData
+            .expand(
+              (item) => item.eventsByStage[selectedStage] ?? <EventItem>[],
+            )
+            .where((event) => event.performanceName.isNotEmpty)
+            .toList();
+
+    // Sort events in chronological order
+    sortedStageEvents.sort((a, b) => a.time.compareTo(b.time));
+
     final Map<String, String> stageOptions = {
       for (String stageName in ScheduleDataService.stageNames)
         stageName:
@@ -154,56 +165,39 @@ class AdminPageState extends State<AdminPage> {
                                 const SizedBox(height: 16),
 
                                 // Dynamically populate the events based on the selected stage
-                                ...scheduleData.expand((scheduleItem) {
-                                  List<EventItem>? eventsForSelectedStage;
-
-                                  eventsForSelectedStage =
-                                      scheduleItem.eventsByStage[selectedStage];
-
-                                  // If there are no events for this time bracket on this stage, render nothing
-                                  if (eventsForSelectedStage == null) {
-                                    return <Widget>[];
-                                  }
-
-                                  // Filter out the empty placeholder events and map the real ones to UI
-                                  return eventsForSelectedStage
-                                      .where(
-                                        (event) =>
-                                            event.performanceName.isNotEmpty,
-                                      )
-                                      .map((event) {
-                                        return PerformanceBox(
-                                          title: event.performanceName,
-                                          startTime: event.time,
-                                          duration: event.duration,
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        EditPerformancePage(
-                                                          existingData: event,
-                                                        ),
+                                ...sortedStageEvents.map((event) {
+                                  return PerformanceBox(
+                                    key: ValueKey(
+                                      event.id,
+                                    ), // Keeps Flutter tracking the widgets properly
+                                    title: event.performanceName,
+                                    startTime: event.time,
+                                    duration: event.duration,
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => EditPerformancePage(
+                                                existingData: event,
                                               ),
-                                            );
-                                          },
-                                          isChecked: selectedPerformanceIds
-                                              .contains(event.id),
-                                          onCheckboxChanged: (bool? value) {
-                                            setState(() {
-                                              if (value == true) {
-                                                selectedPerformanceIds.add(
-                                                  event.id,
-                                                );
-                                              } else {
-                                                selectedPerformanceIds.remove(
-                                                  event.id,
-                                                );
-                                              }
-                                            });
-                                          },
-                                        );
+                                        ),
+                                      );
+                                    },
+                                    isChecked: selectedPerformanceIds.contains(
+                                      event.id,
+                                    ),
+                                    onCheckboxChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          selectedPerformanceIds.add(event.id);
+                                        } else {
+                                          selectedPerformanceIds.remove(
+                                            event.id,
+                                          );
+                                        }
                                       });
+                                    },
+                                  );
                                 }),
                               ],
                             ),
@@ -239,28 +233,31 @@ class AdminPageState extends State<AdminPage> {
                 keyboardType: TextInputType.number,
                 onChanged: (value) => hours = int.tryParse(value) ?? 0,
               ),
-              const SizedBox(width: 8),
-              const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: "Minutes to delay",
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => minutes = int.tryParse(value) ?? 0,
+              ),
             ],
           ),
-        ),
-        onSelected: (String newValue) {
-          setState(() {
-            selectedStage = newValue;
-          });
-        },
-        itemBuilder: (BuildContext context) {
-          return ScheduleDataService.stageNames.map((String stageName) {
-            return PopupMenuItem<String>(
-              value: stageName,
-              child: Text(
-                stageName,
-                style: const TextStyle(color: Colors.white),
-              ),
-            );
-          }).toList();
-        },
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                _processDelay(hours, minutes); // Call the backend logic
+              },
+              child: const Text("Confirm"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -298,12 +295,22 @@ class AdminPageState extends State<AdminPage> {
             ),
           ),
         );
-      }
 
-      // Once finished, clear the selection and rebuild the UI
-      setState(() {
-        selectedPerformanceIds.clear();
-      });
+        // 1. Manually fetch the new, correctly sorted data and WAIT for it to finish
+        if (context.mounted) {
+          await Provider.of<ScheduleDataService>(
+            context,
+            listen: false,
+          ).refreshAllData();
+        }
+
+        // 2. ONLY clear the UI selection after the fresh data has arrived
+        if (context.mounted) {
+          setState(() {
+            selectedPerformanceIds.clear();
+          });
+        }
+      }
     } catch (e) {
       // Handle backend errors
       print("Error updating performances: $e");

@@ -130,7 +130,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
         );
       }
 
-      // 3. Handle the response
+      // Handle the response
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -141,6 +141,8 @@ class EditPerformancePageState extends State<EditPerformancePage> {
             ),
           ),
         );
+
+        Navigator.pop(context);
       } else {
         print("Error: ${response.statusCode} - ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
