@@ -17,7 +17,7 @@ import 'theme_notifier.dart';
 
 // import 'SplashScreen/video_splash_screen.dart';
 
-import 'settings_page.dart';
+import 'pages/settings_page.dart';
 import 'pages/survey/quick_survey_popup.dart';
 
 import 'pages/food/food_page.dart';

@@ -15,6 +15,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final TextEditingController _codeController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     // Responsive sizing
@@ -28,6 +30,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final double headerSize = isTablet ? 24 : 20;
 
     // final theme = context.watch<ThemeNotifier>();
+
+    @override
+    void dispose() {
+      _codeController.dispose();
+      super.dispose();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -179,13 +187,97 @@ class _SettingsPageState extends State<SettingsPage> {
               SizedBox(height: padV * 2),
             ],
           ),
-          TextButton(
-            onPressed: () => _showLoginDialog(context),
-            child: Text('Admin login'),
+
+          SizedBox(height: 25),
+
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: padH + 30),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Code',
+                  style: TextStyle(
+                    fontSize: titleSize,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _codeController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(), // Default state
+                      focusedBorder: OutlineInputBorder(
+                        // Selected/Focused state
+                        borderSide: BorderSide(
+                          color: Color.fromARGB(255, 224, 105, 96),
+                          width: 2.0,
+                        ),
+                      ),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color.fromARGB(
+                      255,
+                      69,
+                      69,
+                      69,
+                    ), // Changes the text color to red
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                  ),
+                  child: const Text('Submit'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  void _handleSubmit() {
+    // Read the text and remove any accidental whitespace
+    final String inputCode = _codeController.text.trim().toLowerCase();
+
+    if (inputCode.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a code.')));
+      return;
+    }
+
+    // Check the input and execute different logic
+    switch (inputCode) {
+      case 'jfbadmin':
+        // If they type JFBADMIN, show the login dialog
+        _showLoginDialog(context);
+        break;
+      case 'ilovejapan':
+        // Show some developer tools or a specific message
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Japan loves you too!')));
+        break;
+      default:
+        // Handle invalid or unknown codes
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid code entered.')));
+        // Optionally clear the text field
+        _codeController.clear();
+    }
   }
 
   void _showLoginDialog(BuildContext context) {

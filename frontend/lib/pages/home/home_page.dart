@@ -8,7 +8,7 @@ import '../../services/db_image_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/timetable_data.dart';
-import '../../settings_page.dart';
+import '../settings_page.dart';
 
 // Centralized festival date logic - single source of truth
 const int festivalDays = 2;
