@@ -57,100 +57,97 @@ class FoodService {
   }
 
   // Get all food booths with their dishes
-  Future<List<FoodBooth>> getFoodBooths() async {
-    try {
-      // Fetch all food booths
-      final foodBoothsResponse = await _supabaseClient
-          .from('food_booths')
-          .select()
-          .order('name');
+  // In your FoodService class
+Future<List<FoodBooth>> getFoodBooths() async {
+  try {
+    // Fetch all food booths
+    final foodBoothsResponse = await _supabaseClient
+        .from('food_booths')
+        .select()
+        .order('name');
 
-      final dishesResponse = await _supabaseClient.from('dishes').select();
+    final dishesResponse = await _supabaseClient.from('dishes').select();
 
-      // Map dishes response to Dish objects
-      final Map<dynamic, List<Dish>> dishesByBooth = {};
+    // Map dishes response to Dish objects
+    final Map<dynamic, List<Dish>> dishesByBooth = {};
 
-      for (final dishData in dishesResponse) {
-        // Ensure allergens is a list, whether it's a string or already a list
-        final allergens = dishData['allergens'];
-        List<String> allergensList = [];
-        if (allergens != null) {
-          if (allergens is String) {
-            // If it's a string, split by commas
-            allergensList = allergens.split(',').map((s) => s.trim()).toList();
-          } else if (allergens is List) {
-            // If it's already a list, use it directly
-            allergensList = List<String>.from(allergens);
-          }
-        }
-
-        final dish = Dish(
-          name: dishData['name'],
-          description: dishData['description'] ?? '',
-          imagePath: dishData['image_path'] ?? '',
-          allergens: allergensList,
-          isVegan: dishData['is_vegan'] ?? false,
-          boothId: dishData['booth_id'],
-        );
-
-        final boothId = dishData['booth_id'];
-        if (boothId != null) {
-          dishesByBooth[boothId] ??= [];
-          dishesByBooth[boothId]!.add(dish);
+    for (final dishData in dishesResponse) {
+      final allergens = dishData['allergens'];
+      List<String> allergensList = [];
+      if (allergens != null) {
+        if (allergens is String) {
+          allergensList = allergens.split(',').map((s) => s.trim()).toList();
+        } else if (allergens is List) {
+          allergensList = List<String>.from(allergens);
         }
       }
 
-      // Map food booths response to FoodBooth objects
-      final List<FoodBooth> booths =
-          foodBoothsResponse.map<FoodBooth>((boothData) {
-            final boothId = boothData['id'];
+      final dish = Dish(
+        name: dishData['name'],
+        description: dishData['description'] ?? '',
+        imagePath: dishData['image_path'] ?? '',
+        allergens: allergensList,
+        isVegan: dishData['is_vegan'] ?? false,
+        boothId: dishData['booth_id'],
+      );
 
-            try {
-              // Ensure booth allergens is a list (same as for dishes)
-              final boothAllergens = boothData['allergens'];
-              List<String> boothAllergensList = [];
-              if (boothAllergens != null) {
-                if (boothAllergens is String) {
-                  boothAllergensList =
-                      boothAllergens.split('|').map((s) => s.trim()).toList();
-                } else if (boothAllergens is List) {
-                  boothAllergensList = List<String>.from(boothAllergens);
-                }
-              }
-
-              return FoodBooth(
-                name: boothData['name'],
-                image: boothData['image'] ?? '',
-                description: boothData['description'] ?? '',
-                // allergy: boothData['allergy'],
-                boothLocation: boothData['booth_location'] ?? '',
-                genre: boothData['genre'] ?? '',
-                logoPath: boothData['logo_path'] ?? '',
-                boothImagePath: boothData['booth_image_path'] ?? '',
-                isVegan: boothData['is_vegan'] ?? false,
-                mapPageFoodLocation: boothData['map_page_food_location'] ?? '',
-                payments:
-                    boothData['payments'] != null &&
-                            boothData['payments'] is String
-                        ? (boothData['payments'] as String)
-                            .split('|')
-                            .map((s) => s.trim())
-                            .toList()
-                        : [],
-                allergens: boothAllergensList,
-                dishes: dishesByBooth[boothId] ?? [],
-              );
-            } catch (e) {
-              rethrow;
-            }
-          }).toList();
-
-      return booths;
-    } catch (e) {
-      print(e);
-      return [];
+      final boothId = dishData['booth_id'];
+      if (boothId != null) {
+        dishesByBooth[boothId] ??= [];
+        dishesByBooth[boothId]!.add(dish);
+      }
     }
+
+    // Map food booths response to FoodBooth objects
+    final List<FoodBooth> booths =
+        foodBoothsResponse.map<FoodBooth>((boothData) {
+          final boothId = boothData['id'];
+
+          try {
+            final boothAllergens = boothData['allergens'];
+            List<String> boothAllergensList = [];
+            if (boothAllergens != null) {
+              if (boothAllergens is String) {
+                boothAllergensList =
+                    boothAllergens.split('|').map((s) => s.trim()).toList();
+              } else if (boothAllergens is List) {
+                boothAllergensList = List<String>.from(boothAllergens);
+              }
+            }
+
+            return FoodBooth(
+              name: boothData['name'],
+              image: boothData['image'] ?? '',
+              description: boothData['description'] ?? '',
+              boothLocation: boothData['booth_location'] ?? '',
+              genre: boothData['genre'] ?? '',
+              logoPath: boothData['logo_path'] ?? '',
+              boothImagePath: boothData['booth_image_path'] ?? '',
+              isVegan: boothData['is_vegan'] ?? false,
+              mapPageFoodLocation: boothData['map_page_food_location'] ?? '',
+              payments:
+                  boothData['payments'] != null &&
+                          boothData['payments'] is String
+                      ? (boothData['payments'] as String)
+                          .split('|')
+                          .map((s) => s.trim())
+                          .toList()
+                      : [],
+              allergens: boothAllergensList,
+              dishes: dishesByBooth[boothId] ?? [],
+              location: boothData['location'] ?? 'Commons', 
+            );
+          } catch (e) {
+            rethrow;
+          }
+        }).toList();
+
+    return booths;
+  } catch (e) {
+    print(e);
+    return [];
   }
+}
 
   void dispose() {
     _foodBoothsSubscription?.cancel();
