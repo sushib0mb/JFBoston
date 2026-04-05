@@ -140,7 +140,9 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
         await _maybeShowAllergyDisclaimer();
-        if (mounted) await QuickSurveyPopup.show(context);
+
+        // TODO: UNDO BEFORE PRODUCTION
+        // if (mounted) await QuickSurveyPopup.show(context);
       }
     }); // default to Day 1
   }
