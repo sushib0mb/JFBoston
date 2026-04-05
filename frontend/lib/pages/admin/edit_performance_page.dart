@@ -53,6 +53,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
     _selectedStage = widget.existingData?.stage;
     _selectedPerformanceIcon = widget.existingData?.iconImage;
     _selectedPerformanceImage = widget.existingData?.eventImage;
+    _selectedPerformanceBackground = widget.existingData?.stageBackground;
   }
 
   TimeOfDay? parseTimeOfDay(String? timeString) {
@@ -106,6 +107,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
         'Description': _descriptionController.text,
         'EventImage': _selectedPerformanceImage,
         "IconImage": _selectedPerformanceIcon,
+        "StageBackground": _selectedPerformanceBackground,
         "Day": _selectedDay,
       };
 
