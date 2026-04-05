@@ -29,9 +29,6 @@ import 'pages/map_page.dart';
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
 
-import 'pages/survey/survey_page.dart';
-import 'pages/survey/survey_list_page.dart';
-
 import 'models/feedback_entry.dart';
 import 'models/survey_entry.dart';
 
@@ -104,9 +101,6 @@ class MyApp extends StatelessWidget {
             home: const MainScreen(),
             routes: {
               SettingsPage.routeName: (_) => const SettingsPage(),
-              SurveyPage.routeName: (_) => const SurveyPage(),
-              if (kDebugMode)
-                SurveyListPage.routeName: (_) => const SurveyListPage(),
               // if (kDebugMode)
               //   AdminDashboardPage.routeName: (_) => const AdminDashboardPage(),
             },
@@ -136,17 +130,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
   late int _dayForTimetable;
-  static const _kSurveyShownKey = 'surveyPromptShown';
   static const _kAllergyDisclaimerKey = 'allergyDisclaimerShown';
-  bool _surveyPromptLoaded = false;
-  bool _surveyPromptShown = false;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _dayForTimetable = widget.selectedDay ?? 1;
-    _loadSurveyFlagAndMaybeSchedule();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
         await _maybeShowAllergyDisclaimer();
@@ -236,76 +226,6 @@ class _MainScreenState extends State<MainScreen> {
           },
         );
       },
-    );
-  }
-
-  Future<void> _loadSurveyFlagAndMaybeSchedule() async {
-    final prefs = await SharedPreferences.getInstance();
-    final shown = prefs.getBool(_kSurveyShownKey) ?? false;
-    setState(() {
-      _surveyPromptLoaded = true;
-      _surveyPromptShown = shown;
-    });
-
-    if (!shown) {
-      // schedule 10-minute one-shot
-      Timer(const Duration(minutes: 10), () {
-        _showSurveyPrompt();
-      });
-    }
-  }
-
-  Future<void> _showSurveyPrompt() async {
-    // mark it in prefs so we never show again
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kSurveyShownKey, true);
-
-    if (!mounted) return;
-
-    setState(() => _surveyPromptShown = true);
-
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Enjoying the App?'),
-            content: const Text(
-              'If you are enjoying this app, please give your feedback!',
-            ),
-            actions: [
-              TextButton(
-                child: const Text('Not Now'),
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-              TextButton(
-                child: const Text('Give Feedback'),
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  Navigator.of(context).push(
-                    PageRouteBuilder(
-                      pageBuilder: (_, a1, a2) => const SurveyPage(),
-                      transitionsBuilder: (_, anim, __, child) {
-                        return SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(1, 0),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: anim,
-                              curve: Curves.easeInOut,
-                            ),
-                          ),
-                          child: child,
-                        );
-                      },
-                      transitionDuration: const Duration(milliseconds: 400),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
     );
   }
 

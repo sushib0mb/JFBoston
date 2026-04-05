@@ -32,6 +32,7 @@ class EditPerformancePageState extends State<EditPerformancePage> {
   int? _selectedDay;
   String? _selectedPerformanceIcon;
   String? _selectedPerformanceImage;
+  String? _selectedPerformanceBackground;
   TimeOfDay? _selectedStartTime;
 
   @override
@@ -305,6 +306,21 @@ class EditPerformancePageState extends State<EditPerformancePage> {
                         onChanged: (String? newUrl) {
                           setState(() {
                             _selectedPerformanceImage = newUrl;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      ImageDropdown(
+                        initialValue: _selectedPerformanceBackground,
+                        label: "Peformance Background: ",
+                        folderPath: "performanceBackground",
+                        errorMessage:
+                            "Please select a performance background image!",
+                        onChanged: (String? newUrl) {
+                          setState(() {
+                            _selectedPerformanceBackground = newUrl;
                           });
                         },
                       ),

@@ -146,82 +146,82 @@ class _FoodPageState extends State<FoodPage> {
     _applyFilters();
   }
 
-@override
-Widget build(BuildContext context) {
-  final screenSize = MediaQuery.of(context).size;
-  final screenWidth = screenSize.width;
-  final screenHeight = screenSize.height;
-  final topPadding = MediaQuery.of(context).size.height * 0.082;
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenWidth = screenSize.width;
+    final screenHeight = screenSize.height;
+    final topPadding = MediaQuery.of(context).size.height * 0.082;
 
-  return Scaffold(
-    resizeToAvoidBottomInset: false,
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    body: Stack(
-      children: [
-        // 1. Background gradient (bottom layer)
-        _buildBackgroundGradient(),
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // 1. Background gradient (bottom layer)
+          _buildBackgroundGradient(),
 
-        // 2. Main white content container
-        Column(
-          children: [
-            SizedBox(
-              height:
-                  MediaQuery.of(context).padding.top +
-                  topPadding +
-                  MediaQuery.of(context).size.height * 0.015,
-            ),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-                child: _buildMainContent(screenWidth, screenHeight),
+          // 2. Main white content container
+          Column(
+            children: [
+              SizedBox(
+                height:
+                    MediaQuery.of(context).padding.top +
+                    topPadding +
+                    MediaQuery.of(context).size.height * 0.015,
               ),
-            ),
-          ],
-        ),
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.all(25),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    color: Theme.of(context).colorScheme.surface,
+                  ),
+                  child: _buildMainContent(screenWidth, screenHeight),
+                ),
+              ),
+            ],
+          ),
 
-        // 3. LOCATION TOGGLE (on top of white container, left side)
-        _buildLocationToggle(),
+          // 3. LOCATION TOGGLE (on top of white container, left side)
+          _buildLocationToggle(),
 
-        // 4. Top action buttons (search and filter, right side)
-        TopActionButtons(
-          isSearching: _isSearching,
-          onSearchPressed: () {
-            setState(() => _isSearching = true);
-            _searchFocusNode.requestFocus();
-          },
-          onFilterPressed: () {
-            if (!_isFilterPopupOpen) _showFilterPopup();
-          },
-        ),
-
-        // 5. Search bar (when active, top layer)
-        if (_isSearching)
-          CustomSearchBar(
-            controller: _searchController,
-            focusNode: _searchFocusNode,
-            topPadding:
-                MediaQuery.of(context).padding.top +
-                (MediaQuery.of(context).size.height * 0.085) +
-                32.5,
-            onChanged: (value) {
-              setState(() {});
+          // 4. Top action buttons (search and filter, right side)
+          TopActionButtons(
+            isSearching: _isSearching,
+            onSearchPressed: () {
+              setState(() => _isSearching = true);
+              _searchFocusNode.requestFocus();
             },
-            onCancel: () {
-              setState(() {
-                _searchController.clear();
-                _isSearching = false;
-              });
-              _searchFocusNode.unfocus();
+            onFilterPressed: () {
+              if (!_isFilterPopupOpen) _showFilterPopup();
             },
           ),
-      ],
-    ),
-  );
-}
+
+          // 5. Search bar (when active, top layer)
+          if (_isSearching)
+            CustomSearchBar(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              topPadding:
+                  MediaQuery.of(context).padding.top +
+                  (MediaQuery.of(context).size.height * 0.085) +
+                  32.5,
+              onChanged: (value) {
+                setState(() {});
+              },
+              onCancel: () {
+                setState(() {
+                  _searchController.clear();
+                  _isSearching = false;
+                });
+                _searchFocusNode.unfocus();
+              },
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBackgroundGradient() {
     return Container(
@@ -495,112 +495,83 @@ Widget build(BuildContext context) {
   }
 
   void _showFilterPopup() {
-  if (_isFilterPopupOpen) return;
-  _isFilterPopupOpen = true;
+    if (_isFilterPopupOpen) return;
+    _isFilterPopupOpen = true;
 
-  Future.delayed(const Duration(milliseconds: 50), () {
-    if (!mounted) return;
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (!mounted) return;
 
-    final screenSize = MediaQuery.of(context).size;
-    final isTablet = screenSize.width >= 600;
-    final popupWidth = screenSize.width * (isTablet ? 0.8 : 0.85);
-    final popupHeight = screenSize.height * (isTablet ? 0.85 : 0.785);
+      final screenSize = MediaQuery.of(context).size;
+      final isTablet = screenSize.width >= 600;
+      final popupWidth = screenSize.width * (isTablet ? 0.8 : 0.85);
+      final popupHeight = screenSize.height * (isTablet ? 0.85 : 0.785);
 
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'FilterPopup',
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-      transitionBuilder: (context, anim, _, __) {
-        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOut);
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'FilterPopup',
+        transitionDuration: const Duration(milliseconds: 200),
+        pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+        transitionBuilder: (context, anim, _, __) {
+          final curved = CurvedAnimation(parent: anim, curve: Curves.easeOut);
 
-        return FadeTransition(
-          opacity: curved,
-          child: Stack(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).maybePop(),
-                child: Container(
-                  color: Colors.black.withOpacity(curved.value * 0.5),
+          return FadeTransition(
+            opacity: curved,
+            child: Stack(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).maybePop(),
+                  child: Container(
+                    color: Colors.black.withOpacity(curved.value * 0.5),
+                  ),
                 ),
-              ),
 
-              Center(
-                child: ScaleTransition(
-                  scale: curved,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      width: popupWidth,
-                      height: popupHeight,
-                      margin: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 30 : 24,
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 24 : 16,
-                        vertical: isTablet ? 16 : 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black26, blurRadius: 10),
-                        ],
-                      ),
+                Center(
+                  child: ScaleTransition(
+                    scale: curved,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        width: popupWidth,
+                        height: popupHeight,
+                        margin: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 30 : 24,
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 24 : 16,
+                          vertical: isTablet ? 16 : 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black26, blurRadius: 10),
+                          ],
+                        ),
 
-                      child: StatefulBuilder(
-                        builder: (context, setModalState) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              // Header
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: isTablet ? 24 : 16,
-                                  vertical: isTablet ? 12 : 8,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "Filters",
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleLarge!.copyWith(
-                                        fontSize: isTablet ? 24 : 20,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        size: isTablet ? 28 : 24,
-                                      ),
-                                      onPressed:
-                                          () => Navigator.of(context).pop(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Scrollable body
-                              Expanded(
-                                child: SingleChildScrollView(
+                        child: StatefulBuilder(
+                          builder: (context, setModalState) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                // Header
+                                Padding(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: isTablet ? 24 : 16,
                                     vertical: isTablet ? 12 : 8,
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      // Payment
-                                      SizedBox(height: isTablet ? 12 : 5),
-                                      Center(
-                                        child: _buildSectionTitle("Payment"),
+                                      Text(
+                                        "Filters",
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleLarge!.copyWith(
+                                          fontSize: isTablet ? 24 : 20,
+                                        ),
                                       ),
-<<<<<<< Updated upstream:frontend/lib/pages/food/food_page.dart
                                       IconButton(
                                         icon: Icon(
                                           Icons.close,
@@ -613,7 +584,7 @@ Widget build(BuildContext context) {
                                   ),
                                 ),
 
-                                // — Scrollable body —
+                                // Scrollable body
                                 Expanded(
                                   child: SingleChildScrollView(
                                     padding: EdgeInsets.symmetric(
@@ -634,11 +605,10 @@ Widget build(BuildContext context) {
                                           selectedPayments: selectedPayments,
                                           onPaymentSelected: (method, isSel) {
                                             setModalState(() {
-                                              if (isSel) {
+                                              if (isSel)
                                                 selectedPayments.add(method);
-                                              } else {
+                                              else
                                                 selectedPayments.remove(method);
-                                              }
                                             });
                                           },
                                         ),
@@ -671,11 +641,10 @@ Widget build(BuildContext context) {
                                           selectedAllergens: selectedAllergens,
                                           onAllergenSelected: (all, isSel) {
                                             setModalState(() {
-                                              if (isSel) {
+                                              if (isSel)
                                                 selectedAllergens.add(all);
-                                              } else {
+                                              else
                                                 selectedAllergens.remove(all);
-                                              }
                                             });
                                           },
                                         ),
@@ -686,7 +655,7 @@ Widget build(BuildContext context) {
                                   ),
                                 ),
 
-                                // — Action buttons —
+                                // Action buttons
                                 Padding(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: isTablet ? 24 : 16,
@@ -715,154 +684,65 @@ Widget build(BuildContext context) {
                                           ),
                                           elevation: isTablet ? 12 : 10,
                                         ).copyWith(
-                                          shadowColor: WidgetStateProperty.all(
-                                            Colors.black.withOpacity(0.3),
-                                          ),
+                                          shadowColor:
+                                              MaterialStateProperty.all(
+                                                Colors.black.withOpacity(0.3),
+                                              ),
                                         ),
                                         onPressed: () {
-=======
-                                      SizedBox(height: isTablet ? 16 : 10),
-                                      PaymentFilterRow(
-                                        selectedPayments: selectedPayments,
-                                        onPaymentSelected: (method, isSel) {
->>>>>>> Stashed changes:frontend/jfbfestival/lib/pages/food/food_page.dart
-                                          setModalState(() {
-                                            if (isSel)
-                                              selectedPayments.add(method);
-                                            else
-                                              selectedPayments.remove(method);
+                                          // ← CHANGE THIS: Apply reset immediately
+                                          setState(() {
+                                            selectedPayments.clear();
+                                            veganOnly = false;
+                                            selectedAllergens.clear();
+                                            _applyFilters(); // ← Apply filters now
                                           });
+                                          setModalState(() {
+                                            // Also update modal state
+                                            selectedPayments.clear();
+                                            veganOnly = false;
+                                            selectedAllergens.clear();
+                                          });
+                                          Navigator.of(
+                                            context,
+                                          ).pop(); // ← Close modal
                                         },
-                                      ),
-
-                                      // Vegan
-                                      SizedBox(height: isTablet ? 20 : 12),
-                                      Center(
-                                        child: _buildSectionTitle(
-                                          "Vegetarian",
+                                        child: Text(
+                                          "Reset",
+                                          style: TextStyle(
+                                            fontSize: isTablet ? 17 : 15,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.2,
+                                          ),
                                         ),
                                       ),
-                                      SizedBox(height: isTablet ? 16 : 12),
-                                      VeganFilterOption(
-                                        isVegan: veganOnly ?? false,
-                                        onChanged:
-                                            (v) => setModalState(
-                                              () => veganOnly = v,
-                                            ),
-                                      ),
 
-                                      // Allergens
-                                      SizedBox(height: isTablet ? 20 : 10),
-                                      Center(
-                                        child: _buildSectionTitle(
-                                          "Allergens",
-                                        ),
+                                      _buildApplyButton(
+                                        addedText: "Apply Filters",
+                                        onApply: _applyFilters,
+                                        closeModal:
+                                            () => Navigator.of(context).pop(),
                                       ),
-                                      SizedBox(height: isTablet ? 16 : 8),
-                                      AllergyFilterGrid(
-                                        selectedAllergens: selectedAllergens,
-                                        onAllergenSelected: (all, isSel) {
-                                          setModalState(() {
-                                            if (isSel)
-                                              selectedAllergens.add(all);
-                                            else
-                                              selectedAllergens.remove(all);
-                                          });
-                                        },
-                                      ),
-
-                                      SizedBox(height: isTablet ? 24 : 16),
                                     ],
                                   ),
                                 ),
-                              ),
-
-                              // Action buttons
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: isTablet ? 24 : 16,
-                                  vertical: isTablet ? 16 : 8,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.black,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          vertical:
-                                              screenSize.height *
-                                              (isTablet ? 0.02 : 0.017),
-                                          horizontal:
-                                              screenSize.width *
-                                              (isTablet ? 0.08 : 0.06),
-                                        ),
-                                        elevation: isTablet ? 12 : 10,
-                                      ).copyWith(
-                                        shadowColor:
-                                            MaterialStateProperty.all(
-                                              Colors.black.withOpacity(0.3),
-                                            ),
-                                      ),
-                                      onPressed: () {
-                                        // ← CHANGE THIS: Apply reset immediately
-                                        setState(() {
-                                          selectedPayments.clear();
-                                          veganOnly = false;
-                                          selectedAllergens.clear();
-                                          _applyFilters(); // ← Apply filters now
-                                        });
-                                        setModalState(() {
-                                          // Also update modal state
-                                          selectedPayments.clear();
-                                          veganOnly = false;
-                                          selectedAllergens.clear();
-                                        });
-                                        Navigator.of(context).pop(); // ← Close modal
-                                      },
-                                      child: Text(
-                                        "Reset",
-                                        style: TextStyle(
-                                          fontSize: isTablet ? 17 : 15,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1.2,
-                                        ),
-                                      ),
-                                    ),
-
-                                    _buildApplyButton(
-                                      addedText: "Apply Filters",
-                                      onApply: _applyFilters,
-                                      closeModal:
-                                          () => Navigator.of(context).pop(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ).then((_) {
-      _isFilterPopupOpen = false;
+              ],
+            ),
+          );
+        },
+      ).then((_) {
+        _isFilterPopupOpen = false;
+      });
     });
-  });
-}
+  }
 
   Widget _buildSectionTitle(String title) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -948,220 +828,192 @@ Widget build(BuildContext context) {
   }
 
   void _applyFilters() {
-  setState(() {
-    safeBooths = [];
-    unsafeBoothsWithAllergens = [];
-    safeVeganBooths = [];
-    nonVeganBooths = [];
-    filteredBooths = [];
+    setState(() {
+      safeBooths = [];
+      unsafeBoothsWithAllergens = [];
+      safeVeganBooths = [];
+      nonVeganBooths = [];
+      filteredBooths = [];
 
-    final searchQuery = _searchController.text.toLowerCase();
+      final searchQuery = _searchController.text.toLowerCase();
 
-    // 1) Start from the map‐filtered list:
-    final baseList =
-        (currentMapLetter != null)
-            ? foodBooths
-                .where((b) => b.mapPageFoodLocation == currentMapLetter)
-                .toList()
-            : List<FoodBooth>.from(foodBooths);
+      // 1) Start from the map‐filtered list:
+      final baseList =
+          (currentMapLetter != null)
+              ? foodBooths
+                  .where((b) => b.mapPageFoodLocation == currentMapLetter)
+                  .toList()
+              : List<FoodBooth>.from(foodBooths);
 
-    // 2) Now run through baseList
-    for (var booth in baseList) {
-      
-      // ← ADD LOCATION FILTER FIRST
-      if (selectedLocation != 'All' && booth.location != selectedLocation) {
-        continue;
-      }
-      
-      // — Search filter
-      if (searchQuery.isNotEmpty) {
-        final matchesName = booth.name.toLowerCase().contains(searchQuery);
-        final matchesLocation = booth.boothLocation.toLowerCase().contains(
-          searchQuery,
+      // 2) Now run through baseList
+      for (var booth in baseList) {
+        // ← ADD LOCATION FILTER FIRST
+        if (selectedLocation != 'All' && booth.location != selectedLocation) {
+          continue;
+        }
+
+        // — Search filter
+        if (searchQuery.isNotEmpty) {
+          final matchesName = booth.name.toLowerCase().contains(searchQuery);
+          final matchesLocation = booth.boothLocation.toLowerCase().contains(
+            searchQuery,
+          );
+          final matchesGenre = booth.genre.toLowerCase().contains(searchQuery);
+          final matchesDish = booth.dishes.any(
+            (d) =>
+                d.name.toLowerCase().contains(searchQuery) ||
+                d.description.toLowerCase().contains(searchQuery),
+          );
+          if (!matchesName &&
+              !matchesLocation &&
+              !matchesGenre &&
+              !matchesDish) {
+            continue;
+          }
+        }
+
+        // — Payment filter
+        if (selectedPayments.isNotEmpty &&
+            !booth.payments.any((p) => selectedPayments.contains(p))) {
+          continue;
+        }
+
+        // ... rest of your existing filter logic ...
+        final hasVeganDish = booth.dishes.any((d) => d.isVegan);
+        final allHaveAllergens = booth.dishes.every(
+          (d) => d.allergens.any((a) => selectedAllergens.contains(a)),
         );
-        final matchesGenre = booth.genre.toLowerCase().contains(searchQuery);
-        final matchesDish = booth.dishes.any(
-          (d) =>
-              d.name.toLowerCase().contains(searchQuery) ||
-              d.description.toLowerCase().contains(searchQuery),
+        final hasSafeDish = booth.dishes.any(
+          (d) => !d.allergens.any((a) => selectedAllergens.contains(a)),
         );
-<<<<<<< Updated upstream:frontend/lib/pages/food/food_page.dart
 
         if (selectedAllergens.isNotEmpty && veganOnly == true) {
-          if (hasVeganDish && hasSafeDish) {
+          if (hasVeganDish && hasSafeDish)
             safeBooths.add(booth);
-          } else {
+          else
             unsafeBoothsWithAllergens.add(booth);
-          }
           continue;
         }
         if (selectedAllergens.isNotEmpty) {
-          if (allHaveAllergens) {
+          if (allHaveAllergens)
             unsafeBoothsWithAllergens.add(booth);
-          } else {
+          else
             safeBooths.add(booth);
-          }
           continue;
         }
         if (veganOnly == true) {
-          if (hasVeganDish) {
+          if (hasVeganDish)
             safeVeganBooths.add(booth);
-          } else {
+          else
             nonVeganBooths.add(booth);
-          }
           continue;
         }
 
-        // — no vegan or allergen filters
         filteredBooths.add(booth);
-=======
-        if (!matchesName &&
-            !matchesLocation &&
-            !matchesGenre &&
-            !matchesDish) {
-          continue;
-        }
->>>>>>> Stashed changes:frontend/jfbfestival/lib/pages/food/food_page.dart
       }
 
-      // — Payment filter
-      if (selectedPayments.isNotEmpty &&
-          !booth.payments.any((p) => selectedPayments.contains(p))) {
-        continue;
-      }
-
-      // ... rest of your existing filter logic ...
-      final hasVeganDish = booth.dishes.any((d) => d.isVegan);
-      final allHaveAllergens = booth.dishes.every(
-        (d) => d.allergens.any((a) => selectedAllergens.contains(a)),
-      );
-      final hasSafeDish = booth.dishes.any(
-        (d) => !d.allergens.any((a) => selectedAllergens.contains(a)),
-      );
-
+      // 3) assemble final filteredBooths list
       if (selectedAllergens.isNotEmpty && veganOnly == true) {
-        if (hasVeganDish && hasSafeDish)
-          safeBooths.add(booth);
-        else
-          unsafeBoothsWithAllergens.add(booth);
-        continue;
-      }
-      if (selectedAllergens.isNotEmpty) {
-        if (allHaveAllergens)
-          unsafeBoothsWithAllergens.add(booth);
-        else
-          safeBooths.add(booth);
-        continue;
-      }
-      if (veganOnly == true) {
-        if (hasVeganDish)
-          safeVeganBooths.add(booth);
-        else
-          nonVeganBooths.add(booth);
-        continue;
+        filteredBooths = [...safeBooths];
+      } else if (selectedAllergens.isNotEmpty) {
+        filteredBooths = [...safeBooths];
+      } else if (veganOnly == true) {
+        filteredBooths = [...safeVeganBooths];
       }
 
-      filteredBooths.add(booth);
-    }
-
-    // 3) assemble final filteredBooths list
-    if (selectedAllergens.isNotEmpty && veganOnly == true) {
-      filteredBooths = [...safeBooths];
-    } else if (selectedAllergens.isNotEmpty) {
-      filteredBooths = [...safeBooths];
-    } else if (veganOnly == true) {
-      filteredBooths = [...safeVeganBooths];
-    }
-    
-    filteredBooths.sort((a, b) => a.name.compareTo(b.name));
-    safeBooths.sort((a, b) => a.name.compareTo(b.name));
-    unsafeBoothsWithAllergens.sort((a, b) => a.name.compareTo(b.name));
-    safeVeganBooths.sort((a, b) => a.name.compareTo(b.name));
-  });
-}
+      filteredBooths.sort((a, b) => a.name.compareTo(b.name));
+      safeBooths.sort((a, b) => a.name.compareTo(b.name));
+      unsafeBoothsWithAllergens.sort((a, b) => a.name.compareTo(b.name));
+      safeVeganBooths.sort((a, b) => a.name.compareTo(b.name));
+    });
+  }
 
   Widget _buildLocationToggle() {
-  final screenSize = MediaQuery.of(context).size;
-  final topPadding = MediaQuery.of(context).padding.top;
-  
-  return Positioned(
-    left: 20,
-    top: topPadding + (screenSize.height * 0.085),
-    child: PopupMenuButton<String>(
-      initialValue: selectedLocation,
-      onSelected: (String value) {
-        setState(() {
-          selectedLocation = value;
-          _applyFilters();
-        });
-      },
-      offset: Offset(0, 50),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      itemBuilder: (BuildContext context) => [
-        _buildLocationMenuItem('All', Icons.apps, Colors.grey),
-        _buildLocationMenuItem('Commons', Icons.location_on, Colors.blue),
-        _buildLocationMenuItem('Downtown', Icons.location_city, Colors.orange),
-      ],
-      child: Container(
-        width: 50,  // ← Match search/filter button size
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,  // ← Circular like search/filter
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Icon(
-          selectedLocation == 'All' 
-            ? Icons.apps 
-            : selectedLocation == 'Commons'
-              ? Icons.location_on
-              : Icons.location_city,
-          size: 24,
-          color: selectedLocation == 'Commons' 
-            ? Colors.blue 
-            : selectedLocation == 'Downtown'
-              ? Colors.orange
-              : Colors.grey.shade700,
-        ),
-      ),
-    ),
-  );
-}
+    final screenSize = MediaQuery.of(context).size;
+    final topPadding = MediaQuery.of(context).padding.top;
 
-PopupMenuItem<String> _buildLocationMenuItem(
-  String value,
-  IconData icon,
-  Color color,
-) {
-  final bool isSelected = selectedLocation == value;
-  
-  return PopupMenuItem<String>(
-    value: value,
-    child: Row(
-      children: [
-        Icon(icon, size: 20, color: color),
-        SizedBox(width: 12),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? color : Colors.black87,
+    return Positioned(
+      left: 20,
+      top: topPadding + (screenSize.height * 0.085),
+      child: PopupMenuButton<String>(
+        initialValue: selectedLocation,
+        onSelected: (String value) {
+          setState(() {
+            selectedLocation = value;
+            _applyFilters();
+          });
+        },
+        offset: Offset(0, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        itemBuilder:
+            (BuildContext context) => [
+              _buildLocationMenuItem('All', Icons.apps, Colors.grey),
+              _buildLocationMenuItem('Commons', Icons.location_on, Colors.blue),
+              _buildLocationMenuItem(
+                'Downtown',
+                Icons.location_city,
+                Colors.orange,
+              ),
+            ],
+        child: Container(
+          width: 50, // ← Match search/filter button size
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle, // ← Circular like search/filter
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(
+            selectedLocation == 'All'
+                ? Icons.apps
+                : selectedLocation == 'Commons'
+                ? Icons.location_on
+                : Icons.location_city,
+            size: 24,
+            color:
+                selectedLocation == 'Commons'
+                    ? Colors.blue
+                    : selectedLocation == 'Downtown'
+                    ? Colors.orange
+                    : Colors.grey.shade700,
           ),
         ),
-        if (isSelected) ...[
-          Spacer(),
-          Icon(Icons.check, size: 18, color: color),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildLocationMenuItem(
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    final bool isSelected = selectedLocation == value;
+
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          SizedBox(width: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? color : Colors.black87,
+            ),
+          ),
+          if (isSelected) ...[
+            Spacer(),
+            Icon(Icons.check, size: 18, color: color),
+          ],
         ],
-      ],
-    ),
-  );
-}
+      ),
+    );
+  }
 }

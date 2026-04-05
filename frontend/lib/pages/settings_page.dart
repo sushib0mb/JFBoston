@@ -4,7 +4,6 @@ import 'admin/admin_page.dart';
 import 'package:share_plus/share_plus.dart';
 
 // import 'theme_notifier.dart';
-import 'survey/survey_page.dart';
 
 class SettingsPage extends StatefulWidget {
   static const routeName = '/settings';
@@ -16,6 +15,12 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _codeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +35,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final double headerSize = isTablet ? 24 : 20;
 
     // final theme = context.watch<ThemeNotifier>();
-
-    @override
-    void dispose() {
-      _codeController.dispose();
-      super.dispose();
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -64,20 +63,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 subject: 'JFB Festival App',
               );
             },
-          ),
-
-          // Fill Out Survey
-          ListTile(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: padH,
-              vertical: padV,
-            ),
-            leading: Icon(Icons.poll, size: iconSize),
-            title: Text(
-              'Fill Out Survey',
-              style: TextStyle(fontSize: titleSize),
-            ),
-            onTap: () => Navigator.pushNamed(context, SurveyPage.routeName),
           ),
 
           // About & Version
