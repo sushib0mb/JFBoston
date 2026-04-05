@@ -234,7 +234,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _handleSubmit() {
     // Read the text and remove any accidental whitespace
-    final String inputCode = _codeController.text.trim().toLowerCase();
+    // final String inputCode = _codeController.text.trim().toLowerCase();
+
+    // TODO: TESTING PURPOSES ONLY, DELETE BEFORE PRODUCTION
+    final inputCode = "jfbadmin";
 
     if (inputCode.isEmpty) {
       ScaffoldMessenger.of(
