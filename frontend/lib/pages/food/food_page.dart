@@ -872,63 +872,62 @@ class _FoodPageState extends State<FoodPage> {
       safeVeganBooths.sort((a, b) => a.name.compareTo(b.name));
     });
   }
+Widget _buildLocationToggle() {
+  final topPadding = MediaQuery.of(context).padding.top;
 
-  Widget _buildLocationToggle() {
-    final screenSize = MediaQuery.of(context).size;
-    final topPadding = MediaQuery.of(context).padding.top;
-
-    return Positioned(
-      left: 20,
-      top: topPadding + (screenSize.height * 0.085),
-      child: PopupMenuButton<String>(
-        initialValue: selectedLocation,
-        onSelected: (String value) {
-          setState(() {
-            selectedLocation = value;
-            _applyFilters();
-          });
-        },
-        offset: const Offset(0, 50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+  return Positioned(
+    left: 20,
+    top: topPadding + 15,
+    child: PopupMenuButton<String>(
+      initialValue: selectedLocation,
+      onSelected: (String value) {
+        setState(() {
+          selectedLocation = value;
+          _applyFilters();
+        });
+      },
+      // ← Drop menu DOWN below button
+      offset: const Offset(0, 55),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      itemBuilder: (BuildContext context) => [
+        _buildLocationMenuItem('All', Icons.location_on, Colors.grey),
+        _buildLocationMenuItem('Commons', Icons.location_city, Colors.blue),
+        _buildLocationMenuItem('Downtown', Icons.location_city, Colors.orange),
+      ],
+      // ← Same styling as search/hamburger buttons
+      child: Container(
+        width: 55,
+        height: 55,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        itemBuilder: (BuildContext context) => [
-          _buildLocationMenuItem('All', Icons.apps, Colors.grey),
-          _buildLocationMenuItem('Commons', Icons.location_on, Colors.blue),
-          _buildLocationMenuItem('Downtown', Icons.location_city, Colors.orange),
-        ],
-        child: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(
-            selectedLocation == 'All'
-                ? Icons.apps
-                : selectedLocation == 'Commons'
-                    ? Icons.location_on
-                    : Icons.location_city,
-            size: 24,
-            color: selectedLocation == 'Commons'
-                ? Colors.blue
-                : selectedLocation == 'Downtown'
-                    ? Colors.orange
-                    : Colors.grey.shade700,
-          ),
+        child: Icon(
+          selectedLocation == 'All'
+              ? Icons.location_on
+              : selectedLocation == 'Commons'
+                  ? Icons.location_city
+                  : Icons.location_city,
+          size: 24,
+          color: selectedLocation == 'Commons'
+              ? Colors.blue
+              : selectedLocation == 'Downtown'
+                  ? Colors.orange
+                  : Colors.grey.shade700,
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   PopupMenuItem<String> _buildLocationMenuItem(
     String value,
     IconData icon,
