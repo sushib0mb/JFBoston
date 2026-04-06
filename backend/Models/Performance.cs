@@ -39,6 +39,10 @@ public class Performance : BaseModel
     [JsonPropertyName("IconImage")]
     public string IconImage { get; set; } = null!;
 
+    [Column("stage_background")]
+    [JsonPropertyName("StageBackground")]
+    public string StageBackground { get; set; } = null!;
+
     [Column("day")]
     [JsonPropertyName("Day")]
     public int Day { get; set; }

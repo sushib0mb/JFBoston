@@ -65,7 +65,7 @@ class EventItem {
       stage: data['stage'] ?? '',
       description: data['description'] ?? '',
       eventImage: data['event_image'] ?? '',
-      stageBackground: data['StageBackground'] ?? '',
+      stageBackground: data['stage_background'] ?? '',
       day: data['day'] ?? 0,
     );
   }
