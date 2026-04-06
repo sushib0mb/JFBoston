@@ -370,14 +370,6 @@ class _HomePageState extends State<HomePage> {
         spacing: screenWidth * 0.02,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // _buildSponsorCategory("Sustainability", "assets/sponsors/Takeda.jpg"),
-          // _buildSponsorCategory("Airline", "assets/sponsors/jal.jpg"),
-          // SizedBox(height: 7),
-          // _buildSponsorCategory(
-          //   "Transportation",
-          //   "assets/sponsors/yamatotransport.jpg",
-          // ),
-          // SizedBox(height: 3),
           ...groupedSponsors.entries.map((entry) {
             String categoryName = entry.key;
             List<String> images = entry.value;
@@ -385,10 +377,6 @@ class _HomePageState extends State<HomePage> {
             return _buildSponsorSection(categoryName, images);
           }),
 
-          // _buildIndividualSponsors(),
-          // _buildAuctionDonors(),
-          // _buildJfbOrganizers(),
-          // _buildSupportingSponsors(),
           SizedBox(height: 5),
         ],
       ),
@@ -416,10 +404,12 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.symmetric(horizontal: 10),
           itemCount: images.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: images.length > 1 ? 2 : 1,
+            crossAxisCount:
+                images.length == 3 ? 3 : (images.length > 1 ? 2 : 1),
             crossAxisSpacing: 4,
             mainAxisSpacing: 10,
-            childAspectRatio: images.length > 1 ? 3 : 4,
+            childAspectRatio:
+                images.length == 3 ? 1.5 : (images.length > 1 ? 3 : 4),
           ),
           itemBuilder: (context, index) {
             return Center(
