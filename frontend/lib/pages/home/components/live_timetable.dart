@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/main.dart';
 import '../home_page.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';
@@ -169,11 +170,22 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: isTablet ? 8 : 5,
+              spreadRadius: isTablet ? 3 : 2,
+            ),
+          ],
+        ),
         child: Column(
           children: [
             if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
               _buildEventSection(
-                "🎤 Now Happening",
                 currentAndUpcomingEvents.currentStageEvents,
                 widget.screenWidth,
                 isCurrent: true,
@@ -185,7 +197,6 @@ class _LiveTimetableState extends State<LiveTimetable> {
                 SizedBox(height: sectionSpacing),
               ],
               _buildEventSection(
-                "⏭️ Up Next",
                 currentAndUpcomingEvents.upcomingStageEvents,
                 widget.screenWidth,
                 isCurrent: false,
@@ -386,14 +397,12 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
   // Build event section with title and list of events
   Widget _buildEventSection(
-    String title,
     List<EventItem> events,
     double screenWidth, {
     required bool isCurrent,
     required bool isTablet,
   }) {
-    final double titleFontSize = isTablet ? 24.0 : 20.0;
-    final double spacing = isTablet ? 12.0 : 8.0;
+    final double spacing = isTablet ? 12.0 : 10.0;
 
     final now = DateTime.now();
     final year = now.year;
@@ -403,20 +412,6 @@ class _LiveTimetableState extends State<LiveTimetable> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 12 : 8,
-            vertical: isTablet ? 7 : 5,
-          ),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: titleFontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.pinkAccent,
-            ),
-          ),
-        ),
         SizedBox(height: spacing),
         ...events.map((e) {
           final eventStartDateTime = _parseEventStartTime(
@@ -425,12 +420,15 @@ class _LiveTimetableState extends State<LiveTimetable> {
             month,
             day,
           );
-          return _buildEventCard(
-            e,
-            isCurrent,
-            screenWidth,
-            isTablet,
-            eventStartDateTime,
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+            child: _buildEventCard(
+              e,
+              isCurrent,
+              screenWidth,
+              isTablet,
+              eventStartDateTime,
+            ),
           );
         }),
       ],
@@ -448,8 +446,7 @@ class _LiveTimetableState extends State<LiveTimetable> {
     final double verticalPadding = isTablet ? 12.0 : 8.0;
     final EdgeInsets cardPadding = EdgeInsets.all(isTablet ? 24 : 16);
     final double borderRadius = isTablet ? 12.0 : 10.0;
-    final double stageFontSize =
-        screenWidth * (isTablet ? 0.055 : 0.045) + (isTablet ? 3 : 2);
+    final double stageFontSize = 22;
     final double titleFontSize = screenWidth * (isTablet ? 0.055 : 0.045);
     final double iconDiameter = screenWidth * (isTablet ? 0.15 : 0.12);
     final double iconOffset = isTablet ? -20.0 : -18.0;
@@ -457,8 +454,19 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
     return GestureDetector(
       onTap: () {
-        // TODO: Someone pasted llM shit here without putting the navigation logic
-        // … your existing navigation logic …
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder:
+                (context) => MainScreen(
+                  initialIndex:
+                      2, // Index 2 corresponds to your TimetablePage in MainScreen
+                  selectedEvent:
+                      event, // Pass the event through so MainScreen can hand it to TimetablePage
+                ),
+          ),
+          (route) =>
+              false, // This clears the navigation stack so you don't get a weird "back" button over your home screen
+        );
       },
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: verticalPadding),
@@ -484,12 +492,30 @@ class _LiveTimetableState extends State<LiveTimetable> {
                   // Stage label
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Text(
-                      event.stage,
-                      style: TextStyle(
-                        color: Colors.pinkAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: stageFontSize,
+                    child: Container(
+                      // Adds breathing room inside the pill around the text
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            event.stage == "Main Stage"
+                                ? Colors.green.shade100
+                                : (event.stage == "Sakura Stage"
+                                    ? Colors.red.shade100
+                                    : Colors.blue.shade100),
+                        // A large radius value makes the edges completely round (pill shape)
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: Text(
+                        event.stage,
+                        style: TextStyle(
+                          // Kept your original text styles
+                          color: Colors.black,
+                          fontWeight: FontWeight.w400,
+                          fontSize: stageFontSize,
+                        ),
                       ),
                     ),
                   ),

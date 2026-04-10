@@ -14,7 +14,7 @@ import '../settings_page.dart';
 const int festivalDays = 2;
 const int festivalStartYear = 2026;
 const int festivalStartMonth = 4;
-const int festivalStartDay = 1;
+const int festivalStartDay = 10;
 const String festivalLocation = "Boston Common";
 
 /// Returns the current festival day (1-based), or 0 if not during the festival.
@@ -222,7 +222,7 @@ class _HomePageState extends State<HomePage> {
                         ),
 
                         // Spacing + Sections
-                        SizedBox(height: verticalSpacing),
+                        SizedBox(height: verticalSpacing * 2),
                         LiveTimetable(
                           screenWidth: screenWidth,
                           festivalDays: festivalDays,
@@ -232,6 +232,8 @@ class _HomePageState extends State<HomePage> {
                           festivalStartYear: festivalStartYear,
                           dayNumber: getFestivalDay(DateTime.now()),
                         ),
+                        SizedBox(height: verticalSpacing),
+
                         _buildSocialMediaIcons(screenWidth),
                         _buildSponsorsSection(screenWidth, sponsorService),
                         SizedBox(height: verticalSpacing * 6),

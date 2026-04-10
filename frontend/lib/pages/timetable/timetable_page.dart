@@ -110,15 +110,6 @@ class _TimetablePageState extends State<TimetablePage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      extendBodyBehindAppBar: true,
-      appBar:
-          (isShowingDetail && _fromHomeTap)
-              ? AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: BackButton(color: Colors.white),
-              )
-              : null,
       body: Stack(
         children: [
           Container(
