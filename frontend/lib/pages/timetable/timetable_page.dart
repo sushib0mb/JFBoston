@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/pages/timetable/components/stage_header.dart';
 import '../../data/timetable_data.dart';
-import '../../services/location_service.dart';
 import 'components/event_detail_popup.dart';
 import 'components/performance.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +22,6 @@ class _TimetablePageState extends State<TimetablePage> {
   EventItem? selectedEvent;
   bool isShowingDetail = false;
   late ScrollController _scrollController;
-  bool _fromHomeTap = true;
 
   static const List<String> _stageNames = [
     'Main Stage',
@@ -108,6 +107,11 @@ class _TimetablePageState extends State<TimetablePage> {
     final schedule =
         selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
 
+    // Filter stages dynamically based on the selected day
+    final currentStageNames = selectedDay == 1 ? _stageNames : [_stageNames[0]];
+    final currentStageLabels =
+        selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
@@ -168,77 +172,16 @@ class _TimetablePageState extends State<TimetablePage> {
                         ),
                         child: Column(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                              child: Row(
-                                children: List.generate(_stageNames.length, (
-                                  i,
-                                ) {
-                                  final isSelected =
-                                      selectedStage == _stageNames[i];
-                                  final loc = context.watch<LocationService>();
-                                  final dist = loc.formatDistance(
-                                    _stageNames[i],
-                                  );
-                                  return Expanded(
-                                    child: GestureDetector(
-                                      onTap:
-                                          () => setState(
-                                            () =>
-                                                selectedStage = _stageNames[i],
-                                          ),
-                                      child: Container(
-                                        margin: EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              isSelected
-                                                  ? const Color(0xFF0B3775)
-                                                  : const Color(0xFF8D8D97),
-                                          borderRadius: BorderRadius.circular(
-                                            36,
-                                          ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _stageLabels[i],
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: tablet ? 15 : 12,
-                                                fontWeight:
-                                                    isSelected
-                                                        ? FontWeight.w700
-                                                        : FontWeight.w500,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                            ),
-                                            if (dist.isNotEmpty)
-                                              Text(
-                                                dist,
-                                                style: TextStyle(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.85),
-                                                  fontSize: tablet ? 11 : 9,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
+                            StageHeader(
+                              stageNames: currentStageNames,
+                              stageLabels: currentStageLabels,
+                              selectedStage: selectedStage,
+                              isTablet: tablet,
+                              onStageSelected: (String newStage) {
+                                setState(() {
+                                  selectedStage = newStage;
+                                });
+                              },
                             ),
                             Expanded(
                               child: SingleChildScrollView(
@@ -250,7 +193,6 @@ class _TimetablePageState extends State<TimetablePage> {
                                     setState(() {
                                       selectedEvent = e;
                                       isShowingDetail = true;
-                                      _fromHomeTap = false;
                                     });
                                   },
                                 ),
@@ -329,63 +271,6 @@ class _TimetablePageState extends State<TimetablePage> {
           style: TextStyle(fontSize: font, fontWeight: FontWeight.w400),
         ),
       ),
-    );
-  }
-
-  Widget _buildStageButtons(BuildContext context, bool tablet) {
-    final loc = context.watch<LocationService>();
-    final names = selectedDay == 1 ? _stageNames : [_stageNames[0]];
-    final labels = selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
-
-    return Row(
-      children: List.generate(names.length, (i) {
-        final isSelected = selectedStage == names[i];
-        final dist = loc.formatDistance(names[i]);
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => selectedStage = names[i]),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color:
-                    isSelected
-                        ? const Color(0xFF0B3775)
-                        : const Color(0xFF8D8D97),
-                borderRadius: BorderRadius.circular(36),
-              ),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    labels[i],
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: tablet ? 13 : 10.5,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  if (dist.isNotEmpty)
-                    Text(
-                      dist,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: tablet ? 11 : 9,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 }
