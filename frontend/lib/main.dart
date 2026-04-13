@@ -1,3 +1,30 @@
+// =============================================================================
+// main.dart
+//
+// App entry point and root navigation shell for the JFBoston festival app.
+//
+// Features:
+//   - App initialisation: Hive, dotenv, Supabase, notifications, orientation lock
+//   - DevicePreview wrapper (enabled in debug mode only)
+//   - MultiProvider setup: ThemeNotifier, ScheduleDataService, SponsorService,
+//     DbImageService, LocationService
+//   - MyApp: MaterialApp with light/dark theme (Fredoka font) and named routes
+//   - MainScreen: IndexedStack tab shell with four pages —
+//       0: HomePage, 1: FoodPage, 2: TimetablePage, 3: MapPage
+//   - TopBar: centred logo (fixed 60 px, SafeArea-inset by parent)
+//   - BottomBar: frosted-glass pill bar with four ImageButton tabs;
+//     uses Expanded for even distribution — no screen-width math
+//   - ImageButton: tap-state toggle between default and pressed asset images
+//   - Fixed layout constants: all sizing defined as static const — no
+//     MediaQuery math or isTablet checks
+//
+// Navigation notes:
+//   - selectedMapLetter threads from MapPage zone buttons → FoodPage filter
+//   - selectedEvent and selectedDay thread into TimetablePage on deep-link
+//   - Switching away from tab 1 clears selectedMapLetter via pushReplacement
+// =============================================================================
+
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

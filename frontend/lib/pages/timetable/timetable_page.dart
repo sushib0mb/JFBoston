@@ -35,6 +35,19 @@ class _TimetablePageState extends State<TimetablePage> {
     'Fuji Stage',
   ];
 
+  // ── Fixed layout constants — no screen-size math ──────────────────────────
+  static const double _dayBtnHeight           = 68.0;
+  static const double _dayBtnWidth            = 156.0;
+  static const double _dayFont                = 40.0;
+  static const double _dayPickerHorizontalPad = 20.0;
+  static const double _dayPickerTopPad        = 4.0;
+  static const double _scheduleTopExtra       = 16.0;
+  static const double _scheduleMargin         = 25.0;
+  static const double _scheduleRadius         = 25.0;
+  static const double _stageFontSize          = 12.0;
+  static const double _stageDistFontSize      = 9.0;
+  static const double _pixelsPerMinute        = 10.0;
+
   @override
   void initState() {
     super.initState();
@@ -54,7 +67,6 @@ class _TimetablePageState extends State<TimetablePage> {
 
     for (var slot in schedule) {
       final eventsForStage = slot.eventsByStage[selected.stage];
-
       if (eventsForStage != null) {
         for (var e in eventsForStage) {
           if (e.performanceName == selected.performanceName &&
@@ -71,20 +83,17 @@ class _TimetablePageState extends State<TimetablePage> {
     }
   }
 
+  // ── isTablet() removed — uses _pixelsPerMinute constant directly ──────────
   void _scrollToEventTime(String time) {
-    // Parse time in HH:MM format to minutes
-    var start = parseTimeToMinutes(time);
-    // Use 11:00 as base reference (11*60 = 660 minutes)
-    var base = 660; // 11:00 in minutes
-    var offset = (start - base) * (isTablet(context) ? 12.0 : 10.0);
+    final start = parseTimeToMinutes(time);
+    const base = 660; // 11:00 in minutes
+    final offset = (start - base) * _pixelsPerMinute;
     _scrollController.animateTo(
       offset,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
-
-  bool isTablet(BuildContext c) => MediaQuery.of(c).size.width >= 600;
 
   @override
   void dispose() {
@@ -94,16 +103,7 @@ class _TimetablePageState extends State<TimetablePage> {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
-    final tablet = isTablet(context);
-
-    // Day buttons adapt
-    final dayBtnHeight = h * (tablet ? 0.10 : 0.082);
-    final dayBtnWidth = w * (tablet ? 0.4 : 0.52);
-    final dayFont = tablet ? 48.0 : 40.0;
-    final topPad = dayBtnHeight;
-
+    // ── No w, h, tablet, dayBtnHeight, dayBtnWidth, dayFont variables ─────
     final svc = Provider.of<ScheduleDataService>(context);
     final schedule =
         selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
@@ -111,16 +111,16 @@ class _TimetablePageState extends State<TimetablePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
-      appBar:
-          (isShowingDetail && _fromHomeTap)
-              ? AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: BackButton(color: Colors.white),
-              )
-              : null,
+      appBar: (isShowingDetail && _fromHomeTap)
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: const BackButton(color: Colors.white),
+            )
+          : null,
       body: Stack(
         children: [
+          // Background gradient
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -133,43 +133,36 @@ class _TimetablePageState extends State<TimetablePage> {
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+
+          // ── SafeArea replaces manual MediaQuery.of(context).padding.top ──
+          SafeArea(
             child: Stack(
               children: [
-                // Day selectors
+                // Day selectors — const EdgeInsets replaces w/h multiplications
                 Positioned(
-                  left: w * 0.06,
-                  top: h * 0.002,
-                  child: _dayPicker(
-                    'Day 1',
-                    1,
-                    dayBtnWidth,
-                    dayBtnHeight,
-                    dayFont,
-                  ),
+                  left: _dayPickerHorizontalPad,
+                  top: _dayPickerTopPad,
+                  child: _dayPicker('Day 1', 1),
                 ),
                 Positioned(
-                  right: w * 0.06,
-                  top: h * 0.002,
-                  child: _dayPicker(
-                    'Day 2',
-                    2,
-                    dayBtnWidth,
-                    dayBtnHeight,
-                    dayFont,
-                  ),
+                  right: _dayPickerHorizontalPad,
+                  top: _dayPickerTopPad,
+                  child: _dayPicker('Day 2', 2),
                 ),
-                // Schedule list
+
+                // Schedule content
                 Column(
                   children: [
-                    SizedBox(height: topPad + h * 0.015),
+                    // Fixed spacing below day buttons — no h * 0.015 math
+                    const SizedBox(
+                      height: _dayBtnHeight + _scheduleTopExtra,
+                    ),
                     Expanded(
                       child: Container(
-                        margin: EdgeInsets.all(tablet ? 32 : 25),
+                        margin: const EdgeInsets.all(_scheduleMargin),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(tablet ? 32 : 25),
-                          gradient: LinearGradient(
+                          borderRadius: BorderRadius.circular(_scheduleRadius),
+                          gradient: const LinearGradient(
                             colors: [Color(0x260A3875), Color(0x26BF1C24)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -177,78 +170,79 @@ class _TimetablePageState extends State<TimetablePage> {
                         ),
                         child: Column(
                           children: [
+                            // Stage selector buttons
                             Padding(
                               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                               child: Row(
-                                children: List.generate(_stageNames.length, (
-                                  i,
-                                ) {
-                                  final isSelected =
-                                      selectedStage == _stageNames[i];
-                                  final loc = context.watch<LocationService>();
-                                  final dist = loc.formatDistance(
-                                    _stageNames[i],
-                                  );
-                                  return Expanded(
-                                    child: GestureDetector(
-                                      onTap:
-                                          () => setState(
-                                            () =>
-                                                selectedStage = _stageNames[i],
+                                children: List.generate(
+                                  _stageNames.length,
+                                  (i) {
+                                    final isSelected =
+                                        selectedStage == _stageNames[i];
+                                    final loc = context.watch<LocationService>();
+                                    final dist =
+                                        loc.formatDistance(_stageNames[i]);
+                                    return Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => setState(
+                                          () => selectedStage = _stageNames[i],
+                                        ),
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 4,
                                           ),
-                                      child: Container(
-                                        margin: EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              isSelected
-                                                  ? const Color(0xFF0B3775)
-                                                  : const Color(0xFF8D8D97),
-                                          borderRadius: BorderRadius.circular(
-                                            36,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
                                           ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _stageLabels[i],
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: tablet ? 15 : 12,
-                                                fontWeight:
-                                                    isSelected
-                                                        ? FontWeight.w700
-                                                        : FontWeight.w500,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                            ),
-                                            if (dist.isNotEmpty)
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? const Color(0xFF0B3775)
+                                                : const Color(0xFF8D8D97),
+                                            borderRadius:
+                                                BorderRadius.circular(36),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
                                               Text(
-                                                dist,
+                                                _stageLabels[i],
                                                 style: TextStyle(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.85),
-                                                  fontSize: tablet ? 11 : 9,
-                                                  fontWeight: FontWeight.w400,
+                                                  color: Colors.white,
+                                                  // Fixed const — tablet?15:12 removed
+                                                  fontSize: _stageFontSize,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.w700
+                                                      : FontWeight.w500,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 1,
                                               ),
-                                          ],
+                                              if (dist.isNotEmpty)
+                                                Text(
+                                                  dist,
+                                                  style: TextStyle(
+                                                    color: Colors.white
+                                                        .withValues(alpha: 0.85),
+                                                    // Fixed const — tablet?11:9 removed
+                                                    fontSize:
+                                                        _stageDistFontSize,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                }),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
+
+                            // Schedule list
                             Expanded(
                               child: SingleChildScrollView(
                                 controller: _scrollController,
@@ -274,129 +268,67 @@ class _TimetablePageState extends State<TimetablePage> {
               ],
             ),
           ),
+
+          // Event detail overlay
           if (isShowingDetail && selectedEvent != null)
             EventDetailPopup(
               event: selectedEvent!,
-              onClose: () {
-                setState(() => isShowingDetail = false);
-              },
+              onClose: () => setState(() => isShowingDetail = false),
             ),
         ],
       ),
     );
   }
 
-  Widget _dayPicker(String text, int day, double w, double h, double fs) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600;
-
-    // scale up a bit on tablets
-    final width = isTablet ? w * 1.2 : w;
-    final height = isTablet ? h * 1.2 : h;
-    final font = isTablet ? fs * 1.2 : fs;
-
+  // ── _dayPicker: removed w/h/fs params — uses static const directly ────────
+  // ── isTablet scaling inside removed ──────────────────────────────────────
+  Widget _dayPicker(String text, int day) {
     return GestureDetector(
-      onTap:
-          () => setState(() {
-            selectedDay = day;
-            // Day 2 only has Boston Common
-            if (day == 2) selectedStage = 'Main Stage';
-          }),
+      onTap: () => setState(() {
+        selectedDay = day;
+        if (day == 2) selectedStage = 'Main Stage';
+      }),
       child: Container(
-        width: width,
-        height: height,
-        alignment: day == 1 ? Alignment(-0.3, 0) : Alignment(0.3, 0),
+        width: _dayBtnWidth,
+        height: _dayBtnHeight,
+        alignment:
+            day == 1 ? const Alignment(-0.3, 0) : const Alignment(0.3, 0),
         decoration: ShapeDecoration(
-          color:
-              day == 1
-                  ? selectedDay == day
-                      ? const Color.fromARGB(38, 191, 29, 35)
-                      : const Color.fromARGB(175, 224, 224, 224)
-                  : selectedDay == day
+          color: day == 1
+              ? selectedDay == day
+                  ? const Color.fromARGB(38, 191, 29, 35)
+                  : const Color.fromARGB(175, 224, 224, 224)
+              : selectedDay == day
                   ? const Color.fromARGB(38, 11, 55, 117)
                   : const Color.fromARGB(175, 224, 224, 224),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
-            side:
-                day == 1
-                    ? selectedDay == day
-                        ? BorderSide(
-                          color: Color.fromARGB(255, 191, 29, 35),
-                          width: 2,
-                        )
-                        : BorderSide(color: Colors.transparent, width: 2)
-                    : selectedDay == day
-                    ? BorderSide(
-                      color: Color.fromARGB(255, 11, 55, 117),
-                      width: 2,
-                    )
-                    : BorderSide(color: Colors.transparent, width: 2),
+            side: day == 1
+                ? selectedDay == day
+                    ? const BorderSide(
+                        color: Color.fromARGB(255, 191, 29, 35),
+                        width: 2,
+                      )
+                    : const BorderSide(color: Colors.transparent, width: 2)
+                : selectedDay == day
+                    ? const BorderSide(
+                        color: Color.fromARGB(255, 11, 55, 117),
+                        width: 2,
+                      )
+                    : const BorderSide(color: Colors.transparent, width: 2),
           ),
         ),
         child: Text(
           text,
-          style: TextStyle(fontSize: font, fontWeight: FontWeight.w400),
+          style: const TextStyle(
+            fontSize: _dayFont,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildStageButtons(BuildContext context, bool tablet) {
-    final loc = context.watch<LocationService>();
-    final names = selectedDay == 1 ? _stageNames : [_stageNames[0]];
-    final labels = selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
-
-    return Row(
-      children: List.generate(names.length, (i) {
-        final isSelected = selectedStage == names[i];
-        final dist = loc.formatDistance(names[i]);
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => selectedStage = names[i]),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color:
-                    isSelected
-                        ? const Color(0xFF0B3775)
-                        : const Color(0xFF8D8D97),
-                borderRadius: BorderRadius.circular(36),
-              ),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    labels[i],
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: tablet ? 13 : 10.5,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  if (dist.isNotEmpty)
-                    Text(
-                      dist,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: tablet ? 11 : 9,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-  }
+  // ── _buildStageButtons removed — was defined but never called (dead code) ──
 }
 
 class ScheduleList extends StatelessWidget {
@@ -410,34 +342,26 @@ class ScheduleList extends StatelessWidget {
     required this.stageName,
     super.key,
   });
+
+  // ── Fixed constants — no screenWidth math ─────────────────────────────────
+  static const double _timeColumnWidth = 52.0;   // was screenWidth * 0.14
+  static const double _timeFontSize    = 14.0;   // was 16.0 * (screenWidth / 375)
+  static const double _pixelsPerMinute = 10.0;
+
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final baseFontSize = 16.0;
-    final responsiveFontSize = baseFontSize * (screenWidth / 375);
-    final pixelsPerMinute = 10.0;
+    // ── screenWidth, baseFontSize, responsiveFontSize removed ────────────
+    if (scheduleItems.isEmpty) return const SizedBox.shrink();
 
-    // If scheduleItems is empty, return an empty container
-    if (scheduleItems.isEmpty) {
-      return Container();
-    }
-
-    // Get all bracket times from schedule items (these are the 30-min brackets)
     final timelineSlots = scheduleItems.map((item) => item.time).toList();
     final baseTime = parseTimeToMinutes(timelineSlots.first);
 
-    // Get the last event's duration from both stages based on scheduleItems
     int latestEventEndTime = baseTime;
-
     for (var item in scheduleItems) {
       final itemStartTime = parseTimeToMinutes(item.time);
-
       for (var eventList in item.eventsByStage.values) {
-        if (eventList.isEmpty) continue;
-
         for (var event in eventList) {
           final eventEndTime = itemStartTime + event.duration;
-
           if (eventEndTime > latestEventEndTime) {
             latestEventEndTime = eventEndTime;
           }
@@ -445,55 +369,54 @@ class ScheduleList extends StatelessWidget {
       }
     }
 
-    // Add padding to latest time
     final latestTime = latestEventEndTime + 35;
-    final timelineHeight = (latestTime - baseTime) * pixelsPerMinute;
+    final timelineHeight = (latestTime - baseTime) * _pixelsPerMinute;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Time Column
+        // ── Time column: fixed _timeColumnWidth replaces screenWidth * 0.14 ─
         Padding(
           padding: const EdgeInsets.only(left: 13),
           child: SizedBox(
-            width: screenWidth * 0.14,
-            height: timelineHeight, // Set explicit height for time column
+            width: _timeColumnWidth,
+            height: timelineHeight,
             child: Stack(
-              children:
-                  timelineSlots.map((timeString) {
-                    final timeInMinutes = parseTimeToMinutes(timeString);
-                    final displayLabel = _minutesToDisplayFormat(timeInMinutes);
-                    final timeParts = displayLabel.split(" ");
-                    final timeText =
-                        timeParts.isNotEmpty ? timeParts[0] : displayLabel;
-                    final ampm = timeParts.length > 1 ? timeParts[1] : "";
-                    final topPosition =
-                        (timeInMinutes - baseTime) * pixelsPerMinute;
+              children: timelineSlots.map((timeString) {
+                final timeInMinutes = parseTimeToMinutes(timeString);
+                final displayLabel = _minutesToDisplayFormat(timeInMinutes);
+                final timeParts = displayLabel.split(" ");
+                final timeText =
+                    timeParts.isNotEmpty ? timeParts[0] : displayLabel;
+                final ampm = timeParts.length > 1 ? timeParts[1] : "";
+                final topPosition =
+                    (timeInMinutes - baseTime) * _pixelsPerMinute;
 
-                    return Positioned(
-                      top: topPosition,
-                      left: 0,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            timeText,
-                            style: TextStyle(
-                              fontSize: responsiveFontSize,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                          Text(
-                            ampm,
-                            style: TextStyle(
-                              fontSize: responsiveFontSize,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                        ],
+                return Positioned(
+                  top: topPosition,
+                  left: 0,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        timeText,
+                        // Fixed const — responsiveFontSize removed
+                        style: const TextStyle(
+                          fontSize: _timeFontSize,
+                          fontWeight: FontWeight.w300,
+                        ),
                       ),
-                    );
-                  }).toList(),
+                      Text(
+                        ampm,
+                        style: const TextStyle(
+                          fontSize: _timeFontSize,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ),
@@ -504,11 +427,10 @@ class ScheduleList extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
+                // ── width param removed — it was passed but never used ────
                 _buildTimelineLines(
                   baseTime: baseTime,
                   latestTime: latestTime,
-                  pixelsPerMinute: pixelsPerMinute,
-                  width: screenWidth,
                 ),
                 SizedBox(
                   height: timelineHeight,
@@ -516,7 +438,7 @@ class ScheduleList extends StatelessWidget {
                     clipBehavior: Clip.none,
                     children: _buildEventColumn(
                       stageName,
-                      pixelsPerMinute,
+                      _pixelsPerMinute,
                       baseTime,
                       latestTime,
                     ),
@@ -530,16 +452,14 @@ class ScheduleList extends StatelessWidget {
     );
   }
 
+  // ── width parameter removed — was never used inside the function ──────────
   Widget _buildTimelineLines({
     required int baseTime,
     required int latestTime,
-    required double pixelsPerMinute,
-    required double width,
   }) {
     final List<Widget> lines = [];
-
     for (int t = baseTime; t <= latestTime; t += 30) {
-      final top = (t - baseTime) * pixelsPerMinute;
+      final top = (t - baseTime) * _pixelsPerMinute;
       lines.add(
         Positioned(
           top: top,
@@ -563,7 +483,6 @@ class ScheduleList extends StatelessWidget {
         ),
       );
     }
-
     return Stack(children: lines);
   }
 
@@ -573,25 +492,22 @@ class ScheduleList extends StatelessWidget {
     int baseTime,
     int latestTime,
   ) {
-    final events =
-        scheduleItems
-            .expand((item) => item.eventsByStage[stageName] ?? [])
-            .where((e) => e.performanceName.isNotEmpty)
-            .toList();
-    // Sort events by time if needed
-    events.sort((a, b) => a.time.compareTo(b.time));
+    final events = scheduleItems
+        .expand((item) => item.eventsByStage[stageName] ?? [])
+        .where((e) => e.performanceName.isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.time.compareTo(b.time));
 
     return [
       for (var i = 0; i < events.length; i++)
         Positioned(
-          top:
-              (parseTimeToMinutes(events[i].time) - baseTime) *
+          top: (parseTimeToMinutes(events[i].time) - baseTime) *
                   pixelsPerMinute +
               4,
           left: 3,
           right: 3,
           child: SizedBox(
-            height: (events[i].duration) * pixelsPerMinute - 4,
+            height: events[i].duration * pixelsPerMinute - 4,
             child: Performance(eventItem: events[i], onTap: onEventTap),
           ),
         ),
@@ -599,13 +515,11 @@ class ScheduleList extends StatelessWidget {
   }
 }
 
-// Convert minutes since midnight to HH:MM am/pm format
 String _minutesToDisplayFormat(int minutes) {
   final hour = minutes ~/ 60;
   final minute = minutes % 60;
-
   final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
   final meridiem = hour >= 12 ? 'pm' : 'am';
-
-  return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $meridiem';
+  return '${displayHour.toString().padLeft(2, '0')}:'
+      '${minute.toString().padLeft(2, '0')} $meridiem';
 }

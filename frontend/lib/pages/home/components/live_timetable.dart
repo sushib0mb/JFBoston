@@ -22,9 +22,7 @@ class _EventCache {
 
   bool isCacheValid(DateTime now) {
     if (cachedEvents == null) return false;
-    final secondsSinceLastCalculation =
-        now.difference(lastCalculationTime).inSeconds;
-    return secondsSinceLastCalculation < 60;
+    return now.difference(lastCalculationTime).inSeconds < 60;
   }
 
   void invalidate() {
@@ -39,7 +37,7 @@ class _EventCache {
 }
 
 class LiveTimetable extends StatefulWidget {
-  final double screenWidth;
+  // ── screenWidth removed — no screen-size param needed ────────────────────
   final int festivalStartYear;
   final int festivalStartMonth;
   final int festivalStartDay;
@@ -49,7 +47,6 @@ class LiveTimetable extends StatefulWidget {
 
   const LiveTimetable({
     super.key,
-    required this.screenWidth,
     required this.festivalStartYear,
     required this.festivalStartMonth,
     required this.festivalStartDay,
@@ -66,11 +63,32 @@ class _LiveTimetableState extends State<LiveTimetable> {
   late _EventCache _cache;
   late Timer _fallbackTimer;
 
+  // ── All fixed constants — no screen-size math anywhere ───────────────────
+  static const double _sectionSpacing       = 16.0;
+  static const double _statusFontSize       = 16.0;
+  static const double _sectionTitleFont     = 20.0;
+  static const double _sectionTitleHPad     = 8.0;
+  static const double _sectionTitleVPad     = 5.0;
+  static const double _sectionTitleSpacing  = 8.0;
+  static const double _cardVerticalPad      = 8.0;
+  static const double _cardPadding          = 16.0;
+  static const double _cardBorderRadius     = 10.0;
+  static const double _stageFontSize        = 18.0;  // was screenWidth*0.045+2
+  static const double _eventTitleFontSize   = 16.0;  // was screenWidth*0.045
+  static const double _iconDiameter         = 44.0;  // was screenWidth*0.12
+  static const double _iconOffset           = -18.0;
+  static const double _iconPaddingLeft      = 3.0;
+  static const double _iconInnerPadding     = 6.0;
+  static const double _badgeFontSize        = 14.0;
+  static const double _badgeVerticalPad     = 4.0;
+  static const double _badgeHorizontalPad   = 8.0;
+  static const double _badgeTopPad          = 5.0;
+  static const double _stageNameTopPad      = 5.0;
+
   @override
   void initState() {
     super.initState();
     _cache = _EventCache();
-    // Set up fallback timer to recalculate events every minute
     _fallbackTimer = Timer.periodic(
       const Duration(minutes: 1),
       (_) => setState(() {}),
@@ -85,13 +103,10 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isTablet = widget.screenWidth >= 600;
-    final double sectionSpacing = isTablet ? 24.0 : 16.0;
-    final double statusFontSize = isTablet ? 18.0 : 16.0;
-
+    // ── isTablet, sectionSpacing, statusFontSize variables removed ────────
     final now = DateTime.now();
 
-    // If not during festival, show appropriate message
+    // Not during festival
     if (widget.dayNumber <= 0) {
       final festivalEnd = DateTime(
         widget.festivalStartYear,
@@ -106,165 +121,156 @@ class _LiveTimetableState extends State<LiveTimetable> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
             ],
           ),
           child: Center(
             child: Text(
               widget.dayNumber == -1
-                  ? "See you at ${widget.festivalLocation} on ${widget.festivalStartMonth}/${widget.festivalStartDay} - ${festivalEnd.month}/${festivalEnd.day}!"
+                  ? "See you at ${widget.festivalLocation} on "
+                    "${widget.festivalStartMonth}/${widget.festivalStartDay}"
+                    " - ${festivalEnd.month}/${festivalEnd.day}!"
                   : "Thank you for visiting, and see you next year!",
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: _statusFontSize),
               textAlign: TextAlign.center,
             ),
           ),
         ),
       );
-    } else {
-      // Get schedule service with listener for data changes
-      final scheduleService = Provider.of<ScheduleDataService>(
-        context,
-        listen: true,
-      );
-      final List<ScheduleItem> scheduleList;
+    }
 
-      try {
-        scheduleList = switch (widget.dayNumber) {
-          1 => scheduleService.day1ScheduleData,
-          2 => scheduleService.day2ScheduleData,
-          _ => [],
-        };
+    // During festival
+    final scheduleService = Provider.of<ScheduleDataService>(
+      context,
+      listen: true,
+    );
+    final List<ScheduleItem> scheduleList;
 
-        // Invalidate cache if schedule data changed
-        _cache.invalidate();
+    try {
+      scheduleList = switch (widget.dayNumber) {
+        1 => scheduleService.day1ScheduleData,
+        2 => scheduleService.day2ScheduleData,
+        _ => [],
+      };
 
-        // Safety check - if schedule data is empty, show a message
-        if (scheduleList.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "No schedule data available for Day ${widget.dayNumber}",
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          );
-        }
-      } catch (e) {
-        // Handle case where data is not available
+      _cache.invalidate();
+
+      if (scheduleList.isEmpty) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "Error loading schedule data: $e",
-            style: TextStyle(fontSize: 16, color: Colors.red),
+            "No schedule data available for Day ${widget.dayNumber}",
+            style: const TextStyle(fontSize: _statusFontSize),
             textAlign: TextAlign.center,
           ),
         );
       }
-
-      final currentAndUpcomingEvents = _getCurrentAndUpcomingEvents(
-        scheduleList,
-        now,
-      );
-
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          children: [
-            if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
-              _buildEventSection(
-                "🎤 Now Happening",
-                currentAndUpcomingEvents.currentStageEvents,
-                widget.screenWidth,
-                isCurrent: true,
-                isTablet: isTablet,
-              ),
-            ],
-            if (currentAndUpcomingEvents.upcomingStageEvents.isNotEmpty) ...[
-              if (currentAndUpcomingEvents.currentStageEvents.isNotEmpty) ...[
-                SizedBox(height: sectionSpacing),
-              ],
-              _buildEventSection(
-                "⏭️ Up Next",
-                currentAndUpcomingEvents.upcomingStageEvents,
-                widget.screenWidth,
-                isCurrent: false,
-                isTablet: isTablet,
-              ),
-            ],
-            if (currentAndUpcomingEvents.currentStageEvents.isEmpty &&
-                currentAndUpcomingEvents.upcomingStageEvents.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 5,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    "No current or upcoming events at this time",
-                    style: TextStyle(fontSize: statusFontSize),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
+    } catch (e) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          "Error loading schedule data: $e",
+          style: const TextStyle(fontSize: _statusFontSize, color: Colors.red),
+          textAlign: TextAlign.center,
         ),
       );
     }
+
+    final currentAndUpcomingEvents =
+        _getCurrentAndUpcomingEvents(scheduleList, now);
+
+    final hasCurrent =
+        currentAndUpcomingEvents.currentStageEvents.isNotEmpty;
+    final hasUpcoming =
+        currentAndUpcomingEvents.upcomingStageEvents.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          // Now happening
+          if (hasCurrent)
+            _buildEventSection(
+              "🎤 Now Happening",
+              currentAndUpcomingEvents.currentStageEvents,
+              isCurrent: true,
+            ),
+
+          // Spacer between sections
+          if (hasCurrent && hasUpcoming)
+            const SizedBox(height: _sectionSpacing),
+
+          // Up next
+          if (hasUpcoming)
+            _buildEventSection(
+              "⏭️ Up Next",
+              currentAndUpcomingEvents.upcomingStageEvents,
+              isCurrent: false,
+            ),
+
+          // Nothing on
+          if (!hasCurrent && !hasUpcoming)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 5,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  "No current or upcoming events at this time",
+                  style: TextStyle(fontSize: _statusFontSize),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Logic helpers (unchanged)
+  // ─────────────────────────────────────────────────────────────────────────
 
   CurrentAndUpcomingEvents _getCurrentAndUpcomingEvents(
     List<ScheduleItem> scheduleList,
     DateTime now,
   ) {
-    // Check cache first
-    if (_cache.isCacheValid(now)) {
-      return _cache.cachedEvents!;
-    }
+    if (_cache.isCacheValid(now)) return _cache.cachedEvents!;
 
-    // Cache miss - calculate current and upcoming events
     final currentEvents = <EventItem>[];
     final upcomingEvents = <EventItem>[];
-
     _processEvents(scheduleList, now, currentEvents, upcomingEvents);
 
-    // Create and cache result
     final result = CurrentAndUpcomingEvents(
       currentStageEvents: currentEvents,
       upcomingStageEvents: upcomingEvents,
     );
-
     _cache.updateCache(result, now);
     return result;
   }
 
-  // Helper method to parse event start time from time string with full date
-  DateTime _parseEventStartTime(String timeStr, int year, int month, int day) {
+  DateTime _parseEventStartTime(
+      String timeStr, int year, int month, int day) {
     try {
       final parts = timeStr.split(':');
-      if (parts.length != 2) {
-        // Return a default time far in the future if parsing fails
-        return DateTime(9999);
-      }
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-      return DateTime(year, month, day, hour, minute);
+      if (parts.length != 2) return DateTime(9999);
+      return DateTime(year, month, day,
+          int.parse(parts[0]), int.parse(parts[1]));
     } catch (e) {
-      // Return a default time far in the future if parsing fails
-      print('Error parsing event start time: $e');
       return DateTime(9999);
     }
   }
 
-  // Categorize a list of events as current or upcoming
   void _categorizeEventList(
     List<EventItem>? events,
     DateTime now,
@@ -275,27 +281,21 @@ class _LiveTimetableState extends State<LiveTimetable> {
     List<EventItem> upcomingEvents,
   ) {
     if (events == null) return;
-
     for (final event in events) {
-      // Skip placeholder events (empty performance names)
       if (event.performanceName.isEmpty || !event.time.contains(':')) continue;
-
       try {
         final times = calculateEventTimes(event, year, month, day);
-
-        // Categorize as current or upcoming
         if (now.isAfter(times.start) && now.isBefore(times.end)) {
           currentEvents.add(event);
         } else if (times.start.isAfter(now)) {
           upcomingEvents.add(event);
         }
-      } catch (e) {
+      } catch (_) {
         continue;
       }
     }
   }
 
-  // Process events from all stages and categorize them as current or upcoming
   void _processEvents(
     List<ScheduleItem> scheduleList,
     DateTime now,
@@ -309,29 +309,15 @@ class _LiveTimetableState extends State<LiveTimetable> {
     final month = now.month;
     final day = widget.festivalStartDay + widget.dayNumber - 1;
 
-    // Process all events from all schedule items
     for (final item in scheduleList) {
-      // Skip if the dynamic map is empty
       if (item.eventsByStage.isEmpty) continue;
-
-      // Iterate through EVERY stage list dynamically
       for (final eventList in item.eventsByStage.values) {
-        // If the list is null or empty, skip it
         if (eventList.isEmpty) continue;
-
         _categorizeEventList(
-          eventList,
-          now,
-          year,
-          month,
-          day,
-          currentEvents,
-          upcomingEvents,
-        );
+            eventList, now, year, month, day, currentEvents, upcomingEvents);
       }
     }
 
-    // Sort upcoming events by start time
     if (upcomingEvents.length > 1) {
       upcomingEvents.sort((a, b) {
         final aTime = _parseEventStartTime(a.time, year, month, day);
@@ -339,62 +325,42 @@ class _LiveTimetableState extends State<LiveTimetable> {
         return aTime.compareTo(bTime);
       });
 
-      // Keep only the earliest batch of upcoming events
       final firstEventTime = _parseEventStartTime(
-        upcomingEvents.first.time,
-        year,
-        month,
-        day,
-      );
+          upcomingEvents.first.time, year, month, day);
       upcomingEvents.removeWhere((event) {
-        final eventTime = _parseEventStartTime(event.time, year, month, day);
+        final eventTime =
+            _parseEventStartTime(event.time, year, month, day);
         return !eventTime.isAtSameMomentAs(firstEventTime);
       });
     }
   }
 
-  // Format countdown time as "HHh MMm" or "MMm"
   String _formatCountdownTime(DateTime eventStart) {
-    final now = DateTime.now();
-    final difference = eventStart.difference(now);
-    final totalMinutes = difference.inMinutes;
-
+    final totalMinutes = eventStart.difference(DateTime.now()).inMinutes;
     if (totalMinutes <= 0) return "0m";
-
     final hours = totalMinutes ~/ 60;
     final minutes = totalMinutes % 60;
-
-    if (hours == 0) {
-      return "${minutes}m";
-    } else if (minutes == 0) {
-      return "${hours}h";
-    } else {
-      return "${hours}h ${minutes}m";
-    }
+    if (hours == 0) return "${minutes}m";
+    if (minutes == 0) return "${hours}h";
+    return "${hours}h ${minutes}m";
   }
 
-  // Get badge color based on remaining minutes
   Color _getCountdownBadgeColor(int remainingMinutes) {
-    if (remainingMinutes > 60) {
-      return const Color.fromARGB(255, 154, 190, 118);
-    } else if (remainingMinutes >= 10) {
-      return const Color.fromARGB(255, 240, 192, 32);
-    } else {
-      return const Color.fromARGB(255, 240, 129, 121);
-    }
+    if (remainingMinutes > 60) return const Color.fromARGB(255, 154, 190, 118);
+    if (remainingMinutes >= 10) return const Color.fromARGB(255, 240, 192, 32);
+    return const Color.fromARGB(255, 240, 129, 121);
   }
 
-  // Build event section with title and list of events
+  // ─────────────────────────────────────────────────────────────────────────
+  // UI builders — all screenWidth/isTablet params removed
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ── screenWidth, isTablet params removed ─────────────────────────────────
   Widget _buildEventSection(
     String title,
-    List<EventItem> events,
-    double screenWidth, {
+    List<EventItem> events, {
     required bool isCurrent,
-    required bool isTablet,
   }) {
-    final double titleFontSize = isTablet ? 24.0 : 20.0;
-    final double spacing = isTablet ? 12.0 : 8.0;
-
     final now = DateTime.now();
     final year = now.year;
     final month = now.month;
@@ -404,77 +370,54 @@ class _LiveTimetableState extends State<LiveTimetable> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 12 : 8,
-            vertical: isTablet ? 7 : 5,
+          padding: const EdgeInsets.symmetric(
+            horizontal: _sectionTitleHPad,
+            vertical: _sectionTitleVPad,
           ),
           child: Text(
             title,
-            style: TextStyle(
-              fontSize: titleFontSize,
+            style: const TextStyle(
+              fontSize: _sectionTitleFont,
               fontWeight: FontWeight.bold,
               color: Colors.pinkAccent,
             ),
           ),
         ),
-        SizedBox(height: spacing),
+        const SizedBox(height: _sectionTitleSpacing),
         ...events.map((e) {
-          final eventStartDateTime = _parseEventStartTime(
-            e.time,
-            year,
-            month,
-            day,
-          );
-          return _buildEventCard(
-            e,
-            isCurrent,
-            screenWidth,
-            isTablet,
-            eventStartDateTime,
-          );
+          final eventStartDateTime =
+              _parseEventStartTime(e.time, year, month, day);
+          return _buildEventCard(e, isCurrent, eventStartDateTime);
         }),
       ],
     );
   }
 
-  // 3) EVENT CARD
+  // ── screenWidth and isTablet params removed — all sizes use static consts ─
   Widget _buildEventCard(
     EventItem event,
     bool isCurrent,
-    double screenWidth,
-    bool isTablet,
     DateTime eventStartDateTime,
   ) {
-    final double verticalPadding = isTablet ? 12.0 : 8.0;
-    final EdgeInsets cardPadding = EdgeInsets.all(isTablet ? 24 : 16);
-    final double borderRadius = isTablet ? 12.0 : 10.0;
-    final double stageFontSize =
-        screenWidth * (isTablet ? 0.055 : 0.045) + (isTablet ? 3 : 2);
-    final double titleFontSize = screenWidth * (isTablet ? 0.055 : 0.045);
-    final double iconDiameter = screenWidth * (isTablet ? 0.15 : 0.12);
-    final double iconOffset = isTablet ? -20.0 : -18.0;
-    final double iconPaddingLeft = isTablet ? 5.0 : 3.0;
-
     return GestureDetector(
       onTap: () {
-        // TODO: Someone pasted llM shit here without putting the navigation logic
-        // … your existing navigation logic …
+        // TODO: navigation logic
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: verticalPadding),
+        padding: const EdgeInsets.symmetric(vertical: _cardVerticalPad),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Container(
-              padding: cardPadding,
+              padding: const EdgeInsets.all(_cardPadding),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(borderRadius),
-                boxShadow: [
+                borderRadius: BorderRadius.circular(_cardBorderRadius),
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black12,
-                    blurRadius: isTablet ? 8 : 5,
-                    spreadRadius: isTablet ? 3 : 2,
+                    blurRadius: 5,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
@@ -486,59 +429,61 @@ class _LiveTimetableState extends State<LiveTimetable> {
                     alignment: Alignment.centerRight,
                     child: Text(
                       event.stage,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.pinkAccent,
                         fontWeight: FontWeight.bold,
-                        fontSize: stageFontSize,
+                        fontSize: _stageFontSize,
                       ),
                     ),
                   ),
-                  SizedBox(height: isTablet ? 8 : 5),
-                  // Title
+                  const SizedBox(height: _stageNameTopPad),
+
+                  // Performance title
                   Text(
                     event.performanceName,
-                    style: TextStyle(
-                      fontSize: titleFontSize,
+                    style: const TextStyle(
+                      fontSize: _eventTitleFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // Time
+
+                  // Time range string
                   Text(
-                    (calculateEventTimes(
+                    calculateEventTimes(
                       event,
-                      festivalStartYear,
-                      festivalStartMonth,
-                      festivalStartDay + festivalDays - 1,
+                      widget.festivalStartYear,
+                      widget.festivalStartMonth,
+                      widget.festivalStartDay + widget.festivalDays - 1,
                       returnAsString: true,
-                    )),
-                    style: TextStyle(color: Colors.grey),
+                    ),
+                    style: const TextStyle(color: Colors.grey),
                   ),
-                  // “Going on now” badge
+
+                  // Live / countdown badge
                   Padding(
-                    padding: EdgeInsets.only(top: isTablet ? 8.0 : 5.0),
+                    padding: const EdgeInsets.only(top: _badgeTopPad),
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: isTablet ? 6 : 4,
-                        horizontal: isTablet ? 12 : 8,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: _badgeVerticalPad,
+                        horizontal: _badgeHorizontalPad,
                       ),
                       decoration: BoxDecoration(
-                        color:
-                            isCurrent
-                                ? Colors.orange
-                                : _getCountdownBadgeColor(
-                                  eventStartDateTime
-                                      .difference(DateTime.now())
-                                      .inMinutes,
-                                ),
+                        color: isCurrent
+                            ? Colors.orange
+                            : _getCountdownBadgeColor(
+                                eventStartDateTime
+                                    .difference(DateTime.now())
+                                    .inMinutes,
+                              ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         isCurrent
                             ? "Going on now!"
                             : "Starts in ${_formatCountdownTime(eventStartDateTime)}",
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
-                          fontSize: isTablet ? 18 : 14,
+                          fontSize: _badgeFontSize,
                         ),
                       ),
                     ),
@@ -547,28 +492,28 @@ class _LiveTimetableState extends State<LiveTimetable> {
               ),
             ),
 
-            // Floating icon
+            // Floating icon — fixed constants, no screenWidth math
             if (event.iconImage.isNotEmpty)
               Positioned(
-                top: iconOffset,
-                left: iconPaddingLeft,
+                top: _iconOffset,
+                left: _iconPaddingLeft,
                 child: Container(
-                  padding: EdgeInsets.all(isTablet ? 8 : 6),
-                  decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(_iconInnerPadding),
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black12,
-                        blurRadius: isTablet ? 6 : 5,
-                        spreadRadius: isTablet ? 3 : 2,
+                        blurRadius: 5,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
                   child: Image.network(
                     event.iconImage,
-                    height: iconDiameter,
-                    width: iconDiameter,
+                    height: _iconDiameter,
+                    width: _iconDiameter,
                     fit: BoxFit.contain,
                   ),
                 ),

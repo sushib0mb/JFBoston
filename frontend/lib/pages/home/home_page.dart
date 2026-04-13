@@ -1,3 +1,30 @@
+// =============================================================================
+// home_page.dart
+//
+// Main landing screen for the JFBoston festival app.
+//
+// Features:
+//   - Auto-scrolling image carousel with dot indicators
+//   - Live timetable widget showing current and upcoming stage events
+//   - Social media icon row (Instagram, Facebook, website)
+//   - Sponsor section with category grouping and image grid
+//   - Settings button (top-right, SafeArea-inset) navigating to SettingsPage
+//   - One-time allergy disclaimer dialog (persisted via SharedPreferences)
+//   - Fixed layout constants: all sizing defined as static const — no
+//     MediaQuery math or isTablet checks
+//
+// Festival date config (single source of truth):
+//   festivalDays, festivalStartYear/Month/Day, festivalLocation
+//   getFestivalDay(DateTime) — returns 1-based day index, -1 (before), or 0 (after)
+//
+// Dependencies:
+//   - provider           : SponsorService, DbImageService
+//   - url_launcher       : social media links
+//   - live_timetable     : LiveTimetable widget
+//   - timetable_data     : EventItem model
+//   - settings_page      : SettingsPage navigation target
+// =============================================================================
+
 // Removed black arrow from map and added to timetable
 
 import 'dart:async';
