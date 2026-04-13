@@ -24,12 +24,9 @@ int getFestivalDay(DateTime now) {
     festivalStartMonth,
     festivalStartDay,
   );
-  final end = start.add(Duration(days: festivalDays));
-  if (now.isBefore(start)) {
-    return -1;
-  } else if (!now.isBefore(end)) {
-    return 0;
-  }
+  final end = start.add(const Duration(days: festivalDays));
+  if (now.isBefore(start)) return -1;
+  else if (!now.isBefore(end)) return 0;
   return now.difference(start).inDays + 1;
 }
 
@@ -71,6 +68,22 @@ class _HomePageState extends State<HomePage> {
 
   static const int _virtualPageCount = 100000;
 
+  // ── Fixed layout constants — no screen-size math ──────────────────────────
+  static const double _headerHeight         = 320.0;
+  static const double _sectionSpacing       = 16.0;
+  static const double _settingsBtnSize      = 52.0;
+  static const double _settingsIconSize     = 28.0;
+  static const double _settingsIconPadding  = 10.0;
+  static const double _settingsRightPad     = 16.0;
+  static const double _settingsTopPad       = 8.0;
+  static const double _dotSelected          = 10.0;
+  static const double _dotUnselected        = 6.0;
+  static const double _dotHorizontalMargin  = 4.0;
+  static const double _dotsBottomPad        = 12.0;
+  static const double _sponsorImgHeight     = 80.0;
+  static const double _sponsorImgWidth      = 120.0;
+  static const double _sponsorSectionSpacing = 8.0;
+
   late final PageController _pageController;
   int _currentPage = 0;
   Timer? _autoScrollTimer;
@@ -85,7 +98,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _pageController = PageController(initialPage: _initialVirtualPage);
     _startAutoScroll();
-    _timetableUpdateTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+    _timetableUpdateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mounted) setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -98,10 +111,10 @@ class _HomePageState extends State<HomePage> {
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
-    _autoScrollTimer = Timer.periodic(Duration(seconds: 5), (_) {
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (_pageController.hasClients) {
         _pageController.nextPage(
-          duration: Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
         );
       }
@@ -124,156 +137,142 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600;
-
-    // Adaptive dimensions
-    final headerHeight = screenHeight * (isTablet ? 0.5 : 0.7);
-    final verticalSpacing = screenHeight * (isTablet ? 0.03 : 0.02);
-    final btnSize = isTablet ? 70.0 : 55.0;
-    final iconSize = isTablet ? 36.0 : 30.0;
-    final iconPadding = isTablet ? 14.0 : 8.0;
-
+    // ── No screenWidth / screenHeight / isTablet variables ────────────────
     final sponsorService = Provider.of<SponsorService>(context);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          color: const Color(0xFFFFF5F5),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color.fromRGBO(10, 56, 117, 0.15),
-                  const Color.fromRGBO(191, 28, 36, 0.15),
-                ],
-              ),
-            ),
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: Stack(
-                children: [
-                  // Scrollable content
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        // Carousel header
-                        SizedBox(
-                          width: double.infinity,
-                          height: headerHeight,
-                          child: Stack(
-                            children: [
-                              PageView.builder(
-                                controller: _pageController,
-                                itemCount: _virtualPageCount,
-                                onPageChanged: _handlePageChanged,
-                                itemBuilder: (context, index) {
-                                  final imagePath =
-                                      backgroundImages[index %
-                                          backgroundImages.length];
-                                  return Image.asset(
-                                    imagePath,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: headerHeight,
-                                    alignment: Alignment.center,
-                                  );
-                                },
-                              ),
-                              Positioned(
-                                bottom: isTablet ? 20 : 10,
-                                left: 0,
-                                right: 0,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(
-                                    backgroundImages.length,
-                                    (idx) => AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      margin: EdgeInsets.symmetric(
-                                        horizontal: isTablet ? 6 : 4,
-                                      ),
-                                      width:
-                                          _currentPage == idx
-                                              ? (isTablet ? 12 : 10)
-                                              : (isTablet ? 8 : 6),
-                                      height:
-                                          _currentPage == idx
-                                              ? (isTablet ? 12 : 10)
-                                              : (isTablet ? 8 : 6),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            _currentPage == idx
-                                                ? Colors.white
-                                                : Colors.white70,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
+    return Container(
+      color: const Color(0xFFFFF5F5),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromRGBO(10, 56, 117, 0.15),
+              Color.fromRGBO(191, 28, 36, 0.15),
+            ],
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              // ── Scrollable content ───────────────────────────────────────
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // ── Carousel header (fixed height constant) ───────────
+                    SizedBox(
+                      width: double.infinity,
+                      height: _headerHeight,
+                      child: Stack(
+                        children: [
+                          PageView.builder(
+                            controller: _pageController,
+                            itemCount: _virtualPageCount,
+                            onPageChanged: _handlePageChanged,
+                            itemBuilder: (context, index) {
+                              final imagePath = backgroundImages[
+                                  index % backgroundImages.length];
+                              return Image.asset(
+                                imagePath,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: _headerHeight,
+                                alignment: Alignment.center,
+                              );
+                            },
+                          ),
+                          // ── Dot indicators (all fixed constants) ─────────
+                          Positioned(
+                            bottom: _dotsBottomPad,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                backgroundImages.length,
+                                (idx) => AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: _dotHorizontalMargin,
+                                  ),
+                                  width: _currentPage == idx
+                                      ? _dotSelected
+                                      : _dotUnselected,
+                                  height: _currentPage == idx
+                                      ? _dotSelected
+                                      : _dotUnselected,
+                                  decoration: BoxDecoration(
+                                    color: _currentPage == idx
+                                        ? Colors.white
+                                        : Colors.white70,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-
-                        // Spacing + Sections
-                        SizedBox(height: verticalSpacing),
-                        LiveTimetable(
-                          screenWidth: screenWidth,
-                          festivalDays: festivalDays,
-                          festivalLocation: festivalLocation,
-                          festivalStartDay: festivalStartDay,
-                          festivalStartMonth: festivalStartMonth,
-                          festivalStartYear: festivalStartYear,
-                          dayNumber: getFestivalDay(DateTime.now()),
-                        ),
-                        _buildSocialMediaIcons(screenWidth),
-                        _buildSponsorsSection(screenWidth, sponsorService),
-                        SizedBox(height: verticalSpacing * 6),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Settings button
-                  Positioned(
-                    top:
-                        MediaQuery.of(context).padding.top +
-                        screenHeight * (isTablet ? 0.02 : 0.015),
-                    right: screenWidth * (isTablet ? 0.07 : 0.05),
+                    const SizedBox(height: _sectionSpacing),
+                    // ── screenWidth param removed from LiveTimetable ──────
+                    LiveTimetable(
+                      festivalDays: festivalDays,
+                      festivalLocation: festivalLocation,
+                      festivalStartDay: festivalStartDay,
+                      festivalStartMonth: festivalStartMonth,
+                      festivalStartYear: festivalStartYear,
+                      dayNumber: getFestivalDay(DateTime.now()),
+                    ),
+                    _buildSocialMediaIcons(),
+                    _buildSponsorsSection(sponsorService),
+                    const SizedBox(height: _sectionSpacing * 6),
+                  ],
+                ),
+              ),
+
+              // ── Settings button ───────────────────────────────────────
+              // SafeArea handles status bar inset — no manual padding.top math
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: _settingsTopPad,
+                      right: _settingsRightPad,
+                    ),
                     child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsPage(),
-                          ),
-                        );
-                      },
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsPage(),
+                        ),
+                      ),
                       child: Material(
                         color: Colors.transparent,
                         child: Container(
-                          width: btnSize,
-                          height: btnSize,
+                          width: _settingsBtnSize,
+                          height: _settingsBtnSize,
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(btnSize / 2),
+                            borderRadius: BorderRadius.circular(
+                              _settingsBtnSize / 2,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
-                                blurRadius: isTablet ? 12 : 10,
+                                blurRadius: 10,
                                 spreadRadius: 1,
                               ),
                             ],
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.all(iconPadding),
+                          child: const Padding(
+                            padding: EdgeInsets.all(_settingsIconPadding),
                             child: Icon(
                               Icons.settings,
-                              size: iconSize,
+                              size: _settingsIconSize,
                               color: Colors.black,
                             ),
                           ),
@@ -281,23 +280,24 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  Widget _buildSocialMediaIcons(double screenWidth) {
+  // ── screenWidth param removed — method uses const EdgeInsets only ──────────
+  Widget _buildSocialMediaIcons() {
     return Container(
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
         ],
       ),
@@ -332,8 +332,8 @@ class _HomePageState extends State<HomePage> {
         }
       },
       child: Container(
-        padding: EdgeInsets.all(8),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.all(8),
+        decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
@@ -345,51 +345,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSponsorsSection(double screenWidth, SponsorService service) {
-    Map<String, List<String>> groupedSponsors = {};
-
-    // 2. Iterate through the service data to populate the map
+  // ── screenWidth param removed — spacing replaced with fixed constant ───────
+  Widget _buildSponsorsSection(SponsorService service) {
+    final Map<String, List<String>> groupedSponsors = {};
     for (var sponsor in service.sponsors) {
-      if (!groupedSponsors.containsKey(sponsor.category)) {
-        groupedSponsors[sponsor.category] = [];
-      }
-      groupedSponsors[sponsor.category]!.add(sponsor.image);
+      groupedSponsors
+          .putIfAbsent(sponsor.category, () => [])
+          .add(sponsor.image);
     }
 
     return Container(
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 2),
         ],
       ),
       child: Column(
-        spacing: screenWidth * 0.02,
+        // Fixed constant replaces screenWidth * 0.02
+        spacing: _sponsorSectionSpacing,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // _buildSponsorCategory("Sustainability", "assets/sponsors/Takeda.jpg"),
-          // _buildSponsorCategory("Airline", "assets/sponsors/jal.jpg"),
-          // SizedBox(height: 7),
-          // _buildSponsorCategory(
-          //   "Transportation",
-          //   "assets/sponsors/yamatotransport.jpg",
-          // ),
-          // SizedBox(height: 3),
-          ...groupedSponsors.entries.map((entry) {
-            String categoryName = entry.key;
-            List<String> images = entry.value;
-
-            return _buildSponsorSection(categoryName, images);
-          }),
-
-          // _buildIndividualSponsors(),
-          // _buildAuctionDonors(),
-          // _buildJfbOrganizers(),
-          // _buildSupportingSponsors(),
-          SizedBox(height: 5),
+          ...groupedSponsors.entries.map(
+            (entry) => _buildSponsorSection(entry.key, entry.value),
+          ),
+          const SizedBox(height: 5),
         ],
       ),
     );
@@ -399,21 +382,24 @@ class _HomePageState extends State<HomePage> {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 26),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 26),
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           decoration: BoxDecoration(
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(40),
           ),
           child: Text(
             categoryName,
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
+            style: const TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w300,
+            ),
           ),
         ),
         GridView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: 10),
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           itemCount: images.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: images.length > 1 ? 2 : 1,
@@ -423,9 +409,10 @@ class _HomePageState extends State<HomePage> {
           ),
           itemBuilder: (context, index) {
             return Center(
+              // Fixed constants replace MediaQuery height/width multiplications
               child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.15,
-                width: MediaQuery.of(context).size.width * 0.3,
+                height: _sponsorImgHeight,
+                width: _sponsorImgWidth,
                 child: Image.network(images[index], fit: BoxFit.contain),
               ),
             );

@@ -10,7 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  video_player: ^2.7.0
+  video_player: ^2.9.2
+  device_preview: ^1.1.0
   motion: ^2.0.1
   provider: ^6.0.0
   flutter_blur: ^0.0.2
@@ -30,7 +31,8 @@ dependencies:
   cached_network_image: ^3.4.1
   http: ^1.6.0
 
-# dependency_overrides:
+dependency_overrides:
+  video_player_avfoundation: ^2.9.2
 #   sign_in_with_apple: ^4.0.0
 
 dev_dependencies:
