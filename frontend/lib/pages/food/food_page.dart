@@ -353,84 +353,125 @@ class _FoodPageState extends State<FoodPage> {
   // Booth card grid
   // ─────────────────────────────────────────────
   Widget _buildBoothGrid(List<FoodBooth> booths, {bool faded = false}) {
-    return Center(
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 20,
-        alignment: WrapAlignment.center,
-        children: booths.map((booth) => _buildBoothCard(booth, faded)).toList(),
-      ),
-    );
-  }
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: booths.length,
+    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: 400,
+      mainAxisSpacing: 24,
+      crossAxisSpacing: 24,
+      mainAxisExtent: 340, // Fixed height for alignment
+    ),
+    itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
+  );
+}
 
-  Widget _buildBoothCard(FoodBooth booth, bool faded) {
-    return GestureDetector(
-      onTap: () => _showBoothDetails(context, booth),
-      child: Opacity(
-        opacity: faded ? 0.5 : 1.0,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.only(bottom: 20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Image with aspect ratio instead of fixed height
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(25),
-                  topRight: Radius.circular(25),
-                ),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.network(
+Widget _buildBoothCard(FoodBooth booth, bool faded) {
+  return GestureDetector(
+    onTap: () => _showBoothDetails(context, booth),
+    child: Opacity(
+      opacity: faded ? 0.5 : 1.0,
+      child: Container(
+        // Shadcn Style: 1px border instead of heavy shadow
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image Section
+            AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Stack(
+                children: [
+                  Image.network(
                     booth.boothImagePath,
+                    width: double.infinity,
                     fit: BoxFit.cover,
                   ),
-                ),
+                  // Overlay Badge for Genre (Shadcn Badge style)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        booth.genre,
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                booth.name,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+            ),
+            // Text Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    booth.name,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        booth.boothLocation,
+                        style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Horizontal list of tiny icons/tags for details
+                  Row(
+                    children: [
+                      _buildMiniTag(Icons.payments_outlined, booth.payments.first),
+                      const SizedBox(width: 8),
+                      if (booth.dishes.any((d) => d.isVegan))
+                        _buildMiniTag(Icons.eco_outlined, 'Vegan Opt'),
+                    ],
+                  )
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                'Food Booth: ${booth.boothLocation}',
-                style:
-                    const TextStyle(fontSize: 16, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 6, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(booth.genre,
-                    style: const TextStyle(fontSize: 14)),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
+// Shadcn-style mini tag
+Widget _buildMiniTag(IconData icon, String label) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.grey.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Row(
+      children: [
+        Icon(icon, size: 12, color: Colors.black87),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+      ],
+    ),
+  );
+}
   // ─────────────────────────────────────────────
   // Booth detail bottom sheet
   // ─────────────────────────────────────────────
