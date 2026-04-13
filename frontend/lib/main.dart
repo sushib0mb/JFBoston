@@ -109,6 +109,7 @@ class MainScreen extends StatefulWidget {
   final EventItem? selectedEvent;
   final String? selectedMapLetter;
   final int? selectedDay;
+  final String? initialStage;
 
   const MainScreen({
     super.key,
@@ -116,6 +117,7 @@ class MainScreen extends StatefulWidget {
     this.selectedEvent,
     this.selectedMapLetter,
     this.selectedDay,
+    this.initialStage,
   });
 
   @override
@@ -252,6 +254,7 @@ class _MainScreenState extends State<MainScreen> {
       TimetablePage(
         selectedEvent: widget.selectedEvent,
         selectedDay: _dayForTimetable,
+        initialStage: widget.initialStage,
       ),
       MapPage(),
     ];

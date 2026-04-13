@@ -10,8 +10,9 @@ import 'components/performance.dart';
 class TimetablePage extends StatefulWidget {
   final EventItem? selectedEvent;
   final int? selectedDay;
+  final String? initialStage;
 
-  const TimetablePage({super.key, this.selectedEvent, this.selectedDay});
+  const TimetablePage({super.key, this.selectedEvent, this.selectedDay, this.initialStage});
 
   @override
   _TimetablePageState createState() => _TimetablePageState();
@@ -23,7 +24,7 @@ class _TimetablePageState extends State<TimetablePage> {
   EventItem? selectedEvent;
   bool isShowingDetail = false;
   late ScrollController _scrollController;
-  bool _fromHomeTap = true;
+
 
   static const List<String> _stageNames = ['Main Stage', 'Sakura Stage', 'Fuji Stage'];
   static const List<String> _stageLabels = ['Boston Common', 'Sakura Stage', 'Fuji Stage'];
@@ -45,35 +46,15 @@ class _TimetablePageState extends State<TimetablePage> {
   void initState() {
     super.initState();
     if (widget.selectedDay != null) selectedDay = widget.selectedDay!;
+    if (widget.initialStage != null) selectedStage = widget.initialStage!;
     _scrollController = ScrollController();
-    
+
     if (widget.selectedEvent != null) {
-      _fromHomeTap = true; 
+      selectedEvent = widget.selectedEvent;
+      isShowingDetail = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _highlightSelectedEvent(widget.selectedEvent!);
+        _scrollToEventTime(widget.selectedEvent!.time);
       });
-    }
-  }
-
-  void _highlightSelectedEvent(EventItem selected) {
-    final svc = Provider.of<ScheduleDataService>(context, listen: false);
-    final schedule = selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
-
-    for (var slot in schedule) {
-      final eventsForStage = slot.eventsByStage[selected.stage];
-      if (eventsForStage != null) {
-        for (var e in eventsForStage) {
-          if (e.performanceName == selected.performanceName && e.time == selected.time) {
-            setState(() {
-              selectedEvent = e;
-              isShowingDetail = true;
-              selectedStage = selected.stage;
-            });
-            _scrollToEventTime(e.time);
-            return;
-          }
-        }
-      }
     }
   }
 
@@ -107,14 +88,6 @@ class _TimetablePageState extends State<TimetablePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFECE0CF),
-      extendBodyBehindAppBar: true,
-      appBar: (isShowingDetail && _fromHomeTap)
-          ? AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: const BackButton(color: Colors.black),
-            )
-          : null,
       body: Stack(
         children: [
           // Background
@@ -214,7 +187,6 @@ class _TimetablePageState extends State<TimetablePage> {
                                     setState(() {
                                       selectedEvent = e;
                                       isShowingDetail = true;
-                                      _fromHomeTap = false;
                                     });
                                   },
                                 ),
@@ -233,7 +205,14 @@ class _TimetablePageState extends State<TimetablePage> {
           if (isShowingDetail && selectedEvent != null)
             EventDetailPopup(
               event: selectedEvent!,
-              onClose: () => setState(() => isShowingDetail = false),
+              onClose: () {
+                setState(() => isShowingDetail = false);
+                if (selectedEvent != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _scrollToEventTime(selectedEvent!.time);
+                  });
+                }
+              },
             ),
         ],
       ),

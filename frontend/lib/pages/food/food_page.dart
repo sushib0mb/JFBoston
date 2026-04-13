@@ -442,7 +442,7 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
                       _buildMiniTag(Icons.payments_outlined, booth.payments.first),
                       const SizedBox(width: 8),
                       if (booth.dishes.any((d) => d.isVegan))
-                        _buildMiniTag(Icons.eco_outlined, 'Vegan Opt'),
+                        _buildMiniTag(Icons.eco_outlined, 'Vegetarian Opt'),
                     ],
                   )
                 ],

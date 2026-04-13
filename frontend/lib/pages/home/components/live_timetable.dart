@@ -119,13 +119,13 @@ class _LiveTimetableState extends State<LiveTimetable> {
       child: Column(
         children: [
           if (events.currentStageEvents.isNotEmpty)
-            _buildEventSection("🎤 Now Happening", events.currentStageEvents, isCurrent: true),
+            _buildEventSection("Now Happening", events.currentStageEvents, isCurrent: true),
           
           if (events.currentStageEvents.isNotEmpty && events.upcomingStageEvents.isNotEmpty)
             const SizedBox(height: _sectionSpacing),
 
           if (events.upcomingStageEvents.isNotEmpty)
-            _buildEventSection("⏭️ Up Next", events.upcomingStageEvents, isCurrent: false),
+            _buildEventSection("Up Next", events.upcomingStageEvents, isCurrent: false),
 
           if (events.currentStageEvents.isEmpty && events.upcomingStageEvents.isEmpty)
             _buildMessageCard("No events scheduled for the rest of today."),
@@ -167,7 +167,12 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
     return GestureDetector(
       onTap: () => Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => MainScreen(initialIndex: 2, selectedEvent: event)),
+        MaterialPageRoute(builder: (context) => MainScreen(
+          initialIndex: 2,
+          selectedEvent: event,
+          selectedDay: widget.dayNumber,
+          initialStage: event.stage,
+        )),
         (route) => false,
       ),
       child: Padding(
