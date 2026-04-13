@@ -33,19 +33,19 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   // ── Fixed layout constants ─────────────────────────────────────────────────
-  static const double _padH              = 8.0;
-  static const double _padV              = 8.0;
-  static const double _iconSize          = 24.0;
-  static const double _titleSize         = 16.0;
-  static const double _subtitleSize      = 14.0;
-  static const double _headerSize        = 20.0;
-  static const double _codeSectionHPad   = 38.0;  // _padH + 30
-  static const double _codeRowSpacing    = 16.0;
-  static const double _codeFieldHPad     = 12.0;
-  static const double _codeFieldVPad     = 12.0;
-  static const double _submitBtnRadius   = 4.0;
-  static const double _sectionGap        = 25.0;
-  static const double _borderWidth       = 2.0;
+  static const double _padH = 8.0;
+  static const double _padV = 8.0;
+  static const double _iconSize = 24.0;
+  static const double _titleSize = 16.0;
+  static const double _subtitleSize = 14.0;
+  static const double _headerSize = 20.0;
+  static const double _codeSectionHPad = 38.0; // _padH + 30
+  static const double _codeRowSpacing = 16.0;
+  static const double _codeFieldHPad = 12.0;
+  static const double _codeFieldVPad = 12.0;
+  static const double _submitBtnRadius = 4.0;
+  static const double _sectionGap = 25.0;
+  static const double _borderWidth = 2.0;
   // ──────────────────────────────────────────────────────────────────────────
 
   final TextEditingController _codeController = TextEditingController();
@@ -61,12 +61,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings', style: TextStyle(fontSize: _headerSize)),
+        backgroundColor: const Color(0xFFECE0CF),
+        surfaceTintColor: Colors.transparent,
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: _padH,
-          vertical: _padV,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: _padH, vertical: _padV),
         children: [
           // ── Share this app ───────────────────────────────────────────────
           ListTile(
@@ -93,8 +92,8 @@ class _SettingsPageState extends State<SettingsPage> {
           const AboutListTile(
             icon: Icon(Icons.info_outline, size: _iconSize),
             applicationName: 'JFBoston',
-            applicationVersion: '1.0.0',
-            applicationLegalese: '© 2025 Boston Japan Community Hub Inc.',
+            applicationVersion: '2.0.0',
+            applicationLegalese: '© 2026 Boston Japan Community Hub Inc.',
             aboutBoxChildren: [],
             dense: false,
             child: Text('About', style: TextStyle(fontSize: _titleSize)),
@@ -128,16 +127,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               SizedBox(height: _padV / 2),
-              Text('Taizo Azuchi — Team Leader',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Jordan Lin — Lead Developer',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Soi Hirose — Lead Developer',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Ryusei Okamoto — Developer',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Umi Imai — Developer',
-                  style: TextStyle(fontSize: _subtitleSize)),
+              Text(
+                'Taizo Azuchi — Team Leader',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Jordan Lin — Lead Developer',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Soi Hirose — Lead Developer',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Umi Imai — Developer',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
 
               SizedBox(height: _padV),
               Text(
@@ -148,14 +153,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               SizedBox(height: _padV / 2),
-              Text('Hiroharu Okabe — UI/UX Designer',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Chikada Hanezu — UI/UX Designer',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Mina Baba — UI/UX Designer',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Hayate Kosuga — Logo Animator',
-                  style: TextStyle(fontSize: _subtitleSize)),
+              Text(
+                'Hiroharu Okabe — UI/UX Designer',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Chikada Hanezu — UI/UX Designer',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Mina Baba — UI/UX Designer',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Hayate Kosuga — Logo Animator',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
 
               SizedBox(height: _padV),
               Text(
@@ -166,10 +179,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               SizedBox(height: _padV / 2),
-              Text('Nobuhiro Mitsuoka',
-                  style: TextStyle(fontSize: _subtitleSize)),
-              Text('Yoshiatsu Murata',
-                  style: TextStyle(fontSize: _subtitleSize)),
+              Text(
+                'Nobuhiro Mitsuoka',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
+              Text(
+                'Yoshiatsu Murata',
+                style: TextStyle(fontSize: _subtitleSize),
+              ),
 
               SizedBox(height: _padV * 2),
             ],
@@ -237,9 +254,9 @@ class _SettingsPageState extends State<SettingsPage> {
     const String inputCode = 'jfbadmin';
 
     if (inputCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a code.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a code.')));
       return;
     }
 
@@ -248,14 +265,14 @@ class _SettingsPageState extends State<SettingsPage> {
         _showLoginDialog(context);
         break;
       case 'ilovejapan':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Japan loves you too!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Japan loves you too!')));
         break;
       default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid code entered.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid code entered.')));
         _codeController.clear();
     }
   }
@@ -273,52 +290,53 @@ class _SettingsPageState extends State<SettingsPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Admin Access'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Admin Access'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                ),
+              ],
             ),
-            TextField(
-              controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await supabase.auth.signInWithPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AdminPage(),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Access Denied: $e')),
+                    );
+                  }
+                },
+                child: const Text('Login'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await supabase.auth.signInWithPassword(
-                  email: emailController.text.trim(),
-                  password: passwordController.text.trim(),
-                );
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AdminPage(),
-                    ),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Access Denied: $e')),
-                );
-              }
-            },
-            child: const Text('Login'),
-          ),
-        ],
-      ),
     );
   }
 }
