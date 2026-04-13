@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
   static const int _virtualPageCount = 100000;
 
   // ── Fixed layout constants — no screen-size math ──────────────────────────
-  static const double _headerHeight          = 320.0;
+  static const double _headerHeight          = 580.0;
   static const double _sectionSpacing        = 16.0;
   static const double _settingsBtnSize       = 52.0;
   static const double _settingsIconSize      = 28.0;

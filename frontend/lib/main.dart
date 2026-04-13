@@ -284,19 +284,22 @@ class TopBar extends StatelessWidget {
   final int selectedIndex;
   const TopBar({super.key, required this.selectedIndex});
 
-  static const double _logoSize = 60.0;
+  static const double _logoSize = 68.0;
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
-      child: SizedBox(
-        width: _logoSize,
-        height: _logoSize,
-        child: ClipOval(
-          child: Image.asset(
-            'assets/JFBLogo.png',
-            fit: BoxFit.cover,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: SizedBox(
+          width: _logoSize,
+          height: _logoSize,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/JFBLogo.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),

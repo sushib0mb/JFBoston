@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,17 +82,15 @@ class _PerformanceState extends State<Performance>
     int selected = _reminderMinutes ?? 10;
     final scrollCtrl = FixedExtentScrollController(initialItem: selected - 1);
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder:
           (ctx) => StatefulBuilder(
             builder:
-                (ctx, setSheet) => Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                (ctx, setSheet) => Dialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,13 +131,13 @@ class _PerformanceState extends State<Performance>
                                   decoration: BoxDecoration(
                                     color:
                                         isChipSelected
-                                            ? const Color(0xFF0B3775)
+                                            ? const Color(0xFFBF1D23)
                                             : Colors.grey[100],
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color:
                                           isChipSelected
-                                              ? const Color(0xFF0B3775)
+                                              ? const Color(0xFFBF1D23)
                                               : Colors.grey[300]!,
                                     ),
                                   ),
@@ -194,7 +193,7 @@ class _PerformanceState extends State<Performance>
                             _scheduleReminder(selected);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0B3775),
+                            backgroundColor: const Color(0xFFBF1D23),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -229,8 +228,9 @@ class _PerformanceState extends State<Performance>
                     ],
                   ),
                 ),
+                ),
           ),
-    ).whenComplete(() => scrollCtrl.dispose());
+    ).then((_) => scrollCtrl.dispose());
   }
 
   Widget _buildReminderButton() {
@@ -238,11 +238,11 @@ class _PerformanceState extends State<Performance>
     return GestureDetector(
       onTap: () => _showReminderPicker(context),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
           color:
               hasReminder
-                  ? const Color(0xFF0B3775)
+                  ? const Color(0xFFBF1D23)
                   : Colors.white.withValues(alpha: 0.92),
           shape: BoxShape.circle,
           boxShadow: [
@@ -255,7 +255,7 @@ class _PerformanceState extends State<Performance>
         ),
         child: Icon(
           hasReminder ? Icons.notifications_active : Icons.notifications_none,
-          size: 22,
+          size: 24,
           color: hasReminder ? Colors.white : Colors.grey[700],
         ),
       ),
@@ -320,7 +320,7 @@ class _PerformanceState extends State<Performance>
           width: double.infinity,
           height: eventHeight,
           child: Stack(
-            clipBehavior: Clip.none,
+            clipBehavior: Clip.hardEdge,
             children: [
               Positioned.fill(
                 child: Container(
@@ -357,9 +357,8 @@ class _PerformanceState extends State<Performance>
                   ),
                 ),
               ),
-              if (widget.eventItem.performanceName.isNotEmpty &&
-                  widget.eventItem.duration >= 10)
-                Positioned(top: 9, right: 4, child: _buildReminderButton()),
+              if (widget.eventItem.performanceName.isNotEmpty)
+                Positioned(top: 5, right: 4, child: _buildReminderButton()),
             ],
           ),
         ),
@@ -368,24 +367,32 @@ class _PerformanceState extends State<Performance>
   }
 
   Widget _buildBackground() {
-    final imageUrl = widget.eventItem.stageBackground;
-    if (imageUrl.isNotEmpty) {
-      return ColorFiltered(
-        colorFilter: const ColorFilter.matrix(<double>[
-          0.607, 0.358, 0.036, 0, 0,
-          0.107, 0.858, 0.036, 0, 0,
-          0.107, 0.358, 0.536, 0, 0,
-          0,     0,     0,     1, 0,
-        ]),
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          errorBuilder: (_, __, ___) => Container(color: Colors.white),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Base cream color
+        Container(color: const Color(0xFFECE0CF)),
+        // Frosted glass blur
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(color: Colors.white.withValues(alpha: 0.35)),
         ),
-      );
-    }
-    return Container(color: Colors.white);
+        // Red tint across the top
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFFBF1D23).withValues(alpha: 0.15),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.85],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildInnerContent(bool isTablet, double scale, double eventHeight) {

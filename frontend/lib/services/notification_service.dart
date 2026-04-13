@@ -63,8 +63,8 @@ class NotificationService {
         >()
         ?.createNotificationChannel(channel);
 
-    /* 2. Initialise plugin + iOS permissions */
-    const iosInit = DarwinInitializationSettings(
+    /* 2. Initialise plugin + iOS/macOS permissions */
+    const darwinInit = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -72,7 +72,11 @@ class NotificationService {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
     await fln.initialize(
-      const InitializationSettings(android: androidInit, iOS: iosInit),
+      const InitializationSettings(
+        android: androidInit,
+        iOS: darwinInit,
+        macOS: darwinInit,
+      ),
     );
 
     await fln

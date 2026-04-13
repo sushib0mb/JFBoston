@@ -30,14 +30,14 @@ class _TimetablePageState extends State<TimetablePage> {
 
   // ── Layout Constants ──────────────────────────────────────────────────────
   static const double _dayBtnHeight = 68.0;
-  static const double _dayBtnWidth = 156.0;
+  static const double _dayBtnWidth = 215.0;
   static const double _dayFont = 40.0;
-  static const double _dayPickerHorizontalPad = 20.0;
+  static const double _dayPickerHorizontalPad = 8.0;
   static const double _dayPickerTopPad = 4.0;
   static const double _scheduleTopExtra = 16.0;
   static const double _scheduleMargin = 25.0;
   static const double _scheduleRadius = 25.0;
-  static const double _stageFontSize = 12.0;
+  static const double _stageFontSize = 10.0;
   static const double _stageDistFontSize = 9.0;
   static const double _pixelsPerMinute = 10.0;
 
@@ -169,7 +169,7 @@ class _TimetablePageState extends State<TimetablePage> {
                                           margin: const EdgeInsets.symmetric(horizontal: 4),
                                           padding: const EdgeInsets.symmetric(vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: isSelected ? const Color(0xFF0B3775) : const Color(0xFF8D8D97),
+                                            color: isSelected ? const Color(0xFFBF1D23) : const Color(0xFFD4706E),
                                             borderRadius: BorderRadius.circular(36),
                                           ),
                                           alignment: Alignment.center,
@@ -250,17 +250,15 @@ class _TimetablePageState extends State<TimetablePage> {
       child: Container(
         width: _dayBtnWidth,
         height: _dayBtnHeight,
-        alignment: day == 1 ? const Alignment(-0.3, 0) : const Alignment(0.3, 0),
+        alignment: day == 1 ? const Alignment(-0.2, 0) : const Alignment(0.2, 0),
         decoration: ShapeDecoration(
           color: isSelected
-              ? (day == 1 ? const Color(0x26BF1D23) : const Color(0x260B3775))
+              ? const Color(0x26BF1D23)
               : const Color(0xAFe0e0e0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
             side: BorderSide(
-              color: isSelected 
-                  ? (day == 1 ? const Color(0xFFBF1D23) : const Color(0xFF0B3775)) 
-                  : Colors.transparent, 
+              color: isSelected ? const Color(0xFFBF1D23) : Colors.transparent,
               width: 2,
             ),
           ),
@@ -357,8 +355,8 @@ class ScheduleList extends StatelessWidget {
     for (int t = baseTime; t <= latestTime; t += 30) {
       lines.add(Positioned(
         top: (t - baseTime) * _pixelsPerMinute,
-        left: 0, right: 0,
-        child: Container(height: 1, color: Colors.black12),
+        left: 4, right: 12,
+        child: Container(height: 1, color: Colors.black26),
       ));
     }
     return Stack(children: lines);
@@ -375,7 +373,7 @@ class ScheduleList extends StatelessWidget {
       return Positioned(
         top: top,
         left: 3,
-        right: 3,
+        right: 20,
         child: SizedBox(
           height: (e.duration * _pixelsPerMinute) - 4,
           child: Performance(eventItem: e, onTap: onEventTap),
