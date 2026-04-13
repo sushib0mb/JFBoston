@@ -126,6 +126,9 @@ flutter:
     - assets/timetableIcons/Kendo (Frame).png
     - assets/timetableIcons/Closing ceremony.png
     - assets/timetableIcons/Closing ceremony (Frame).png
+    - assets/timetableIcons/taiko.png
+    - assets/timetableIcons/taiko(frame).png
+    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
