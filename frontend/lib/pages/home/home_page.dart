@@ -139,21 +139,8 @@ class _HomePageState extends State<HomePage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Container(
-          color: const Color(0xFFFFF5F5),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color.fromRGBO(10, 56, 117, 0.15),
-                  const Color.fromRGBO(191, 28, 36, 0.15),
-                ],
-              ),
-            ),
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
+        return Scaffold(
+              backgroundColor: const Color(0xFFECE0CF),
               body: Stack(
                 children: [
                   // Scrollable content
@@ -285,8 +272,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-            ),
-          ),
         );
       },
     );

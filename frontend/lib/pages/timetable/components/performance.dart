@@ -326,17 +326,17 @@ class _PerformanceState extends State<Performance>
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
+                    borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isPressed ? 0.05 : 0.1),
+                        color: Colors.black.withValues(alpha: isPressed ? 0.05 : 0.1),
                         blurRadius: isPressed ? 1 : 3,
                         offset: Offset(0, isPressed ? 0 : 1),
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(isTablet ? 50 : 45),
+                    borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -359,7 +359,7 @@ class _PerformanceState extends State<Performance>
               ),
               if (widget.eventItem.performanceName.isNotEmpty &&
                   widget.eventItem.duration >= 10)
-                Positioned(top: 18, right: 8, child: _buildReminderButton()),
+                Positioned(top: 9, right: 4, child: _buildReminderButton()),
             ],
           ),
         ),
@@ -370,11 +370,19 @@ class _PerformanceState extends State<Performance>
   Widget _buildBackground() {
     final imageUrl = widget.eventItem.stageBackground;
     if (imageUrl.isNotEmpty) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        alignment: Alignment.topCenter,
-        errorBuilder: (_, __, ___) => Container(color: Colors.white),
+      return ColorFiltered(
+        colorFilter: const ColorFilter.matrix(<double>[
+          0.607, 0.358, 0.036, 0, 0,
+          0.107, 0.858, 0.036, 0, 0,
+          0.107, 0.358, 0.536, 0, 0,
+          0,     0,     0,     1, 0,
+        ]),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          errorBuilder: (_, __, ___) => Container(color: Colors.white),
+        ),
       );
     }
     return Container(color: Colors.white);
@@ -427,14 +435,15 @@ class _PerformanceState extends State<Performance>
                 ? "${widget.eventItem.performanceName.substring(0, 27)}..."
                 : widget.eventItem.performanceName,
             scale * 12,
-            FontWeight.w500,
+            FontWeight.w700,
+            textColor: Colors.black,
           ),
           SizedBox(height: isTablet ? 12 : 8),
           _labelBox(
             '${widget.eventItem.time} - ${findEndTime(widget.eventItem.time, widget.eventItem.duration)}',
             scale * 10,
-            FontWeight.w500,
-            textColor: Colors.grey[700]!,
+            FontWeight.w700,
+            textColor: Colors.black,
             maxLines: 1,
           ),
         ],
@@ -450,7 +459,7 @@ class _PerformanceState extends State<Performance>
         shape: BoxShape.circle,
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 2),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 2),
         ],
       ),
       child:
@@ -479,15 +488,16 @@ class _PerformanceState extends State<Performance>
                 ? "${widget.eventItem.performanceName.substring(0, maxTitle)}..."
                 : widget.eventItem.performanceName,
             titleScale,
-            FontWeight.w500,
+            FontWeight.w700,
+            textColor: Colors.black,
             textAlign: TextAlign.left,
           ),
           SizedBox(height: isTablet ? 6 : 4),
           _labelBox(
             '${widget.eventItem.time} - ${findEndTime(widget.eventItem.time, widget.eventItem.duration)}',
             timeScale,
-            FontWeight.w500,
-            textColor: Colors.grey[700]!,
+            FontWeight.w700,
+            textColor: Colors.black,
             maxLines: 1,
             textAlign: TextAlign.left,
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jfbfestival/pages/timetable/components/stage_header.dart';
 import '../../data/timetable_data.dart';
 import 'components/event_detail_popup.dart';
@@ -113,21 +114,10 @@ class _TimetablePageState extends State<TimetablePage> {
         selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFECE0CF),
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF0B3775).withValues(alpha: 0.15),
-                  const Color(0xFFBF1D23).withValues(alpha: 0.15),
-                ],
-              ),
-            ),
-          ),
+          Container(color: const Color(0xFFECE0CF)),
           Padding(
             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
             child: Stack(
@@ -240,35 +230,19 @@ class _TimetablePageState extends State<TimetablePage> {
         height: height,
         alignment: day == 1 ? Alignment(-0.3, 0) : Alignment(0.3, 0),
         decoration: ShapeDecoration(
-          color:
-              day == 1
-                  ? selectedDay == day
-                      ? const Color.fromARGB(38, 191, 29, 35)
-                      : const Color.fromARGB(175, 224, 224, 224)
-                  : selectedDay == day
-                  ? const Color.fromARGB(38, 11, 55, 117)
-                  : const Color.fromARGB(175, 224, 224, 224),
+          color: selectedDay == day
+              ? const Color.fromARGB(38, 191, 29, 35)
+              : const Color.fromARGB(175, 224, 224, 224),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
-            side:
-                day == 1
-                    ? selectedDay == day
-                        ? BorderSide(
-                          color: Color.fromARGB(255, 191, 29, 35),
-                          width: 2,
-                        )
-                        : BorderSide(color: Colors.transparent, width: 2)
-                    : selectedDay == day
-                    ? BorderSide(
-                      color: Color.fromARGB(255, 11, 55, 117),
-                      width: 2,
-                    )
-                    : BorderSide(color: Colors.transparent, width: 2),
+            side: selectedDay == day
+                ? const BorderSide(color: Color.fromARGB(255, 191, 29, 35), width: 2)
+                : const BorderSide(color: Colors.transparent, width: 2),
           ),
         ),
         child: Text(
           text,
-          style: TextStyle(fontSize: font, fontWeight: FontWeight.w400),
+          style: GoogleFonts.bebasNeue(fontSize: font, fontWeight: FontWeight.w400),
         ),
       ),
     );
@@ -356,14 +330,14 @@ class ScheduleList extends StatelessWidget {
                             timeText,
                             style: TextStyle(
                               fontSize: responsiveFontSize,
-                              fontWeight: FontWeight.w300,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             ampm,
                             style: TextStyle(
                               fontSize: responsiveFontSize,
-                              fontWeight: FontWeight.w300,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],

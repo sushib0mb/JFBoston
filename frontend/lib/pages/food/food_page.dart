@@ -209,18 +209,7 @@ class _FoodPageState extends State<FoodPage> {
   }
 
   Widget _buildBackgroundGradient() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF0B3775).withValues(alpha: 0.15),
-            const Color(0xFFBF1D23).withValues(alpha: 0.15),
-          ],
-        ),
-      ),
-    );
+    return Container(color: const Color(0xFFECE0CF));
   }
 
   Widget _buildMainContent(double screenWidth, double screenHeight) {

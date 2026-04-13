@@ -37,18 +37,7 @@ class MapPageState extends State<MapPage> {
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color.fromRGBO(10, 56, 117, 0.15),
-                  Color.fromRGBO(191, 28, 36, 0.15),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
+          Container(color: const Color(0xFFECE0CF)),
 
           // Center the map container in the middle of the screen
           Center(

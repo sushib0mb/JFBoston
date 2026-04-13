@@ -38,8 +38,8 @@ class StageHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color:
                       isSelected
-                          ? const Color(0xFF0B3775)
-                          : const Color(0xFF8D8D97),
+                          ? const Color(0xFFBF1D23)
+                          : const Color(0xFFD4706E),
                   borderRadius: BorderRadius.circular(36),
                 ),
                 alignment: Alignment.center,
@@ -50,7 +50,7 @@ class StageHeader extends StatelessWidget {
                       stageLabels[i],
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: isTablet ? 15 : 12,
+                        fontSize: isTablet ? 13 : 10.5,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w500,
                       ),

@@ -90,6 +90,10 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               brightness: Brightness.light,
               fontFamily: 'Fredoka',
+              scaffoldBackgroundColor: const Color(0xFFECE0CF),
+              colorScheme: const ColorScheme.light(
+                surface: Colors.white,
+              ),
             ),
             darkTheme: ThemeData(
               brightness: Brightness.dark,
