@@ -5,7 +5,7 @@ class CustomSearchBar extends StatelessWidget {
   final FocusNode focusNode;
   final VoidCallback onCancel;
   final ValueChanged<String> onChanged;
-  final double topPadding;
+  final double topPadding; // Keep for compatibility, though we use parent padding now
 
   const CustomSearchBar({
     super.key,
@@ -18,47 +18,51 @@ class CustomSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(30, topPadding, 30, 0),
-      child: Material(
-        elevation: 4,
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 1,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+      color: const Color(0xFFECE0CF), 
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE4E4E7)),
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Search food booths...',
-                    border: InputBorder.none,
+              child: Row(
+                children: [
+                  const SizedBox(width: 12),
+                  const Icon(Icons.search, size: 18, color: Color(0xFFA1A1AA)),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'Search...',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      onChanged: onChanged,
+                    ),
                   ),
-                  onChanged: onChanged,
-                  style: const TextStyle(fontSize: 16),
-                ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey),
-                onPressed: onCancel,
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: onCancel,
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
+} 

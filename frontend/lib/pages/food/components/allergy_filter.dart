@@ -1,3 +1,12 @@
+/// ────────────────────────────────────────────────────────────────────────────
+/// DYNAMIC ALLERGY FILTER GRID - SHADCN EDITION
+/// ────────────────────────────────────────────────────────────────────────────
+/// Features:
+/// - LayoutBuilder for real-time constraint sensing.
+/// - Adaptive childAspectRatio to prevent text overflow on narrow screens.
+/// - Dynamic icon scaling based on available width.
+/// ────────────────────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 
 class AllergyFilterGrid extends StatelessWidget {
@@ -12,95 +21,94 @@ class AllergyFilterGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size       = MediaQuery.of(context).size;
-    final screenW    = size.width;
-    final isTablet   = screenW >= 600;
-    // 3 columns on phone, 4 on tablet
-    final crossCount = isTablet ? 4 : 3;
-    // tighter on phone, more breathing on tablet
-    final gridSpacing      = isTablet ? 12.0 : 8.0;
-    final iconContainer    = isTablet ? 60.0 : 40.0;
-    final iconImageSize    = isTablet ? 50.0 : 44.0;
-    final labelFontSize    = isTablet ? 25.0 : 14.0;
-    final labelVerticalGap = isTablet ? 8.0  : 6.0;
-
     const allergens = [
-      "Egg",
-      "Wheat",
-      "Peanut",
-      "Milk",
-      "Soy",
-      "Tree Nut",
-      "Fish",
-      "Shellfish",
-      "Sesame",
+      "Egg", "Wheat", "Peanut", "Milk", "Soy", 
+      "Tree Nut", "Fish", "Shellfish", "Sesame",
     ];
 
-    return GridView.builder(
-      // shrinkWrap so it takes only as much height as it needs
-      shrinkWrap: true,
-      // allow the grid itself to scroll if it exceeds its parent’s viewport
-      physics: const NeverScrollableScrollPhysics(), 
-      padding: EdgeInsets.zero,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossCount,
-        crossAxisSpacing: gridSpacing,
-        mainAxisSpacing: gridSpacing,
-        // roughly square tiles
-        childAspectRatio: 1.0,
-      ),
-      itemCount: allergens.length,
-      itemBuilder: (ctx, i) {
-        final a = allergens[i];
-        final sel = selectedAllergens.contains(a);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate dynamic counts based on width
+        final double width = constraints.maxWidth;
+        final int crossCount = width > 600 ? 4 : 3;
+        
+        // Dynamically calculate spacing: 4% of width
+        final double spacing = width * 0.04;
+        
+        // Adaptive Aspect Ratio: 
+        // Narrower screens need more vertical space for text (lower ratio)
+        final double adaptiveRatio = width > 400 ? 0.9 : 0.75;
 
-        return GestureDetector(
-          onTap: () => onAllergenSelected(a, !sel),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: iconContainer,
-                height: iconContainer,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(isTablet ? 28 : 24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 10,
-                    ),
-                  ],
-                  border: Border.all(
-                    color: sel ? Colors.red : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Image.asset(
-                    'assets/allergens/${a.toLowerCase().replaceAll(' ', '_')}.png',
-                    width: iconImageSize,
-                    height: iconImageSize,
-                    color: sel ? null : Colors.grey.withOpacity(0.5),
-                    colorBlendMode: BlendMode.modulate,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: labelVerticalGap),
-
-              Text(
-                a,
-                style: TextStyle(
-                  fontSize: labelFontSize,
-                  color: sel ? Colors.black : Colors.grey[400],
-                ),
-              ),
-            ],
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(vertical: spacing),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossCount,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            childAspectRatio: adaptiveRatio,
           ),
+          itemCount: allergens.length,
+          itemBuilder: (ctx, i) {
+            final a = allergens[i];
+            final isSelected = selectedAllergens.contains(a);
+
+            return _buildDynamicTile(context, a, isSelected, width / crossCount);
+          },
         );
       },
+    );
+  }
+
+  Widget _buildDynamicTile(BuildContext context, String label, bool isSelected, double cellWidth) {
+    // Dynamic sizing based on the cell width
+    final double iconPadding = cellWidth * 0.15;
+    final double fontSize = (cellWidth * 0.12).clamp(10.0, 16.0);
+
+    return GestureDetector(
+      onTap: () => onAllergenSelected(label, !isSelected),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded( // Use Expanded to let the container fill available height
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.all(iconPadding),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFF4F4F5) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF18181B) : const Color(0xFFE4E4E7),
+                  width: isSelected ? 1.5 : 1.0,
+                ),
+              ),
+              child: Image.asset(
+                'assets/allergens/${label.toLowerCase().replaceAll(' ', '_')}.png',
+                color: isSelected ? null : Colors.grey.withOpacity(0.4),
+                colorBlendMode: isSelected ? null : BlendMode.modulate,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 2),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis, // Guard against very long labels
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? const Color(0xFF18181B) : const Color(0xFFA1A1AA),
+                letterSpacing: -0.2,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

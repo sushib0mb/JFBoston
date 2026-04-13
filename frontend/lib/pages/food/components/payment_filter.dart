@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class PaymentFilterRow extends StatelessWidget {
@@ -12,106 +13,68 @@ class PaymentFilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // detect tablet
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet     = screenWidth >= 600;
+    const payments = ["Apple Pay", "Credit Card", "Cash", "Venmo", "Zelle", "PayPal"];
 
-    final payments = [
-      "Apple Pay",
-      "Credit Card",
-      "Cash",
-      "Venmo",
-      "Zelle",
-      "PayPal",
-    
-    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double width = constraints.maxWidth;
+        // Adjust spacing based on width
+        final double spacing = width > 600 ? 20 : 12;
 
-    final half = (payments.length / 2).ceil();
-    final firstRowPayments  = payments.sublist(0, half);
-    final secondRowPayments = payments.sublist(half);
-
-    // spacing between items
-    final rowSpacing = isTablet ? 24.0 : 16.0;
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: firstRowPayments.map((method) {
-            final selected = selectedPayments.contains(method);
-            return _PaymentFilterItem(
+        return Wrap(
+          alignment: WrapAlignment.center,
+          spacing: spacing,
+          runSpacing: spacing,
+          children: payments.map((method) {
+            final isSelected = selectedPayments.contains(method);
+            return _ShadcnPaymentItem(
               method: method,
-              isSelected: selected,
-              onTap: () => onPaymentSelected(method, !selected),
-              isTablet: isTablet,
+              isSelected: isSelected,
+              onTap: () => onPaymentSelected(method, !isSelected),
+              parentWidth: width,
             );
           }).toList(),
-        ),
-        SizedBox(height: rowSpacing),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: secondRowPayments.map((method) {
-            final selected = selectedPayments.contains(method);
-            return _PaymentFilterItem(
-              method: method,
-              isSelected: selected,
-              onTap: () => onPaymentSelected(method, !selected),
-              isTablet: isTablet,
-            );
-          }).toList(),
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
-class _PaymentFilterItem extends StatelessWidget {
+class _ShadcnPaymentItem extends StatelessWidget {
   final String method;
   final bool isSelected;
   final VoidCallback onTap;
-  final bool isTablet;
+  final double parentWidth;
 
-  const _PaymentFilterItem({
+  const _ShadcnPaymentItem({
     required this.method,
     required this.isSelected,
     required this.onTap,
-    required this.isTablet,
+    required this.parentWidth,
   });
 
   @override
   Widget build(BuildContext context) {
-    // scaled sizes
-    final double containerSize = isTablet ? 60 : 40;
-    final double iconSize      = isTablet ? 60 : 44;
-    final double borderRadius  = containerSize / 2;
-    final double fontSize      = isTablet ? 25 : 16;
-    final double labelHeight   = isTablet ? 70 : 40;
-    final double verticalGap   = isTablet ? 8 : 4;
+    final bool isTablet = parentWidth > 600;
+    final double boxSize = isTablet ? 70 : 54;
+    final double iconSize = isTablet ? 32 : 24;
 
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // icon background
-          Container(
-            width: containerSize,
-            height: containerSize,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: boxSize,
+            height: boxSize,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(borderRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-              ],
+              color: isSelected ? const Color(0xFFF4F4F5) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12), // Shadcn Radius
               border: Border.all(
-                color: isSelected
-                    ? const Color.fromARGB(255, 255, 217, 0)
-                    : Colors.transparent,
-                width: 2,
+                color: isSelected ? const Color(0xFF18181B) : const Color(0xFFE4E4E7),
+                width: isSelected ? 1.5 : 1.0,
               ),
             ),
             child: Center(
@@ -119,33 +82,21 @@ class _PaymentFilterItem extends StatelessWidget {
                 'assets/payments/${method.toLowerCase().replaceAll(' ', '_')}.png',
                 width: iconSize,
                 height: iconSize,
-                color: isSelected ? null : Colors.grey.withOpacity(0.5),
-                colorBlendMode: BlendMode.modulate,
+                color: isSelected ? null : const Color(0xFFA1A1AA),
+                colorBlendMode: isSelected ? null : BlendMode.srcIn,
               ),
             ),
           ),
-
-          SizedBox(height: verticalGap),
-
-          // label
-          SizedBox(
-            height: labelHeight,
-            child: Padding(
-              padding: EdgeInsets.only(bottom: verticalGap),
-              child: Text(
-                // break long labels
-                method == "Credit Card"
-                    ? "Credit\nCard"
-                    : method == "Apple Pay"
-                        ? "Apple\nPay"
-                        : method,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  color: isSelected ? Colors.black : Colors.grey[400],
-                  height: 1.0,
-                ),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            method.replaceAll(' ', '\n'), // Dynamic break
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: isTablet ? 14 : 11,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? const Color(0xFF18181B) : const Color(0xFFA1A1AA),
+              height: 1.1,
+              letterSpacing: -0.3,
             ),
           ),
         ],
