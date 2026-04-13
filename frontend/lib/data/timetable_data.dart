@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase/supabase.dart';
 
 class FestivalDates {
-  static final DateTime day1 = DateTime(2026, 4, 25);
-  static final DateTime day2 = DateTime(2026, 4, 26);
+  static final DateTime day1 = DateTime(2026, 4, 12);
+  static final DateTime day2 = DateTime(2026, 4, 13);
   static DateTime forDay(int day) => day == 2 ? day2 : day1;
 }
 
@@ -18,7 +18,6 @@ class EventItem {
   final String stage;
   final String description;
   final String eventImage;
-  final String stageBackground;
   final int day;
 
   EventItem({
@@ -31,7 +30,6 @@ class EventItem {
     required this.stage,
     required this.description,
     required this.eventImage,
-    required this.stageBackground,
     required this.day,
   });
 
@@ -65,7 +63,6 @@ class EventItem {
       stage: data['stage'] ?? '',
       description: data['description'] ?? '',
       eventImage: data['event_image'] ?? '',
-      stageBackground: data['stage_background'] ?? '',
       day: data['day'] ?? 0,
     );
   }
@@ -279,7 +276,6 @@ class ScheduleDataService extends ChangeNotifier {
               stage: stage,
               description: '',
               eventImage: '',
-              stageBackground: '',
               day: -1,
             ),
           ];
