@@ -30,7 +30,7 @@ class _TimetablePageState extends State<TimetablePage> {
 
   // ── Layout Constants ──────────────────────────────────────────────────────
   static const double _dayBtnHeight = 68.0;
-  static const double _dayBtnWidth = 230.0;
+  static const double _dayBtnWidth = 223.0;
   static const double _dayFont = 40.0;
   static const double _dayPickerHorizontalPad = 4.0;
   static const double _dayPickerTopPad = 4.0;
