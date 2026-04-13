@@ -14,101 +14,92 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/rendering.dart';
 
 import 'theme_notifier.dart';
-
-// import 'SplashScreen/video_splash_screen.dart';
+import 'package:device_preview/device_preview.dart';
 
 import 'pages/settings_page.dart';
 import 'pages/survey/quick_survey_popup.dart';
-
 import 'pages/food/food_page.dart';
-
 import 'pages/home/home_page.dart';
-
 import 'pages/map_page.dart';
-
 import 'pages/timetable/timetable_page.dart';
 import 'data/timetable_data.dart';
-
 import 'models/feedback_entry.dart';
 import 'models/survey_entry.dart';
-
 import 'config/supabase_config.dart';
 import 'services/notification_service.dart';
 import 'services/location_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  debugPaintSizeEnabled = false; // box outlines
-  debugPaintBaselinesEnabled = false; // text baselines
-  debugPaintLayerBordersEnabled = false; // layer borders
-  debugRepaintRainbowEnabled = false; // repaint flashes
+  debugPaintSizeEnabled = false;
+  debugPaintBaselinesEnabled = false;
+  debugPaintLayerBordersEnabled = false;
+  debugRepaintRainbowEnabled = false;
 
-  // Load environment variables
   await dotenv.load();
-
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // Initialize Hive
   await Hive.initFlutter();
   Hive.registerAdapter(FeedbackEntryAdapter());
   Hive.registerAdapter(SurveyEntryAdapter());
-
   await Hive.openBox<FeedbackEntry>('feedback');
   await Hive.openBox<SurveyEntry>('survey');
 
-  // Initialize local notifications
   await notificationService.init();
 
-  // Supabase is now initialized via supabase_config.dart
   developer.log('Supabase client initialized: $supabase', name: 'SupabaseInit');
-
   initFoodBoothsService(supabase);
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-        ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
-        ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
-        ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
-        ChangeNotifierProvider(create: (_) => LocationService()),
-      ],
-      child: const MyApp(),
+    DevicePreview(
+      enabled: kDebugMode,
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+          ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
+          ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
+          ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
+          ChangeNotifierProvider(create: (_) => LocationService()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeNotifier>(
-      builder:
-          (context, theme, _) => MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'JFB Festival',
-            theme: ThemeData(
-              brightness: Brightness.light,
-              fontFamily: 'Fredoka',
-              scaffoldBackgroundColor: const Color(0xFFECE0CF),
-              colorScheme: const ColorScheme.light(
-                surface: Colors.white,
-              ),
-            ),
-            darkTheme: ThemeData(
-              brightness: Brightness.dark,
-              fontFamily: 'Fredoka',
-            ),
-            themeMode: theme.mode,
-
-            // home: const VideoSplashScreen(),
-            home: const MainScreen(),
-            routes: {
-              SettingsPage.routeName: (_) => const SettingsPage(),
-              // if (kDebugMode)
-              //   AdminDashboardPage.routeName: (_) => const AdminDashboardPage(),
-            },
+      // Keep DevicePreview wrappers from HEAD + new scaffoldBackgroundColor
+      // and ColorScheme from incoming branch
+      builder: (context, theme, _) => MaterialApp(
+        useInheritedMediaQuery: true,
+        locale: DevicePreview.locale(context),
+        builder: DevicePreview.appBuilder,
+        debugShowCheckedModeBanner: false,
+        title: 'JFB Festival',
+        theme: ThemeData(
+          brightness: Brightness.light,
+          fontFamily: 'Fredoka',
+          // ── Incoming: new background + surface colour ──────────────────
+          scaffoldBackgroundColor: const Color(0xFFECE0CF),
+          colorScheme: const ColorScheme.light(
+            surface: Colors.white,
           ),
+        ),
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          fontFamily: 'Fredoka',
+        ),
+        themeMode: theme.mode,
+        home: const MainScreen(),
+        routes: {
+          SettingsPage.routeName: (_) => const SettingsPage(),
+        },
+      ),
     );
   }
 }
@@ -117,7 +108,7 @@ class MainScreen extends StatefulWidget {
   final int initialIndex;
   final EventItem? selectedEvent;
   final String? selectedMapLetter;
-  final int? selectedDay; // ← new
+  final int? selectedDay;
 
   const MainScreen({
     super.key,
@@ -144,27 +135,21 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
         await _maybeShowAllergyDisclaimer();
-
-        // TODO: UNDO BEFORE PRODUCTION
-        // if (mounted) await QuickSurveyPopup.show(context);
       }
-    }); // default to Day 1
+    });
   }
 
   Future<void> _maybeShowAllergyDisclaimer() async {
     final prefs = await SharedPreferences.getInstance();
     final shown = prefs.getBool(_kAllergyDisclaimerKey) ?? false;
-    if (shown) return; // If already shown in the past, stop here.
-
-    if (!mounted) return; // Safety check before showing dialog
+    if (shown) return;
+    if (!mounted) return;
 
     await showDialog(
       context: context,
-      barrierDismissible: false, // User must interact with the dialog
+      barrierDismissible: false,
       builder: (ctx) {
-        // Define the state variable outside the builder
         bool isChecked = false;
-
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -175,14 +160,17 @@ class _MainScreenState extends State<MainScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'All allergen information displayed in this app is provided directly by the vendors and is presented exactly as received. '
-                      'This listing typically covers only the 9 major allergens (Milk, Eggs, Fish, Shellfish, Tree Nuts, Peanuts, Wheat, Soy, and Sesame).\n\n'
-                      'JFB and the app developers do not verify ingredients and cannot guarantee that food is allergen-free. '
-                      'Always confirm details directly with the vendor before consumption.\n\n'
-                      'Note on Images: Photos are provided by vendors or are for illustrative purposes only. Actual food items may vary in appearance.',
+                      'All allergen information displayed in this app is provided directly '
+                      'by the vendors and is presented exactly as received. '
+                      'This listing typically covers only the 9 major allergens '
+                      '(Milk, Eggs, Fish, Shellfish, Tree Nuts, Peanuts, Wheat, Soy, and Sesame).\n\n'
+                      'JFB and the app developers do not verify ingredients and cannot guarantee '
+                      'that food is allergen-free. Always confirm details directly with the vendor '
+                      'before consumption.\n\n'
+                      'Note on Images: Photos are provided by vendors or are for illustrative '
+                      'purposes only. Actual food items may vary in appearance.',
                     ),
                     const SizedBox(height: 20),
-                    // The Checkbox Row
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -192,9 +180,7 @@ class _MainScreenState extends State<MainScreen> {
                           child: Checkbox(
                             value: isChecked,
                             onChanged: (val) {
-                              setState(() {
-                                isChecked = val ?? false;
-                              });
+                              setState(() => isChecked = val ?? false);
                             },
                           ),
                         ),
@@ -212,19 +198,13 @@ class _MainScreenState extends State<MainScreen> {
               ),
               actions: [
                 TextButton(
-                  // Button is disabled (null) if isChecked is false
-                  onPressed:
-                      isChecked
-                          ? () async {
-                            // 1. Save the preference permanently
-                            await prefs.setBool(_kAllergyDisclaimerKey, true);
-
-                            // 2. Close the dialog
-                            if (context.mounted) {
-                              Navigator.of(context).pop();
-                            }
-                          }
-                          : null,
+                  onPressed: isChecked
+                      ? () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool(_kAllergyDisclaimerKey, true);
+                          if (context.mounted) Navigator.of(context).pop();
+                        }
+                      : null,
                   child: const Text('Confirm'),
                 ),
               ],
@@ -238,38 +218,26 @@ class _MainScreenState extends State<MainScreen> {
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
-
-      // If you want to reset your food‑page filter when leaving FoodPage:
       if (index != 1 && widget.selectedMapLetter != null) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder:
-                (context, animation, secondaryAnimation) => MainScreen(
-                  initialIndex: index,
-                  selectedEvent: widget.selectedEvent,
-                  selectedMapLetter: null,
-                  selectedDay: _dayForTimetable,
-                ),
-            transitionsBuilder: (
-              context,
-              animation,
-              secondaryAnimation,
-              child,
-            ) {
-              const begin = 0.0;
-              const end = 1.0;
-              const curve = Curves.easeInOut;
-              final fadeTween = Tween(
-                begin: begin,
-                end: end,
-              ).chain(CurveTween(curve: curve));
-              final opacityAnimation = animation.drive(fadeTween);
-              return FadeTransition(opacity: opacityAnimation, child: child);
+            pageBuilder: (context, animation, secondaryAnimation) => MainScreen(
+              initialIndex: index,
+              selectedEvent: widget.selectedEvent,
+              selectedMapLetter: null,
+              selectedDay: _dayForTimetable,
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              final fadeTween = Tween(begin: 0.0, end: 1.0)
+                  .chain(CurveTween(curve: Curves.easeInOut));
+              return FadeTransition(
+                opacity: animation.drive(fadeTween),
+                child: child,
+              );
             },
-            transitionDuration: const Duration(
-              milliseconds: 300,
-            ), // Adjust as needed
+            transitionDuration: const Duration(milliseconds: 300),
           ),
         );
       }
@@ -281,7 +249,6 @@ class _MainScreenState extends State<MainScreen> {
     final pages = <Widget>[
       HomePage(),
       FoodPage(selectedMapLetter: widget.selectedMapLetter),
-      // Pass both event *and* day into TimetablePage:
       TimetablePage(
         selectedEvent: widget.selectedEvent,
         selectedDay: _dayForTimetable,
@@ -310,51 +277,36 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
+// ─── FIXED: TopBar ────────────────────────────────────────────────────────────
+// Removed screenWidth/screenHeight calculations.
+// Logo uses a fixed constant size; SafeArea in parent handles top inset.
 class TopBar extends StatelessWidget {
   final int selectedIndex;
   const TopBar({super.key, required this.selectedIndex});
+
+  static const double _logoSize = 60.0;
+
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isTablet = screenWidth >= 600;
-
-    // Increase the logo size slightly on tablets
-    final logoSize = screenHeight * (isTablet ? 0.12 : 0.086);
-
-    return Padding(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              width: logoSize,
-              height: logoSize,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.transparent,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/JFBLogo.png',
-                    fit: BoxFit.cover,
-                    width: logoSize,
-                    height: logoSize,
-                  ),
-                ),
-              ),
-            ),
+    return Align(
+      alignment: Alignment.topCenter,
+      child: SizedBox(
+        width: _logoSize,
+        height: _logoSize,
+        child: ClipOval(
+          child: Image.asset(
+            'assets/JFBLogo.png',
+            fit: BoxFit.cover,
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
+// ─── FIXED: BottomBar ─────────────────────────────────────────────────────────
+// Removed all screenWidth-based calculations.
+// Uses const EdgeInsets for padding and Expanded for icon distribution.
 class BottomBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
@@ -365,96 +317,73 @@ class BottomBar extends StatelessWidget {
     super.key,
   });
 
+  static const double _barHeight = 88.0;
+  static const double _horizontalPadding = 12.0;
+  static const double _bottomMargin = 20.0;
+  static const double _borderRadius = 100.0;
+
   @override
   Widget build(BuildContext context) {
-    // Get the screen width and calculate the width of the bottom bar
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Define the padding for the left and right sides
-    final sidePadding = screenWidth * 0.03; // Adjust the value as needed
-
-    // Adjust the width of the bottom bar to account for side padding
-    final bottomBarWidth =
-        screenWidth - 2 * sidePadding; // Subtracting padding on both sides
-
-    // Icon size
-    final iconSize = 74.0; // Width and height of each icon
-    final numberOfIcons = 4; // Number of icons in the bottom bar
-
-    // Calculate total width of all icons (icons + space between them)
-    final totalIconsWidth = iconSize * numberOfIcons;
-
-    // Calculate the remaining space in the bottom bar
-    final remainingSpace = bottomBarWidth - totalIconsWidth;
-
-    // Calculate dynamic spacing based on the remaining space
-    final dynamicSpacing =
-        remainingSpace / (numberOfIcons + 1); // +1 for the edges
-
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: sidePadding),
+      padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
       child: Container(
-        width: bottomBarWidth,
-        height: 94.74,
-        margin: const EdgeInsets.only(bottom: 20),
+        height: _barHeight,
+        margin: const EdgeInsets.only(bottom: _bottomMargin),
         child: Stack(
           children: [
-            // Semi-transparent background with blur
             Positioned.fill(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(100),
+                borderRadius: BorderRadius.circular(_borderRadius),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: BorderRadius.circular(_borderRadius),
                     ),
                   ),
                 ),
               ),
             ),
-            // Navigation buttons
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Dynamic spacing for each icon
-                  SizedBox(width: dynamicSpacing),
-                  ImageButton(
+            Row(
+              children: [
+                Expanded(
+                  child: ImageButton(
                     index: 0,
                     defaultImage: "assets/bottomBar/Home.png",
                     pressedImage: "assets/bottomBar/Home(Frame).png",
                     selectedIndex: selectedIndex,
                     onSelect: onItemTapped,
                   ),
-                  SizedBox(width: dynamicSpacing),
-                  ImageButton(
+                ),
+                Expanded(
+                  child: ImageButton(
                     index: 1,
                     defaultImage: "assets/bottomBar/Food.png",
                     pressedImage: "assets/bottomBar/Food(Frame).png",
                     selectedIndex: selectedIndex,
                     onSelect: onItemTapped,
                   ),
-                  SizedBox(width: dynamicSpacing),
-                  ImageButton(
+                ),
+                Expanded(
+                  child: ImageButton(
                     index: 2,
                     defaultImage: "assets/bottomBar/Timetable.png",
                     pressedImage: "assets/bottomBar/Timetable(Frame).png",
                     selectedIndex: selectedIndex,
                     onSelect: onItemTapped,
                   ),
-                  SizedBox(width: dynamicSpacing),
-                  ImageButton(
+                ),
+                Expanded(
+                  child: ImageButton(
                     index: 3,
                     defaultImage: "assets/bottomBar/Map.png",
                     pressedImage: "assets/bottomBar/Map(Frame).png",
                     selectedIndex: selectedIndex,
                     onSelect: onItemTapped,
                   ),
-                  SizedBox(width: dynamicSpacing),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -463,6 +392,7 @@ class BottomBar extends StatelessWidget {
   }
 }
 
+// ─── FIXED: ImageButton ───────────────────────────────────────────────────────
 class ImageButton extends StatefulWidget {
   final int index;
   final String defaultImage;
@@ -486,49 +416,41 @@ class ImageButton extends StatefulWidget {
 class _ImageButtonState extends State<ImageButton> {
   bool isPressed = false;
 
-  // Handle tap events
-  void _onTapDown(TapDownDetails details) {
-    setState(() {
-      isPressed = true;
-    });
-  }
+  static const double _containerSize = 60.0;
+  static const double _iconSize = 52.0;
 
-  void _onTapUp(TapUpDetails details) {
-    setState(() {
-      isPressed = false;
-    });
-  }
-
-  void _onTapCancel() {
-    setState(() {
-      isPressed = false;
-    });
-  }
+  void _onTapDown(TapDownDetails details) => setState(() => isPressed = true);
+  void _onTapUp(TapUpDetails details) => setState(() => isPressed = false);
+  void _onTapCancel() => setState(() => isPressed = false);
 
   @override
   Widget build(BuildContext context) {
     final isSelected = widget.selectedIndex == widget.index;
     final imageToShow = isPressed ? widget.pressedImage : widget.defaultImage;
-    final iconSize = 67.0;
 
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
       onTap: () => widget.onSelect(widget.index),
-      child: Container(
-        width: 74,
-        height: 74,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color:
-              isSelected && !isPressed
-                  ? Colors.white.withOpacity(0.7)
-                  : Colors.transparent,
-        ),
-        child: Center(
-          child: ClipOval(
-            child: Image.asset(imageToShow, width: iconSize, height: iconSize),
+      child: Center(
+        child: Container(
+          width: _containerSize,
+          height: _containerSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isSelected && !isPressed
+                ? Colors.white.withOpacity(0.7)
+                : Colors.transparent,
+          ),
+          child: Center(
+            child: ClipOval(
+              child: Image.asset(
+                imageToShow,
+                width: _iconSize,
+                height: _iconSize,
+              ),
+            ),
           ),
         ),
       ),

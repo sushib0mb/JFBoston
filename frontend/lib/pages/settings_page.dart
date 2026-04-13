@@ -1,9 +1,27 @@
+// =============================================================================
+// settings_page.dart
+//
+// Application settings screen for the JFBoston festival app.
+//
+// Features:
+//   - Share button: opens the native share sheet with the App Store link
+//   - About dialog: shows app name, version, and legal information
+//   - Credits section: lists the full development and design team
+//   - Admin code entry: hidden code field that triggers a login dialog to
+//     access the AdminPage (Supabase-authenticated)
+//   - Fixed layout constants: all sizing defined as static const — no
+//     MediaQuery math or isTablet checks
+//
+// Dependencies:
+//   - share_plus       : native share sheet
+//   - supabase_config  : Supabase client singleton
+//   - admin/admin_page : admin dashboard (accessed via code + login)
+// =============================================================================
+
 import 'package:flutter/material.dart';
 import '../config/supabase_config.dart';
 import 'admin/admin_page.dart';
 import 'package:share_plus/share_plus.dart';
-
-// import 'theme_notifier.dart';
 
 class SettingsPage extends StatefulWidget {
   static const routeName = '/settings';
@@ -14,6 +32,22 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  // ── Fixed layout constants ─────────────────────────────────────────────────
+  static const double _padH              = 8.0;
+  static const double _padV              = 8.0;
+  static const double _iconSize          = 24.0;
+  static const double _titleSize         = 16.0;
+  static const double _subtitleSize      = 14.0;
+  static const double _headerSize        = 20.0;
+  static const double _codeSectionHPad   = 38.0;  // _padH + 30
+  static const double _codeRowSpacing    = 16.0;
+  static const double _codeFieldHPad     = 12.0;
+  static const double _codeFieldVPad     = 12.0;
+  static const double _submitBtnRadius   = 4.0;
+  static const double _sectionGap        = 25.0;
+  static const double _borderWidth       = 2.0;
+  // ──────────────────────────────────────────────────────────────────────────
+
   final TextEditingController _codeController = TextEditingController();
 
   @override
@@ -24,202 +58,165 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive sizing
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isTablet = screenWidth >= 600;
-    final double padH = isTablet ? 24 : 8;
-    final double padV = isTablet ? 16 : 8;
-    final double iconSize = isTablet ? 32 : 24;
-    final double titleSize = isTablet ? 20 : 16;
-    final double subtitleSize = isTablet ? 18 : 14;
-    final double headerSize = isTablet ? 24 : 20;
-
-    // final theme = context.watch<ThemeNotifier>();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings', style: TextStyle(fontSize: headerSize)),
+        title: const Text('Settings', style: TextStyle(fontSize: _headerSize)),
       ),
       body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+        padding: const EdgeInsets.symmetric(
+          horizontal: _padH,
+          vertical: _padV,
+        ),
         children: [
-          // Share this app
+          // ── Share this app ───────────────────────────────────────────────
           ListTile(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: padH,
-              vertical: padV,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: _padH,
+              vertical: _padV,
             ),
-            leading: Icon(Icons.share, size: iconSize),
-            title: Text(
+            leading: const Icon(Icons.share, size: _iconSize),
+            title: const Text(
               'Share this App',
-              style: TextStyle(fontSize: titleSize),
+              style: TextStyle(fontSize: _titleSize),
             ),
             onTap: () {
-              final iosUrl =
+              const iosUrl =
                   'https://apps.apple.com/us/app/jfboston/id6744838556';
-              final link = iosUrl;
               Share.share(
-                'Check out the JFB Festival app! Download it now and plan your visit:\n$link',
+                'Check out the JFB Festival app! Download it now and plan your visit:\n$iosUrl',
                 subject: 'JFB Festival App',
               );
             },
           ),
 
-          // About & Version
-          AboutListTile(
-            icon: Icon(Icons.info_outline, size: iconSize),
+          // ── About & version ──────────────────────────────────────────────
+          const AboutListTile(
+            icon: Icon(Icons.info_outline, size: _iconSize),
             applicationName: 'JFBoston',
             applicationVersion: '1.0.0',
             applicationLegalese: '© 2025 Boston Japan Community Hub Inc.',
             aboutBoxChildren: [],
             dense: false,
-            child: Text('About', style: TextStyle(fontSize: titleSize)),
+            child: Text('About', style: TextStyle(fontSize: _titleSize)),
           ),
 
-          SizedBox(height: padV * 2),
+          SizedBox(height: _padV * 2),
 
-          // Credits header
-          Center(
+          // ── Credits header ───────────────────────────────────────────────
+          const Center(
             child: Text(
               'Credits',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: headerSize,
+                fontSize: _headerSize,
               ),
               textAlign: TextAlign.center,
             ),
           ),
 
-          SizedBox(height: padV),
+          const SizedBox(height: _padV),
 
-          // Credits list
+          // ── Credits list ─────────────────────────────────────────────────
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: const [
               Text(
                 'Application Development Team',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: titleSize,
+                  fontSize: _titleSize,
                 ),
               ),
-              SizedBox(height: padV / 2),
-              Text(
-                'Taizo Azuchi — Team Leader',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Jordan Lin — Lead Developer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Soi Hirose — Lead Developer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Ryusei Okamoto — Developer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Umi Imai — Developer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
+              SizedBox(height: _padV / 2),
+              Text('Taizo Azuchi — Team Leader',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Jordan Lin — Lead Developer',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Soi Hirose — Lead Developer',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Ryusei Okamoto — Developer',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Umi Imai — Developer',
+                  style: TextStyle(fontSize: _subtitleSize)),
 
-              SizedBox(height: padV),
+              SizedBox(height: _padV),
               Text(
                 'Application Design Team',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: titleSize,
+                  fontSize: _titleSize,
                 ),
               ),
-              SizedBox(height: padV / 2),
-              Text(
-                'Hiroharu Okabe — UI/UX Designer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Chikada Hanezu — UI/UX Designer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Mina Baba — UI/UX Designer',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Hayate Kosuga — Logo Animator',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
+              SizedBox(height: _padV / 2),
+              Text('Hiroharu Okabe — UI/UX Designer',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Chikada Hanezu — UI/UX Designer',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Mina Baba — UI/UX Designer',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Hayate Kosuga — Logo Animator',
+                  style: TextStyle(fontSize: _subtitleSize)),
 
-              SizedBox(height: padV),
+              SizedBox(height: _padV),
               Text(
                 'Special Thanks To',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: titleSize,
+                  fontSize: _titleSize,
                 ),
               ),
-              SizedBox(height: padV / 2),
-              Text(
-                'Nobuhiro Mitsuoka',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
-              Text(
-                'Yoshiatsu Murata',
-                style: TextStyle(fontSize: subtitleSize),
-              ),
+              SizedBox(height: _padV / 2),
+              Text('Nobuhiro Mitsuoka',
+                  style: TextStyle(fontSize: _subtitleSize)),
+              Text('Yoshiatsu Murata',
+                  style: TextStyle(fontSize: _subtitleSize)),
 
-              SizedBox(height: padV * 2),
+              SizedBox(height: _padV * 2),
             ],
           ),
 
-          SizedBox(height: 25),
+          const SizedBox(height: _sectionGap),
 
+          // ── Admin code entry ─────────────────────────────────────────────
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: padH + 30),
+            padding: const EdgeInsets.symmetric(horizontal: _codeSectionHPad),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Code',
                   style: TextStyle(
-                    fontSize: titleSize,
+                    fontSize: _titleSize,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: _codeRowSpacing),
                 Expanded(
                   child: TextField(
                     controller: _codeController,
                     decoration: const InputDecoration(
-                      border: OutlineInputBorder(), // Default state
+                      border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
-                        // Selected/Focused state
                         borderSide: BorderSide(
                           color: Color.fromARGB(255, 224, 105, 96),
-                          width: 2.0,
+                          width: _borderWidth,
                         ),
                       ),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
+                        horizontal: _codeFieldHPad,
+                        vertical: _codeFieldVPad,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: _codeRowSpacing),
                 ElevatedButton(
                   onPressed: _handleSubmit,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color.fromARGB(
-                      255,
-                      69,
-                      69,
-                      69,
-                    ), // Changes the text color to red
+                    foregroundColor: const Color.fromARGB(255, 69, 69, 69),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4.0),
+                      borderRadius: BorderRadius.circular(_submitBtnRadius),
                     ),
                   ),
                   child: const Text('Submit'),
@@ -232,107 +229,96 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Handles the admin code submission and routes to the appropriate action
+  // ---------------------------------------------------------------------------
   void _handleSubmit() {
-    // Read the text and remove any accidental whitespace
-    // final String inputCode = _codeController.text.trim().toLowerCase();
-
-    // TODO: TESTING PURPOSES ONLY, DELETE BEFORE PRODUCTION
-    final inputCode = "jfbadmin";
+    // TODO: TESTING PURPOSES ONLY — replace with _codeController.text.trim().toLowerCase() before production
+    const String inputCode = 'jfbadmin';
 
     if (inputCode.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter a code.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a code.')),
+      );
       return;
     }
 
-    // Check the input and execute different logic
     switch (inputCode) {
       case 'jfbadmin':
-        // If they type JFBADMIN, show the login dialog
         _showLoginDialog(context);
         break;
       case 'ilovejapan':
-        // Show some developer tools or a specific message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Japan loves you too!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Japan loves you too!')),
+        );
         break;
       default:
-        // Handle invalid or unknown codes
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid code entered.')));
-        // Optionally clear the text field
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid code entered.')),
+        );
         _codeController.clear();
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Shows the admin login dialog and navigates to AdminPage on success
+  // ---------------------------------------------------------------------------
   void _showLoginDialog(BuildContext context) {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    // TODO: ONLY FOR DEBUG!!! REMOVE BEFORE PRODUCTION!!
-    emailController.text = "jfbstudents@gmail.com";
-    passwordController.text = "jfbadmin";
+    // TODO: ONLY FOR DEBUG — remove pre-filled credentials before production
+    emailController.text = 'jfbstudents@gmail.com';
+    passwordController.text = 'jfbadmin';
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Admin Access'),
-            content: Column(
-              mainAxisSize:
-                  MainAxisSize.min, // Prevents dialog from taking full screen
-              children: [
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-                TextField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                ),
-              ],
+      builder: (context) => AlertDialog(
+        title: const Text('Admin Access'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context), // Closes the dialog
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                // Inside your ElevatedButton in the Dialog
-                onPressed: () async {
-                  try {
-                    // 1. Log in
-                    await supabase.auth.signInWithPassword(
-                      email: emailController.text.trim(),
-                      password: passwordController.text.trim(),
-                    );
-
-                    if (context.mounted) {
-                      // 2. Close the Login Dialog
-                      Navigator.pop(context);
-
-                      // 3. Navigate to the Admin Page
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const AdminPage(),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    // Show the error if login fails
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Access Denied: $e")),
-                    );
-                  }
-                },
-                child: const Text('Login'),
-              ),
-            ],
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await supabase.auth.signInWithPassword(
+                  email: emailController.text.trim(),
+                  password: passwordController.text.trim(),
+                );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AdminPage(),
+                    ),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Access Denied: $e')),
+                );
+              }
+            },
+            child: const Text('Login'),
+          ),
+        ],
+      ),
     );
   }
 }
