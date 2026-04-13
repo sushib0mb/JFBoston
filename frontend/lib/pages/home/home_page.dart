@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
     final sponsorService = Provider.of<SponsorService>(context);
 
     return Container(
-      backgroundColor: const Color(0xFFECE0CF),
+      color: const Color(0xFFECE0CF),
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
