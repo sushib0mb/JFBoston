@@ -43,8 +43,7 @@ class AdminPageState extends State<AdminPage> {
 
     final Map<String, String> stageOptions = {
       for (String stageName in ScheduleDataService.stageNames)
-        stageName:
-            stageName, // Sets both the key and the display value to the stageName
+        stageName: stageName,
     };
 
     return Scaffold(
@@ -78,7 +77,8 @@ class AdminPageState extends State<AdminPage> {
                   ),
                 ),
 
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
+
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(20),
@@ -86,90 +86,59 @@ class AdminPageState extends State<AdminPage> {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: SingleChildScrollView(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    StageSelectorPill(
-                                      selectedValue: selectedStage,
-                                      options: stageOptions,
-                                      onSelected: (String newValue) {
-                                        setState(() {
-                                          selectedStage = newValue;
-                                        });
-                                      },
-                                    ),
-
-                                    ElevatedButton(
-                                      // If the set is empty, onPressed is null (disables the button)
-                                      onPressed:
-                                          selectedPerformanceIds.isEmpty
-                                              ? null
-                                              : () => _showDelayDialog(context),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey[800],
-                                        foregroundColor: Colors.white,
-                                        disabledBackgroundColor:
-                                            Colors.grey[300],
-                                        disabledForegroundColor:
-                                            Colors.grey[500],
-                                        elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 17.5,
-                                          vertical: 10,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            9999,
-                                          ),
-                                        ),
-                                        textStyle: const TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      child: const Text("Delay Performance"),
-                                    ),
-
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.black,
-                                        iconColor: Colors.white,
-                                        padding: const EdgeInsets.all(12),
-                                        shape: const CircleBorder(),
-                                        minimumSize: Size.zero,
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    const EditPerformancePage(),
-                                          ),
-                                        );
-                                      },
-                                      child: const Icon(Icons.add, size: 24),
-                                    ),
-                                  ],
+                    // FIX: Replaced the outer SingleChildScrollView and Row with just the Column
+                    child: Column(
+                      children: [
+                        // 1. FIXED HEADER
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            StageSelectorPill(
+                              selectedValue: selectedStage,
+                              options: stageOptions,
+                              onSelected: (String newValue) {
+                                setState(() {
+                                  selectedStage = newValue;
+                                });
+                              },
+                            ),
+                            ElevatedButton(
+                              onPressed:
+                                  selectedPerformanceIds.isEmpty
+                                      ? null
+                                      : () => _showDelayDialog(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey[800],
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey[300],
+                                disabledForegroundColor: Colors.grey[500],
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 17.5,
+                                  vertical: 10,
                                 ),
-                                const SizedBox(height: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(9999),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              child: const Text("Delay"),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
 
-                                // Dynamically populate the events based on the selected stage
+                        // 2. SCROLLABLE MIDDLE SECTION
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
                                 ...sortedStageEvents.map((event) {
                                   return PerformanceBox(
-                                    key: ValueKey(
-                                      event.id,
-                                    ), // Keeps Flutter tracking the widgets properly
+                                    key: ValueKey(event.id),
                                     title: event.performanceName,
                                     startTime: event.time,
                                     duration: event.duration,
@@ -202,8 +171,35 @@ class AdminPageState extends State<AdminPage> {
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const EditPerformancePage(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              backgroundColor: Colors.grey[800],
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text(
+                              "Add Performance",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

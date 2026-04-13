@@ -1,30 +1,3 @@
-// =============================================================================
-// main.dart
-//
-// App entry point and root navigation shell for the JFBoston festival app.
-//
-// Features:
-//   - App initialisation: Hive, dotenv, Supabase, notifications, orientation lock
-//   - DevicePreview wrapper (enabled in debug mode only)
-//   - MultiProvider setup: ThemeNotifier, ScheduleDataService, SponsorService,
-//     DbImageService, LocationService
-//   - MyApp: MaterialApp with light/dark theme (Fredoka font) and named routes
-//   - MainScreen: IndexedStack tab shell with four pages —
-//       0: HomePage, 1: FoodPage, 2: TimetablePage, 3: MapPage
-//   - TopBar: centred logo (fixed 60 px, SafeArea-inset by parent)
-//   - BottomBar: frosted-glass pill bar with four ImageButton tabs;
-//     uses Expanded for even distribution — no screen-width math
-//   - ImageButton: tap-state toggle between default and pressed asset images
-//   - Fixed layout constants: all sizing defined as static const — no
-//     MediaQuery math or isTablet checks
-//
-// Navigation notes:
-//   - selectedMapLetter threads from MapPage zone buttons → FoodPage filter
-//   - selectedEvent and selectedDay thread into TimetablePage on deep-link
-//   - Switching away from tab 1 clears selectedMapLetter via pushReplacement
-// =============================================================================
-
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -100,6 +73,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeNotifier>(
+      // Keep DevicePreview wrappers from HEAD + new scaffoldBackgroundColor
+      // and ColorScheme from incoming branch
       builder: (context, theme, _) => MaterialApp(
         useInheritedMediaQuery: true,
         locale: DevicePreview.locale(context),
@@ -109,6 +84,11 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           brightness: Brightness.light,
           fontFamily: 'Fredoka',
+          // ── Incoming: new background + surface colour ──────────────────
+          scaffoldBackgroundColor: const Color(0xFFECE0CF),
+          colorScheme: const ColorScheme.light(
+            surface: Colors.white,
+          ),
         ),
         darkTheme: ThemeData(
           brightness: Brightness.dark,
@@ -248,7 +228,8 @@ class _MainScreenState extends State<MainScreen> {
               selectedMapLetter: null,
               selectedDay: _dayForTimetable,
             ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               final fadeTween = Tween(begin: 0.0, end: 1.0)
                   .chain(CurveTween(curve: Curves.easeInOut));
               return FadeTransition(
@@ -303,7 +284,6 @@ class TopBar extends StatelessWidget {
   final int selectedIndex;
   const TopBar({super.key, required this.selectedIndex});
 
-  // Fixed size — does not depend on screen dimensions
   static const double _logoSize = 60.0;
 
   @override
@@ -337,7 +317,6 @@ class BottomBar extends StatelessWidget {
     super.key,
   });
 
-  // All sizes are fixed constants — no screen-size math
   static const double _barHeight = 88.0;
   static const double _horizontalPadding = 12.0;
   static const double _bottomMargin = 20.0;
@@ -352,7 +331,6 @@ class BottomBar extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: _bottomMargin),
         child: Stack(
           children: [
-            // Blurred background
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(_borderRadius),
@@ -367,7 +345,6 @@ class BottomBar extends StatelessWidget {
                 ),
               ),
             ),
-            // Icons distributed evenly using Expanded — no manual spacing
             Row(
               children: [
                 Expanded(
@@ -416,8 +393,6 @@ class BottomBar extends StatelessWidget {
 }
 
 // ─── FIXED: ImageButton ───────────────────────────────────────────────────────
-// Replaced local final variables with static const — sizes never recalculated.
-// Center widget ensures proper alignment inside Expanded parent.
 class ImageButton extends StatefulWidget {
   final int index;
   final String defaultImage;
@@ -441,18 +416,12 @@ class ImageButton extends StatefulWidget {
 class _ImageButtonState extends State<ImageButton> {
   bool isPressed = false;
 
-  // Fixed constants — no runtime screen-size math
   static const double _containerSize = 60.0;
   static const double _iconSize = 52.0;
 
-  void _onTapDown(TapDownDetails details) =>
-      setState(() => isPressed = true);
-
-  void _onTapUp(TapUpDetails details) =>
-      setState(() => isPressed = false);
-
-  void _onTapCancel() =>
-      setState(() => isPressed = false);
+  void _onTapDown(TapDownDetails details) => setState(() => isPressed = true);
+  void _onTapUp(TapUpDetails details) => setState(() => isPressed = false);
+  void _onTapCancel() => setState(() => isPressed = false);
 
   @override
   Widget build(BuildContext context) {

@@ -1,62 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:jfbfestival/services/location_service.dart';
+import 'package:provider/provider.dart';
 
 class StageHeader extends StatelessWidget {
-  final double fontSize;
-  final double timeColumnWidth;
+  final List<String> stageNames;
+  final List<String> stageLabels;
+  final String selectedStage;
+  final bool isTablet;
+  final ValueChanged<String> onStageSelected;
 
   const StageHeader({
     super.key,
-    required this.fontSize,
-    required this.timeColumnWidth,
+    required this.stageNames,
+    required this.stageLabels,
+    required this.selectedStage,
+    required this.isTablet,
+    required this.onStageSelected,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 25, bottom: 10, left: 13),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
-        children: [
-          // Spacer matching the time column width
-          SizedBox(width: timeColumnWidth),
-          // Stage 1
-          Expanded(child: _stageLabel('Boston Common', fontSize - 1.5)),
-          _divider(),
-          // Stage 2
-          Expanded(child: _stageLabel('Downtown', fontSize)),
-          _divider(),
-          // Stage 3
-          Expanded(child: _stageLabel('Stage 3', fontSize)),
-        ],
+        children: List.generate(stageNames.length, (i) {
+          final isSelected = selectedStage == stageNames[i];
+          final loc = context.watch<LocationService>();
+          final dist = loc.formatDistance(stageNames[i]);
+
+          return Expanded(
+            child: GestureDetector(
+              // Trigger the callback to update the parent's state
+              onTap: () => onStageSelected(stageNames[i]),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected
+                          ? const Color(0xFFBF1D23)
+                          : const Color(0xFFD4706E),
+                  borderRadius: BorderRadius.circular(36),
+                ),
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      stageLabels[i],
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isTablet ? 13 : 10.5,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    if (dist.isNotEmpty)
+                      Text(
+                        dist,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: isTablet ? 11 : 9,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
 }
-
-Widget _divider() => Container(
-  width: 3,
-  height: 30,
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
-  ),
-);
-
-Widget _stageLabel(String txt, double fs) => Container(
-  height: 50,
-  decoration: BoxDecoration(
-    color: const Color(0xFF8D8D97),
-    borderRadius: BorderRadius.circular(36),
-  ),
-  alignment: Alignment.center,
-  child: Text(
-    txt,
-    style: TextStyle(
-      fontSize: fs,
-      fontWeight: FontWeight.w500,
-      color: Colors.white,
-    ),
-    overflow: TextOverflow.ellipsis,
-    maxLines: 1,
-    textAlign: TextAlign.center,
-  ),
-);

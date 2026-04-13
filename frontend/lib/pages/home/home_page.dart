@@ -1,30 +1,3 @@
-// =============================================================================
-// home_page.dart
-//
-// Main landing screen for the JFBoston festival app.
-//
-// Features:
-//   - Auto-scrolling image carousel with dot indicators
-//   - Live timetable widget showing current and upcoming stage events
-//   - Social media icon row (Instagram, Facebook, website)
-//   - Sponsor section with category grouping and image grid
-//   - Settings button (top-right, SafeArea-inset) navigating to SettingsPage
-//   - One-time allergy disclaimer dialog (persisted via SharedPreferences)
-//   - Fixed layout constants: all sizing defined as static const — no
-//     MediaQuery math or isTablet checks
-//
-// Festival date config (single source of truth):
-//   festivalDays, festivalStartYear/Month/Day, festivalLocation
-//   getFestivalDay(DateTime) — returns 1-based day index, -1 (before), or 0 (after)
-//
-// Dependencies:
-//   - provider           : SponsorService, DbImageService
-//   - url_launcher       : social media links
-//   - live_timetable     : LiveTimetable widget
-//   - timetable_data     : EventItem model
-//   - settings_page      : SettingsPage navigation target
-// =============================================================================
-
 // Removed black arrow from map and added to timetable
 
 import 'dart:async';
@@ -41,7 +14,8 @@ import '../settings_page.dart';
 const int festivalDays = 2;
 const int festivalStartYear = 2026;
 const int festivalStartMonth = 4;
-const int festivalStartDay = 1;
+// ── Incoming: updated start day ───────────────────────────────────────────────
+const int festivalStartDay = 12;
 const String festivalLocation = "Boston Common";
 
 /// Returns the current festival day (1-based), or 0 if not during the festival.
@@ -96,20 +70,21 @@ class _HomePageState extends State<HomePage> {
   static const int _virtualPageCount = 100000;
 
   // ── Fixed layout constants — no screen-size math ──────────────────────────
-  static const double _headerHeight         = 320.0;
-  static const double _sectionSpacing       = 16.0;
-  static const double _settingsBtnSize      = 52.0;
-  static const double _settingsIconSize     = 28.0;
-  static const double _settingsIconPadding  = 10.0;
-  static const double _settingsRightPad     = 16.0;
-  static const double _settingsTopPad       = 8.0;
-  static const double _dotSelected          = 10.0;
-  static const double _dotUnselected        = 6.0;
-  static const double _dotHorizontalMargin  = 4.0;
-  static const double _dotsBottomPad        = 12.0;
-  static const double _sponsorImgHeight     = 80.0;
-  static const double _sponsorImgWidth      = 120.0;
+  static const double _headerHeight          = 320.0;
+  static const double _sectionSpacing        = 16.0;
+  static const double _settingsBtnSize       = 52.0;
+  static const double _settingsIconSize      = 28.0;
+  static const double _settingsIconPadding   = 10.0;
+  static const double _settingsRightPad      = 16.0;
+  static const double _settingsTopPad        = 8.0;
+  static const double _dotSelected           = 10.0;
+  static const double _dotUnselected         = 6.0;
+  static const double _dotHorizontalMargin   = 4.0;
+  static const double _dotsBottomPad         = 12.0;
+  static const double _sponsorImgHeight      = 80.0;
+  static const double _sponsorImgWidth       = 120.0;
   static const double _sponsorSectionSpacing = 8.0;
+  // ──────────────────────────────────────────────────────────────────────────
 
   late final PageController _pageController;
   int _currentPage = 0;
@@ -129,10 +104,8 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DbImageService>(
-        context,
-        listen: false,
-      ).fetchFolder('homeImages');
+      Provider.of<DbImageService>(context, listen: false)
+          .fetchFolder('homeImages');
     });
   }
 
@@ -168,7 +141,7 @@ class _HomePageState extends State<HomePage> {
     final sponsorService = Provider.of<SponsorService>(context);
 
     return Container(
-      color: const Color(0xFFFFF5F5),
+      backgroundColor: const Color(0xFFECE0CF),
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -188,7 +161,7 @@ class _HomePageState extends State<HomePage> {
               SingleChildScrollView(
                 child: Column(
                   children: [
-                    // ── Carousel header (fixed height constant) ───────────
+                    // ── Carousel header ───────────────────────────────────
                     SizedBox(
                       width: double.infinity,
                       height: _headerHeight,
@@ -210,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                               );
                             },
                           ),
-                          // ── Dot indicators (all fixed constants) ─────────
+                          // ── Dot indicators ────────────────────────────
                           Positioned(
                             bottom: _dotsBottomPad,
                             left: 0,
@@ -245,7 +218,6 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     const SizedBox(height: _sectionSpacing),
-                    // ── screenWidth param removed from LiveTimetable ──────
                     LiveTimetable(
                       festivalDays: festivalDays,
                       festivalLocation: festivalLocation,
@@ -261,8 +233,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              // ── Settings button ───────────────────────────────────────
-              // SafeArea handles status bar inset — no manual padding.top math
+              // ── Settings button — SafeArea handles status bar inset ───────
               SafeArea(
                 child: Align(
                   alignment: Alignment.topRight,
@@ -316,7 +287,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ── screenWidth param removed — method uses const EdgeInsets only ──────────
   Widget _buildSocialMediaIcons() {
     return Container(
       margin: const EdgeInsets.all(16),
@@ -372,7 +342,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ── screenWidth param removed — spacing replaced with fixed constant ───────
   Widget _buildSponsorsSection(SponsorService service) {
     final Map<String, List<String>> groupedSponsors = {};
     for (var sponsor in service.sponsors) {
@@ -392,7 +361,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       child: Column(
-        // Fixed constant replaces screenWidth * 0.02
         spacing: _sponsorSectionSpacing,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -429,14 +397,16 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           itemCount: images.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: images.length > 1 ? 2 : 1,
+            // ── Incoming: improved 3-item grid handling ───────────────────
+            crossAxisCount:
+                images.length == 3 ? 3 : (images.length > 1 ? 2 : 1),
             crossAxisSpacing: 4,
             mainAxisSpacing: 10,
-            childAspectRatio: images.length > 1 ? 3 : 4,
+            childAspectRatio:
+                images.length == 3 ? 1.5 : (images.length > 1 ? 3 : 4),
           ),
           itemBuilder: (context, index) {
             return Center(
-              // Fixed constants replace MediaQuery height/width multiplications
               child: SizedBox(
                 height: _sponsorImgHeight,
                 width: _sponsorImgWidth,

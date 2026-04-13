@@ -17,7 +17,8 @@
 // =============================================================================
 
 import 'package:flutter/material.dart';
-import '../main.dart';
+
+enum MapSection { downtown, bostonCommon }
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -26,6 +27,7 @@ class MapPage extends StatefulWidget {
   MapPageState createState() => MapPageState();
 }
 
+<<<<<<< HEAD
 class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   bool _isMiniWindowVisible = false;
   String _selectedFilter = 'All';
@@ -64,16 +66,22 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   void _toggleMiniWindow() {
+=======
+class MapPageState extends State<MapPage> {
+  MapSection _selectedMap = MapSection.bostonCommon;
+
+  void _toggleMap() {
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
     setState(() {
-      _isMiniWindowVisible = !_isMiniWindowVisible;
-      if (_isMiniWindowVisible) {
-        _animationController.forward();
+      if (_selectedMap == MapSection.bostonCommon) {
+        _selectedMap = MapSection.downtown;
       } else {
-        _animationController.reverse();
+        _selectedMap = MapSection.bostonCommon;
       }
     });
   }
 
+<<<<<<< HEAD
   void _selectFilter(String filter) {
     setState(() {
       _selectedFilter = (_selectedFilter == filter) ? 'All' : filter;
@@ -101,12 +109,19 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
   }
 
+=======
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
   @override
   Widget build(BuildContext context) {
-    final Size screenSize = MediaQuery.of(context).size;
-    final bool isFilterActive = _selectedFilter != 'All';
-    final String targetMapImage =
-        mapImages[_selectedFilter] ?? mapImages['All']!;
+    final String currentMapImage =
+        _selectedMap == MapSection.bostonCommon
+            ? 'assets/MapNew.png'
+            : 'assets/MapNew2.png';
+
+    final String toggleButtonLabel =
+        _selectedMap == MapSection.bostonCommon
+            ? 'View Downtown'
+            : 'View Boston Common';
 
     // ── Responsive sizing ────────────────────────────────────────────────────
     final bool isTablet = screenSize.width >= 600;
@@ -133,22 +148,11 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color.fromRGBO(10, 56, 117, 0.15),
-                  Color.fromRGBO(191, 28, 36, 0.15),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
+          Container(color: const Color(0xFFECE0CF)),
 
           // Centred map with animated cross-fade between filter states
           Center(
+<<<<<<< HEAD
             child: AnimatedCrossFade(
               firstChild: _buildMapContainer(
                 screenSize,
@@ -261,21 +265,62 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                                   filterBtnVertPad, filterBtnVertMar,
                                   filterLabelSize),
                             ],
+=======
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: MediaQuery.of(context).size.width * 0.25,
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          24,
+                        ), // Rounded edges
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      // ClipRRect ensures the image doesn't bleed over the rounded corners
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: InteractiveViewer(
+                          minScale: 1.0,
+                          maxScale: 4.0, // Allows users to zoom in 4x
+                          constrained: true,
+                          child: Image.asset(
+                            currentMapImage,
+                            fit: BoxFit.contain,
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
 
+<<<<<<< HEAD
           // Filter icon button (top-right)
+=======
+          // Top Right Toggle Button
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
           Positioned(
             top: filterIconTop,
             right: filterIconRight,
             child: GestureDetector(
+<<<<<<< HEAD
               onTap: _toggleMiniWindow,
               child: AnimatedContainer(
                 duration: _animationDuration,
@@ -286,6 +331,17 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   color: _isMiniWindowVisible || isFilterActive
                       ? Colors.grey.shade300
                       : Colors.white,
+=======
+              onTap: _toggleMap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -294,6 +350,7 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ),
                   ],
                 ),
+<<<<<<< HEAD
                 padding: EdgeInsets.all(filterIconPad),
                 child: ClipOval(
                   child: Image.asset(
@@ -303,6 +360,22 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                         ? Colors.black
                         : null,
                   ),
+=======
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.map, color: Colors.black87, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      toggleButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
                 ),
               ),
             ),
@@ -311,6 +384,7 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       ),
     );
   }
+<<<<<<< HEAD
 
   // ---------------------------------------------------------------------------
   // Map container: white card holding the map image + optional zone buttons
@@ -454,3 +528,6 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
   }
 }
+=======
+}
+>>>>>>> 79ec797026e91f15f0a8fddf7bc9a24dab5dd902
