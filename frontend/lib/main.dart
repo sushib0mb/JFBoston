@@ -53,16 +53,19 @@ void main() async {
   runApp(
     DevicePreview(
       enabled: kDebugMode,
-      builder: (context) => MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-          ChangeNotifierProvider(create: (_) => ScheduleDataService(supabase)),
-          ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
-          ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
-          ChangeNotifierProvider(create: (_) => LocationService()),
-        ],
-        child: const MyApp(),
-      ),
+      builder:
+          (context) => MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+              ChangeNotifierProvider(
+                create: (_) => ScheduleDataService(supabase),
+              ),
+              ChangeNotifierProvider(create: (_) => SponsorService(supabase)),
+              ChangeNotifierProvider(create: (_) => DbImageService(supabase)),
+              ChangeNotifierProvider(create: (_) => LocationService()),
+            ],
+            child: const MyApp(),
+          ),
     ),
   );
 }
@@ -75,31 +78,28 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeNotifier>(
       // Keep DevicePreview wrappers from HEAD + new scaffoldBackgroundColor
       // and ColorScheme from incoming branch
-      builder: (context, theme, _) => MaterialApp(
-        useInheritedMediaQuery: true,
-        locale: DevicePreview.locale(context),
-        builder: DevicePreview.appBuilder,
-        debugShowCheckedModeBanner: false,
-        title: 'JFB Festival',
-        theme: ThemeData(
-          brightness: Brightness.light,
-          fontFamily: 'Fredoka',
-          // ── Incoming: new background + surface colour ──────────────────
-          scaffoldBackgroundColor: const Color(0xFFECE0CF),
-          colorScheme: const ColorScheme.light(
-            surface: Colors.white,
+      builder:
+          (context, theme, _) => MaterialApp(
+            useInheritedMediaQuery: true,
+            locale: DevicePreview.locale(context),
+            builder: DevicePreview.appBuilder,
+            debugShowCheckedModeBanner: false,
+            title: 'JFB Festival',
+            theme: ThemeData(
+              brightness: Brightness.light,
+              fontFamily: 'Fredoka',
+              // ── Incoming: new background + surface colour ──────────────────
+              scaffoldBackgroundColor: const Color(0xFFECE0CF),
+              colorScheme: const ColorScheme.light(surface: Colors.white),
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              fontFamily: 'Fredoka',
+            ),
+            themeMode: theme.mode,
+            home: const MainScreen(),
+            routes: {SettingsPage.routeName: (_) => const SettingsPage()},
           ),
-        ),
-        darkTheme: ThemeData(
-          brightness: Brightness.dark,
-          fontFamily: 'Fredoka',
-        ),
-        themeMode: theme.mode,
-        home: const MainScreen(),
-        routes: {
-          SettingsPage.routeName: (_) => const SettingsPage(),
-        },
-      ),
     );
   }
 }
@@ -200,13 +200,14 @@ class _MainScreenState extends State<MainScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: isChecked
-                      ? () async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool(_kAllergyDisclaimerKey, true);
-                          if (context.mounted) Navigator.of(context).pop();
-                        }
-                      : null,
+                  onPressed:
+                      isChecked
+                          ? () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool(_kAllergyDisclaimerKey, true);
+                            if (context.mounted) Navigator.of(context).pop();
+                          }
+                          : null,
                   child: const Text('Confirm'),
                 ),
               ],
@@ -224,16 +225,23 @@ class _MainScreenState extends State<MainScreen> {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => MainScreen(
-              initialIndex: index,
-              selectedEvent: widget.selectedEvent,
-              selectedMapLetter: null,
-              selectedDay: _dayForTimetable,
-            ),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              final fadeTween = Tween(begin: 0.0, end: 1.0)
-                  .chain(CurveTween(curve: Curves.easeInOut));
+            pageBuilder:
+                (context, animation, secondaryAnimation) => MainScreen(
+                  initialIndex: index,
+                  selectedEvent: widget.selectedEvent,
+                  selectedMapLetter: null,
+                  selectedDay: _dayForTimetable,
+                ),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              final fadeTween = Tween(
+                begin: 0.0,
+                end: 1.0,
+              ).chain(CurveTween(curve: Curves.easeInOut));
               return FadeTransition(
                 opacity: animation.drive(fadeTween),
                 child: child,
@@ -256,7 +264,7 @@ class _MainScreenState extends State<MainScreen> {
         selectedDay: _dayForTimetable,
         initialStage: widget.initialStage,
       ),
-      MapPage(),
+      MapPage(supabase),
     ];
 
     return Scaffold(
@@ -299,10 +307,7 @@ class TopBar extends StatelessWidget {
           width: _logoSize,
           height: _logoSize,
           child: ClipOval(
-            child: Image.asset(
-              'assets/JFBLogo.png',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/JFBLogo.png', fit: BoxFit.cover),
           ),
         ),
       ),
@@ -445,9 +450,10 @@ class _ImageButtonState extends State<ImageButton> {
           height: _containerSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isSelected && !isPressed
-                ? Colors.white.withOpacity(0.7)
-                : Colors.transparent,
+            color:
+                isSelected && !isPressed
+                    ? Colors.white.withOpacity(0.7)
+                    : Colors.transparent,
           ),
           child: Center(
             child: ClipOval(
