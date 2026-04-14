@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../data/food_booths.dart';
+import '../../models/food_booth.dart';
 import 'components/payment_filter.dart';
 import 'components/vegan_filter.dart';
 import 'components/allergy_filter.dart';
 import 'components/booth_details.dart';
-import '../../data/food_booths.dart';
-import '../../models/food_booth.dart';
 import 'components/top_action_buttons.dart';
 import 'components/search_bar.dart';
 
@@ -114,6 +115,16 @@ class _FoodPageState extends State<FoodPage> {
     currentMapLetter = widget.selectedMapLetter;
     _applyInitialMapFilter();
     filteredBooths.sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-apply filters whenever FoodService notifies (data loaded/updated)
+    Provider.of<FoodService>(context);
+    if (foodBooths.isNotEmpty && filteredBooths.isEmpty) {
+      _applyFilters();
+    }
   }
 
   @override
@@ -268,9 +279,20 @@ class _FoodPageState extends State<FoodPage> {
     final bool showSplitSections =
         safeBooths.isNotEmpty || unsafeBoothsWithAllergens.isNotEmpty;
 
+    // If filteredBooths is empty but foodBooths has loaded (async),
+    // and no filters are active, show all booths directly.
+    final bool noActiveFilters = selectedLocation == 'All' &&
+        selectedPayments.isEmpty &&
+        selectedAllergens.isEmpty &&
+        (veganOnly != true) &&
+        _searchController.text.isEmpty;
+
     final List<FoodBooth> boothsToShow = showSplitSections
         ? [...safeBooths, ...unsafeBoothsWithAllergens]
-        : filteredBooths;
+        : (filteredBooths.isEmpty && noActiveFilters
+            ? (List<FoodBooth>.from(foodBooths)
+              ..sort((a, b) => a.name.compareTo(b.name)))
+            : filteredBooths);
 
     // Empty state
     if (boothsToShow.isEmpty) {

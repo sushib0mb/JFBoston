@@ -1,12 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase/supabase.dart';
 import 'dart:async';
 import '../models/food_booth.dart';
 import '../models/dish.dart';
 
-// Global list to store food booths data
+// Global list to store food booths data (kept for backward compat)
 final List<FoodBooth> foodBooths = [];
 
-class FoodService {
+class FoodService extends ChangeNotifier {
   final SupabaseClient _supabaseClient;
   StreamSubscription? _foodBoothsSubscription;
   StreamSubscription? _dishesSubscription;
@@ -26,6 +27,7 @@ class FoodService {
       foodBooths.clear();
       foodBooths.addAll(fetchedBooths);
       foodBooths.sort((a, b) => a.name.compareTo(b.name));
+      notifyListeners();
     } catch (e) {
       print('Error fetching initial food booths data: $e');
     }
@@ -149,9 +151,11 @@ Future<List<FoodBooth>> getFoodBooths() async {
   }
 }
 
+  @override
   void dispose() {
     _foodBoothsSubscription?.cancel();
     _dishesSubscription?.cancel();
+    super.dispose();
   }
 }
 

@@ -97,9 +97,12 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
     // 1. Check if festival is active
     if (widget.dayNumber <= 0) {
-      return _buildMessageCard(widget.dayNumber == -1
-          ? "See you at ${widget.festivalLocation}!"
-          : "Thank you for visiting, and see you next year!");
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: _buildMessageCard(widget.dayNumber == -1
+            ? "See you at ${widget.festivalLocation}!"
+            : "Thank you for visiting, and see you next year!"),
+      );
     }
 
     // 2. Load Schedule Data
@@ -137,14 +140,17 @@ class _LiveTimetableState extends State<LiveTimetable> {
   // ── UI Components ────────────────────────────────────────────────────────
 
   Widget _buildMessageCard(String message) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: _cardVerticalPad),
+      child: Container(
+        padding: const EdgeInsets.all(_cardPadding),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(_cardBorderRadius),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, spreadRadius: 2)],
+        ),
+        child: Center(child: Text(message, style: const TextStyle(fontSize: _statusFontSize))),
       ),
-      child: Center(child: Text(message, style: const TextStyle(fontSize: _statusFontSize))),
     );
   }
 
