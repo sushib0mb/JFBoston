@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../data/food_booths.dart';
+import '../../models/food_booth.dart';
 import 'components/payment_filter.dart';
 import 'components/vegan_filter.dart';
 import 'components/allergy_filter.dart';
 import 'components/booth_details.dart';
-import '../../data/food_booths.dart';
-import '../../models/food_booth.dart';
 import 'components/top_action_buttons.dart';
 import 'components/search_bar.dart';
 
@@ -117,6 +118,16 @@ class _FoodPageState extends State<FoodPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-apply filters whenever FoodService notifies (data loaded/updated)
+    Provider.of<FoodService>(context);
+    if (foodBooths.isNotEmpty && filteredBooths.isEmpty) {
+      _applyFilters();
+    }
+  }
+
+  @override
   void didUpdateWidget(FoodPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedMapLetter != oldWidget.selectedMapLetter) {
@@ -184,7 +195,7 @@ class _FoodPageState extends State<FoodPage> {
           Column(
             children: [
               // Safe-area + header space using fixed padding
-              SizedBox(height: topInset + 80),
+              SizedBox(height: topInset + 84),
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(25),
@@ -250,7 +261,6 @@ class _FoodPageState extends State<FoodPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 16),
                 _buildAllBoothsSection(),
                 const SizedBox(height: 40),
               ],
@@ -268,9 +278,20 @@ class _FoodPageState extends State<FoodPage> {
     final bool showSplitSections =
         safeBooths.isNotEmpty || unsafeBoothsWithAllergens.isNotEmpty;
 
+    // If filteredBooths is empty but foodBooths has loaded (async),
+    // and no filters are active, show all booths directly.
+    final bool noActiveFilters = selectedLocation == 'All' &&
+        selectedPayments.isEmpty &&
+        selectedAllergens.isEmpty &&
+        (veganOnly != true) &&
+        _searchController.text.isEmpty;
+
     final List<FoodBooth> boothsToShow = showSplitSections
         ? [...safeBooths, ...unsafeBoothsWithAllergens]
-        : filteredBooths;
+        : (filteredBooths.isEmpty && noActiveFilters
+            ? (List<FoodBooth>.from(foodBooths)
+              ..sort((a, b) => a.name.compareTo(b.name)))
+            : filteredBooths);
 
     // Empty state
     if (boothsToShow.isEmpty) {
@@ -303,7 +324,6 @@ class _FoodPageState extends State<FoodPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 40),
 
         // Map section label
         if (widget.selectedMapLetter != null)
@@ -359,8 +379,8 @@ class _FoodPageState extends State<FoodPage> {
     itemCount: booths.length,
     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
       maxCrossAxisExtent: 400,
-      mainAxisSpacing: 24,
-      crossAxisSpacing: 24,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
       mainAxisExtent: 340, // Fixed height for alignment
     ),
     itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),

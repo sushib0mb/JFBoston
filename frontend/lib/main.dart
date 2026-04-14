@@ -48,7 +48,6 @@ void main() async {
   await notificationService.init();
 
   developer.log('Supabase client initialized: $supabase', name: 'SupabaseInit');
-  initFoodBoothsService(supabase);
 
   runApp(
     DevicePreview(
@@ -57,6 +56,9 @@ void main() async {
           (context) => MultiProvider(
             providers: [
               ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+              ChangeNotifierProvider(
+                create: (_) => FoodService(supabase)..initialize(),
+              ),
               ChangeNotifierProvider(
                 create: (_) => ScheduleDataService(supabase),
               ),
