@@ -195,7 +195,7 @@ class _FoodPageState extends State<FoodPage> {
           Column(
             children: [
               // Safe-area + header space using fixed padding
-              SizedBox(height: topInset + 80),
+              SizedBox(height: topInset + 84),
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(25),
@@ -261,7 +261,6 @@ class _FoodPageState extends State<FoodPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 16),
                 _buildAllBoothsSection(),
                 const SizedBox(height: 40),
               ],
@@ -325,7 +324,6 @@ class _FoodPageState extends State<FoodPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 40),
 
         // Map section label
         if (widget.selectedMapLetter != null)
@@ -381,8 +379,8 @@ class _FoodPageState extends State<FoodPage> {
     itemCount: booths.length,
     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
       maxCrossAxisExtent: 400,
-      mainAxisSpacing: 24,
-      crossAxisSpacing: 24,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
       mainAxisExtent: 340, // Fixed height for alignment
     ),
     itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
