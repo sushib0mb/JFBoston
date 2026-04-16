@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
   static const int _virtualPageCount = 100000;
 
   // ── Fixed layout constants — no screen-size math ──────────────────────────
-  static const double _headerHeight = 580.0;
+
   static const double _sectionSpacing = 16.0;
   static const double _settingsBtnSize = 52.0;
   static const double _settingsIconSize = 28.0;
@@ -141,6 +141,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     // ── No screenWidth / screenHeight / isTablet variables ────────────────
+    final double headerHeight = MediaQuery.of(context).size.height * 0.72;
     final sponsorService = Provider.of<SponsorService>(context);
 
     return Container(
@@ -156,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                   // ── Carousel header ───────────────────────────────────
                   SizedBox(
                     width: double.infinity,
-                    height: _headerHeight,
+                    height: headerHeight,
                     child: Stack(
                       children: [
                         PageView.builder(
@@ -171,7 +172,7 @@ class _HomePageState extends State<HomePage> {
                               imagePath,
                               fit: BoxFit.cover,
                               width: double.infinity,
-                              height: _headerHeight,
+                              height: headerHeight,
                               alignment: Alignment.center,
                             );
                           },

@@ -11,8 +11,8 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
-  bool _isMainStageMap = true;
-  final Duration _animationDuration = const Duration(milliseconds: 300);
+  late final PageController _pageController;
+  int _currentPage = 0;
 
   final String _mainStageFile = 'mapImages/MainMap.png';
   final String _downtownFile = 'mapImages/DowntownMap.png';
@@ -20,12 +20,23 @@ class MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _toggleMap() {
-    setState(() {
-      _isMainStageMap = !_isMainStageMap;
-    });
+    final next = _currentPage == 0 ? 1 : 0;
+    _pageController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOutCubic,
+    );
+    setState(() => _currentPage = next);
   }
 
   String _getSupabaseImageUrl(String fileName) {
@@ -36,9 +47,7 @@ class MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
 
-    // ── Responsive sizing ────────────────────────────────────────────────────
     final bool isTablet = screenSize.width >= 600;
-    final double mapContainerWidth = isTablet ? 0.80 : 0.85;
     final double mapContainerHeight = isTablet ? 0.60 : 0.65;
 
     final double buttonTop =
@@ -51,30 +60,22 @@ class MapPageState extends State<MapPage> {
         children: [
           Container(color: const Color(0xFFECE0CF)),
 
-          // Map Container
+          // Map PageView for smooth slide
           Center(
-            child: AnimatedCrossFade(
-              firstChild: _buildMapContainer(
-                screenSize,
-                _mainStageFile,
-                mapContainerWidth,
-                mapContainerHeight,
+            child: SizedBox(
+              height: screenSize.height * mapContainerHeight,
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                children: [
+                  _buildMapContainer(screenSize, _mainStageFile, mapContainerHeight),
+                  _buildMapContainer(screenSize, _downtownFile, mapContainerHeight),
+                ],
               ),
-              secondChild: _buildMapContainer(
-                screenSize,
-                _downtownFile,
-                mapContainerWidth,
-                mapContainerHeight,
-              ),
-              crossFadeState:
-                  _isMainStageMap
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
-              duration: _animationDuration,
             ),
           ),
 
-          // Toggle Map Button
+          // Toggle button
           Positioned(
             top: buttonTop,
             right: buttonRight,
@@ -82,7 +83,7 @@ class MapPageState extends State<MapPage> {
               onPressed: _toggleMap,
               icon: const Icon(Icons.swap_horiz, color: Colors.black87),
               label: Text(
-                _isMainStageMap ? 'Downtown' : 'Main Stage',
+                _currentPage == 0 ? 'Downtown' : 'Main Stage',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,
@@ -90,10 +91,7 @@ class MapPageState extends State<MapPage> {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -106,12 +104,7 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildMapContainer(
-    Size screenSize,
-    String fileName,
-    double widthFactor,
-    double heightFactor,
-  ) {
+  Widget _buildMapContainer(Size screenSize, String fileName, double heightFactor) {
     return Container(
       height: screenSize.height * heightFactor,
       margin: const EdgeInsets.symmetric(horizontal: 25),
@@ -127,39 +120,31 @@ class MapPageState extends State<MapPage> {
         ],
       ),
       padding: const EdgeInsets.all(10),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.network(
-                  _getSupabaseImageUrl(fileName),
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                  errorBuilder:
-                      (context, error, stackTrace) => const Center(
-                        // Replaced the broken image icon with text
-                        child: Text(
-                          "Map Coming Soon!",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Image.network(
+            _getSupabaseImageUrl(fileName),
+            fit: BoxFit.contain,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return const Center(child: CircularProgressIndicator());
+            },
+            errorBuilder: (context, error, stackTrace) => const Center(
+              child: Text(
+                "Map Coming Soon!",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
