@@ -380,9 +380,9 @@ class _FoodPageState extends State<FoodPage> {
     itemCount: booths.length,
     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
       maxCrossAxisExtent: 400,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      mainAxisExtent: 340, // Fixed height for alignment
+      mainAxisSpacing: 32,
+      crossAxisSpacing: 32,
+      mainAxisExtent: 370, // Fixed height for alignment
     ),
     itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
   );
