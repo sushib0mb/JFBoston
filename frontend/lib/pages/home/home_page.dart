@@ -26,8 +26,10 @@ int getFestivalDay(DateTime now) {
     festivalStartDay,
   );
   final end = start.add(const Duration(days: festivalDays));
-  if (now.isBefore(start)) return -1;
-  else if (!now.isBefore(end)) return 0;
+  if (now.isBefore(start))
+    return -1;
+  else if (!now.isBefore(end))
+    return 0;
   return now.difference(start).inDays + 1;
 }
 
@@ -70,19 +72,19 @@ class _HomePageState extends State<HomePage> {
   static const int _virtualPageCount = 100000;
 
   // ── Fixed layout constants — no screen-size math ──────────────────────────
-  static const double _headerHeight          = 580.0;
-  static const double _sectionSpacing        = 16.0;
-  static const double _settingsBtnSize       = 52.0;
-  static const double _settingsIconSize      = 28.0;
-  static const double _settingsIconPadding   = 10.0;
-  static const double _settingsRightPad      = 16.0;
-  static const double _settingsTopPad        = 8.0;
-  static const double _dotSelected           = 10.0;
-  static const double _dotUnselected         = 6.0;
-  static const double _dotHorizontalMargin   = 4.0;
-  static const double _dotsBottomPad         = 12.0;
-  static const double _sponsorImgHeight      = 80.0;
-  static const double _sponsorImgWidth       = 120.0;
+  static const double _headerHeight = 580.0;
+  static const double _sectionSpacing = 16.0;
+  static const double _settingsBtnSize = 52.0;
+  static const double _settingsIconSize = 28.0;
+  static const double _settingsIconPadding = 10.0;
+  static const double _settingsRightPad = 16.0;
+  static const double _settingsTopPad = 8.0;
+  static const double _dotSelected = 10.0;
+  static const double _dotUnselected = 6.0;
+  static const double _dotHorizontalMargin = 4.0;
+  static const double _dotsBottomPad = 12.0;
+  static const double _sponsorImgHeight = 80.0;
+  static const double _sponsorImgWidth = 120.0;
   static const double _sponsorSectionSpacing = 8.0;
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -104,8 +106,10 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DbImageService>(context, listen: false)
-          .fetchFolder('homeImages');
+      Provider.of<DbImageService>(
+        context,
+        listen: false,
+      ).fetchFolder('homeImages');
     });
   }
 
@@ -172,8 +176,9 @@ class _HomePageState extends State<HomePage> {
                             itemCount: _virtualPageCount,
                             onPageChanged: _handlePageChanged,
                             itemBuilder: (context, index) {
-                              final imagePath = backgroundImages[
-                                  index % backgroundImages.length];
+                              final imagePath =
+                                  backgroundImages[index %
+                                      backgroundImages.length];
                               return Image.asset(
                                 imagePath,
                                 fit: BoxFit.cover,
@@ -197,16 +202,19 @@ class _HomePageState extends State<HomePage> {
                                   margin: const EdgeInsets.symmetric(
                                     horizontal: _dotHorizontalMargin,
                                   ),
-                                  width: _currentPage == idx
-                                      ? _dotSelected
-                                      : _dotUnselected,
-                                  height: _currentPage == idx
-                                      ? _dotSelected
-                                      : _dotUnselected,
+                                  width:
+                                      _currentPage == idx
+                                          ? _dotSelected
+                                          : _dotUnselected,
+                                  height:
+                                      _currentPage == idx
+                                          ? _dotSelected
+                                          : _dotUnselected,
                                   decoration: BoxDecoration(
-                                    color: _currentPage == idx
-                                        ? Colors.white
-                                        : Colors.white70,
+                                    color:
+                                        _currentPage == idx
+                                            ? Colors.white
+                                            : Colors.white70,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -243,11 +251,12 @@ class _HomePageState extends State<HomePage> {
                       right: _settingsRightPad,
                     ),
                     child: GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsPage(),
-                        ),
-                      ),
+                      onTap:
+                          () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsPage(),
+                            ),
+                          ),
                       child: Material(
                         color: Colors.transparent,
                         child: Container(
@@ -289,7 +298,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSocialMediaIcons() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(25),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -351,7 +360,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(25),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -385,10 +394,7 @@ class _HomePageState extends State<HomePage> {
           ),
           child: Text(
             categoryName,
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.w300,
-            ),
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
           ),
         ),
         GridView.builder(

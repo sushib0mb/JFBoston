@@ -12,7 +12,12 @@ class TimetablePage extends StatefulWidget {
   final int? selectedDay;
   final String? initialStage;
 
-  const TimetablePage({super.key, this.selectedEvent, this.selectedDay, this.initialStage});
+  const TimetablePage({
+    super.key,
+    this.selectedEvent,
+    this.selectedDay,
+    this.initialStage,
+  });
 
   @override
   _TimetablePageState createState() => _TimetablePageState();
@@ -25,16 +30,24 @@ class _TimetablePageState extends State<TimetablePage> {
   bool isShowingDetail = false;
   late ScrollController _scrollController;
 
-
-  static const List<String> _stageNames = ['Main Stage', 'Sakura Stage', 'Fuji Stage'];
-  static const List<String> _stageLabels = ['Boston Common', 'Sakura Stage', 'Fuji Stage'];
+  static const List<String> _stageNames = [
+    'Main Stage',
+    'Sakura Stage',
+    'Fuji Stage',
+  ];
+  static const List<String> _stageLabels = [
+    'Boston Common',
+    'Sakura Stage',
+    'Fuji Stage',
+  ];
 
   // ── Layout Constants ──────────────────────────────────────────────────────
   static const double _dayBtnHeight = 68.0;
   static const double _dayBtnWidth = 221.0;
   static const double _dayFont = 40.0;
-  static const double _dayPickerHorizontalPad = 4.0;
+  static const double logoSize = 68;
   static const double _dayPickerTopPad = 4.0;
+  static const double _dayPickerMargin = 25;
   static const double _scheduleTopExtra = 16.0;
   static const double _scheduleMargin = 25.0;
   static const double _scheduleRadius = 25.0;
@@ -80,11 +93,13 @@ class _TimetablePageState extends State<TimetablePage> {
   @override
   Widget build(BuildContext context) {
     final svc = Provider.of<ScheduleDataService>(context);
-    final schedule = selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
+    final schedule =
+        selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
 
     // Logic from Version 1: Filter stages based on day
     final currentStageNames = selectedDay == 1 ? _stageNames : [_stageNames[0]];
-    final currentStageLabels = selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
+    final currentStageLabels =
+        selectedDay == 1 ? _stageLabels : [_stageLabels[0]];
 
     return Scaffold(
       backgroundColor: const Color(0xFFECE0CF),
@@ -92,20 +107,43 @@ class _TimetablePageState extends State<TimetablePage> {
         children: [
           // Background
           Container(color: const Color(0xFFECE0CF)),
-          
+
           SafeArea(
             child: Stack(
               children: [
                 // Day Selectors
+                // Day Selectors
                 Positioned(
-                  left: _dayPickerHorizontalPad,
+                  left: 0.0,
+                  right: 0.0,
                   top: _dayPickerTopPad,
-                  child: _dayPicker('Day 1', 1),
-                ),
-                Positioned(
-                  right: _dayPickerHorizontalPad,
-                  top: _dayPickerTopPad,
-                  child: _dayPicker('Day 2', 2),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Calculate the exact width: half the screen + your 34px overlap
+                      final buttonWidth =
+                          (constraints.maxWidth / 2) +
+                          logoSize / 2 -
+                          _dayPickerMargin;
+
+                      return SizedBox(
+                        height: _dayBtnHeight,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 25,
+                              width: buttonWidth,
+                              child: _dayPicker('Day 1', 1),
+                            ),
+                            Positioned(
+                              right: 25,
+                              width: buttonWidth,
+                              child: _dayPicker('Day 2', 2),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
 
                 // Schedule Content
@@ -132,18 +170,36 @@ class _TimetablePageState extends State<TimetablePage> {
                                 children: List.generate(
                                   currentStageNames.length,
                                   (i) {
-                                    final isSelected = selectedStage == currentStageNames[i];
-                                    final loc = context.watch<LocationService>();
-                                    final dist = loc.formatDistance(currentStageNames[i]);
+                                    final isSelected =
+                                        selectedStage == currentStageNames[i];
+                                    final loc =
+                                        context.watch<LocationService>();
+                                    final dist = loc.formatDistance(
+                                      currentStageNames[i],
+                                    );
                                     return Expanded(
                                       child: GestureDetector(
-                                        onTap: () => setState(() => selectedStage = currentStageNames[i]),
+                                        onTap:
+                                            () => setState(
+                                              () =>
+                                                  selectedStage =
+                                                      currentStageNames[i],
+                                            ),
                                         child: Container(
-                                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: isSelected ? const Color(0xFFBF1D23) : const Color(0xFFD4706E),
-                                            borderRadius: BorderRadius.circular(36),
+                                            color:
+                                                isSelected
+                                                    ? const Color(0xFFBF1D23)
+                                                    : const Color(0xFFD4706E),
+                                            borderRadius: BorderRadius.circular(
+                                              36,
+                                            ),
                                           ),
                                           alignment: Alignment.center,
                                           child: Column(
@@ -154,7 +210,10 @@ class _TimetablePageState extends State<TimetablePage> {
                                                 style: TextStyle(
                                                   color: Colors.white,
                                                   fontSize: _stageFontSize,
-                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                  fontWeight:
+                                                      isSelected
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -163,7 +222,8 @@ class _TimetablePageState extends State<TimetablePage> {
                                                   dist,
                                                   style: TextStyle(
                                                     color: Colors.white70,
-                                                    fontSize: _stageDistFontSize,
+                                                    fontSize:
+                                                        _stageDistFontSize,
                                                   ),
                                                 ),
                                             ],
@@ -222,18 +282,21 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget _dayPicker(String text, int day) {
     bool isSelected = selectedDay == day;
     return GestureDetector(
-      onTap: () => setState(() {
-        selectedDay = day;
-        if (day == 2) selectedStage = 'Main Stage';
-      }),
+      onTap:
+          () => setState(() {
+            selectedDay = day;
+            if (day == 2) selectedStage = 'Main Stage';
+          }),
       child: Container(
         width: _dayBtnWidth,
         height: _dayBtnHeight,
-        alignment: day == 1 ? const Alignment(-0.2, 0) : const Alignment(0.2, 0),
+        alignment:
+            day == 1 ? const Alignment(-0.2, 0) : const Alignment(0.2, 0),
         decoration: ShapeDecoration(
-          color: isSelected
-              ? const Color(0x26BF1D23)
-              : const Color(0xAFe0e0e0),
+          color:
+              isSelected
+                  ? const Color(0x26BF1D23)
+                  : const Color.fromARGB(173, 197, 195, 195),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
             side: BorderSide(
@@ -242,9 +305,17 @@ class _TimetablePageState extends State<TimetablePage> {
             ),
           ),
         ),
-        child: Text(
-          text,
-          style: GoogleFonts.bebasNeue(fontSize: _dayFont, fontWeight: FontWeight.w400),
+        child: Padding(
+          // Fixes the text being weirdly too low
+          padding: const EdgeInsets.only(top: 5.0),
+          child: Text(
+            text,
+            style: GoogleFonts.bebasNeue(
+              fontSize: _dayFont,
+              fontWeight: FontWeight.w400,
+              height: 1.0,
+            ),
+          ),
         ),
       ),
     );
@@ -296,21 +367,32 @@ class ScheduleList extends StatelessWidget {
             width: _timeColumnWidth,
             height: timelineHeight,
             child: Stack(
-              children: timelineSlots.map((timeString) {
-                final timeInMinutes = parseTimeToMinutes(timeString);
-                final displayLabel = _minutesToDisplayFormat(timeInMinutes);
-                final parts = displayLabel.split(" ");
-                return Positioned(
-                  top: (timeInMinutes - baseTime) * _pixelsPerMinute,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(parts[0], style: const TextStyle(fontSize: _timeFontSize, fontWeight: FontWeight.w600)),
-                      if (parts.length > 1) Text(parts[1], style: const TextStyle(fontSize: _timeFontSize)),
-                    ],
-                  ),
-                );
-              }).toList(),
+              children:
+                  timelineSlots.map((timeString) {
+                    final timeInMinutes = parseTimeToMinutes(timeString);
+                    final displayLabel = _minutesToDisplayFormat(timeInMinutes);
+                    final parts = displayLabel.split(" ");
+                    return Positioned(
+                      top: (timeInMinutes - baseTime) * _pixelsPerMinute,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            parts[0],
+                            style: const TextStyle(
+                              fontSize: _timeFontSize,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (parts.length > 1)
+                            Text(
+                              parts[1],
+                              style: const TextStyle(fontSize: _timeFontSize),
+                            ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
         ),
@@ -332,23 +414,28 @@ class ScheduleList extends StatelessWidget {
   Widget _buildTimelineLines(int baseTime, int latestTime) {
     List<Widget> lines = [];
     for (int t = baseTime; t <= latestTime; t += 30) {
-      lines.add(Positioned(
-        top: (t - baseTime) * _pixelsPerMinute,
-        left: 4, right: 12,
-        child: Container(height: 1, color: Colors.black26),
-      ));
+      lines.add(
+        Positioned(
+          top: (t - baseTime) * _pixelsPerMinute,
+          left: 4,
+          right: 12,
+          child: Container(height: 1, color: Colors.black26),
+        ),
+      );
     }
     return Stack(children: lines);
   }
 
   List<Widget> _buildEvents(int baseTime) {
-    final events = scheduleItems
-        .expand((item) => item.eventsByStage[stageName] ?? [])
-        .where((e) => e.performanceName.isNotEmpty)
-        .toList();
+    final events =
+        scheduleItems
+            .expand((item) => item.eventsByStage[stageName] ?? [])
+            .where((e) => e.performanceName.isNotEmpty)
+            .toList();
 
     return events.map((e) {
-      final top = (parseTimeToMinutes(e.time) - baseTime) * _pixelsPerMinute + 4;
+      final top =
+          (parseTimeToMinutes(e.time) - baseTime) * _pixelsPerMinute + 4;
       return Positioned(
         top: top,
         left: 3,
