@@ -43,7 +43,7 @@ class BoothDetails extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black.withOpacity(0.08)),
+
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),

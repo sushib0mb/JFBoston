@@ -258,6 +258,7 @@ class _FoodPageState extends State<FoodPage> {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),
           child: SingleChildScrollView(
+            padding: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -324,6 +325,7 @@ class _FoodPageState extends State<FoodPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const SizedBox(height: 18),
 
         // Map section label
         if (widget.selectedMapLetter != null)
@@ -338,8 +340,6 @@ class _FoodPageState extends State<FoodPage> {
               ),
             ),
           ),
-
-        const SizedBox(height: 20),
 
         // Safe booths
         if (showSplitSections && safeBooths.isNotEmpty) ...[
@@ -376,6 +376,7 @@ class _FoodPageState extends State<FoodPage> {
   return GridView.builder(
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
+    padding: EdgeInsets.zero,
     itemCount: booths.length,
     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
       maxCrossAxisExtent: 400,
