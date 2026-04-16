@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../home_page.dart';
 import '../../../main.dart';
 import '../../../data/timetable_data.dart';
 import 'package:provider/provider.dart';

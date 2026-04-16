@@ -26,10 +26,11 @@ int getFestivalDay(DateTime now) {
     festivalStartDay,
   );
   final end = start.add(const Duration(days: festivalDays));
-  if (now.isBefore(start))
+  if (now.isBefore(start)) {
     return -1;
-  else if (!now.isBefore(end))
+  } else if (!now.isBefore(end)) {
     return 0;
+  }
   return now.difference(start).inDays + 1;
 }
 

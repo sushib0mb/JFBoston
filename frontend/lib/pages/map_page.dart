@@ -4,7 +4,6 @@ import 'package:supabase/supabase.dart';
 class MapPage extends StatefulWidget {
   final SupabaseClient _supabase;
 
-  // Initialized via constructor
   const MapPage(this._supabase, {super.key});
 
   @override
@@ -41,10 +40,6 @@ class MapPageState extends State<MapPage> {
     final bool isTablet = screenSize.width >= 600;
     final double mapContainerWidth = isTablet ? 0.80 : 0.85;
     final double mapContainerHeight = isTablet ? 0.60 : 0.65;
-    final double letterBtnWidth = isTablet ? 100.0 : 80.0;
-    final double letterBtnHeight = isTablet ? 42.0 : 35.0;
-    final double letterBtnRadius = isTablet ? 12.0 : 10.0;
-    final double letterFontSize = isTablet ? 20.0 : 18.0;
 
     final double buttonTop =
         MediaQuery.of(context).padding.top +
@@ -64,20 +59,12 @@ class MapPageState extends State<MapPage> {
                 _mainStageFile,
                 mapContainerWidth,
                 mapContainerHeight,
-                letterBtnWidth,
-                letterBtnHeight,
-                letterBtnRadius,
-                letterFontSize,
               ),
               secondChild: _buildMapContainer(
                 screenSize,
                 _downtownFile,
                 mapContainerWidth,
                 mapContainerHeight,
-                letterBtnWidth,
-                letterBtnHeight,
-                letterBtnRadius,
-                letterFontSize,
               ),
               crossFadeState:
                   _isMainStageMap
@@ -124,14 +111,10 @@ class MapPageState extends State<MapPage> {
     String fileName,
     double widthFactor,
     double heightFactor,
-    double letterBtnWidth,
-    double letterBtnHeight,
-    double letterBtnRadius,
-    double letterFontSize,
   ) {
     return Container(
-      width: screenSize.width * widthFactor,
       height: screenSize.height * heightFactor,
+      margin: const EdgeInsets.symmetric(horizontal: 25),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
