@@ -83,8 +83,6 @@ class _HomePageState extends State<HomePage> {
   static const double _dotUnselected = 6.0;
   static const double _dotHorizontalMargin = 4.0;
   static const double _dotsBottomPad = 12.0;
-  static const double _sponsorImgHeight = 80.0;
-  static const double _sponsorImgWidth = 120.0;
   static const double _sponsorSectionSpacing = 8.0;
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -146,142 +144,130 @@ class _HomePageState extends State<HomePage> {
 
     return Container(
       color: const Color(0xFFECE0CF),
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.fromRGBO(10, 56, 117, 0.15),
-              Color.fromRGBO(191, 28, 36, 0.15),
-            ],
-          ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Stack(
-            children: [
-              // ── Scrollable content ───────────────────────────────────────
-              SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // ── Carousel header ───────────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      height: _headerHeight,
-                      child: Stack(
-                        children: [
-                          PageView.builder(
-                            controller: _pageController,
-                            itemCount: _virtualPageCount,
-                            onPageChanged: _handlePageChanged,
-                            itemBuilder: (context, index) {
-                              final imagePath =
-                                  backgroundImages[index %
-                                      backgroundImages.length];
-                              return Image.asset(
-                                imagePath,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: _headerHeight,
-                                alignment: Alignment.center,
-                              );
-                            },
-                          ),
-                          // ── Dot indicators ────────────────────────────
-                          Positioned(
-                            bottom: _dotsBottomPad,
-                            left: 0,
-                            right: 0,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(
-                                backgroundImages.length,
-                                (idx) => AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: _dotHorizontalMargin,
-                                  ),
-                                  width:
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // ── Scrollable content ───────────────────────────────────────
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  // ── Carousel header ───────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    height: _headerHeight,
+                    child: Stack(
+                      children: [
+                        PageView.builder(
+                          controller: _pageController,
+                          itemCount: _virtualPageCount,
+                          onPageChanged: _handlePageChanged,
+                          itemBuilder: (context, index) {
+                            final imagePath =
+                                backgroundImages[index %
+                                    backgroundImages.length];
+                            return Image.asset(
+                              imagePath,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: _headerHeight,
+                              alignment: Alignment.center,
+                            );
+                          },
+                        ),
+                        // ── Dot indicators ────────────────────────────
+                        Positioned(
+                          bottom: _dotsBottomPad,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              backgroundImages.length,
+                              (idx) => AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: _dotHorizontalMargin,
+                                ),
+                                width:
+                                    _currentPage == idx
+                                        ? _dotSelected
+                                        : _dotUnselected,
+                                height:
+                                    _currentPage == idx
+                                        ? _dotSelected
+                                        : _dotUnselected,
+                                decoration: BoxDecoration(
+                                  color:
                                       _currentPage == idx
-                                          ? _dotSelected
-                                          : _dotUnselected,
-                                  height:
-                                      _currentPage == idx
-                                          ? _dotSelected
-                                          : _dotUnselected,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        _currentPage == idx
-                                            ? Colors.white
-                                            : Colors.white70,
-                                    shape: BoxShape.circle,
-                                  ),
+                                          ? Colors.white
+                                          : Colors.white70,
+                                  shape: BoxShape.circle,
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
 
-                    const SizedBox(height: _sectionSpacing),
-                    LiveTimetable(
-                      festivalDays: festivalDays,
-                      festivalLocation: festivalLocation,
-                      festivalStartDay: festivalStartDay,
-                      festivalStartMonth: festivalStartMonth,
-                      festivalStartYear: festivalStartYear,
-                      dayNumber: getFestivalDay(DateTime.now()),
-                    ),
-                    _buildSocialMediaIcons(),
-                    _buildSponsorsSection(sponsorService),
-                    const SizedBox(height: _sectionSpacing * 6),
-                  ],
-                ),
+                  const SizedBox(height: _sectionSpacing),
+                  LiveTimetable(
+                    festivalDays: festivalDays,
+                    festivalLocation: festivalLocation,
+                    festivalStartDay: festivalStartDay,
+                    festivalStartMonth: festivalStartMonth,
+                    festivalStartYear: festivalStartYear,
+                    dayNumber: getFestivalDay(DateTime.now()),
+                  ),
+                  _buildSocialMediaIcons(),
+                  _buildSponsorsSection(sponsorService),
+                  const SizedBox(height: _sectionSpacing * 6),
+                ],
               ),
+            ),
 
-              // ── Settings button — SafeArea handles status bar inset ───────
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: _settingsTopPad,
-                      right: _settingsRightPad,
-                    ),
-                    child: GestureDetector(
-                      onTap:
-                          () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsPage(),
-                            ),
+            // ── Settings button — SafeArea handles status bar inset ───────
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: _settingsTopPad,
+                    right: _settingsRightPad,
+                  ),
+                  child: GestureDetector(
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsPage(),
                           ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Container(
-                          width: _settingsBtnSize,
-                          height: _settingsBtnSize,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(
-                              _settingsBtnSize / 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ],
+                        ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        width: _settingsBtnSize,
+                        height: _settingsBtnSize,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(
+                            _settingsBtnSize / 2,
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(_settingsIconPadding),
-                            child: Icon(
-                              Icons.settings,
-                              size: _settingsIconSize,
-                              color: Colors.black,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              spreadRadius: 1,
                             ),
+                          ],
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(_settingsIconPadding),
+                          child: Icon(
+                            Icons.settings,
+                            size: _settingsIconSize,
+                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -289,8 +275,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -374,7 +360,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ...groupedSponsors.entries.map(
-            (entry) => _buildSponsorSection(entry.key, entry.value),
+            (entry) => _buildSponsorType(entry.key, entry.value),
           ),
           const SizedBox(height: 5),
         ],
@@ -382,7 +368,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSponsorSection(String categoryName, List<String> images) {
+  Widget _buildSponsorType(String categoryName, List<String> images) {
+    final screenSize = MediaQuery.of(context).size;
+
+    final double dynamicMaxHeight = screenSize.height * 0.12;
+
     return Column(
       children: [
         Container(
@@ -392,34 +382,48 @@ class _HomePageState extends State<HomePage> {
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(40),
           ),
-          child: Text(
-            categoryName,
-            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w300),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              categoryName,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
+            ),
           ),
         ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          itemCount: images.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            // ── Incoming: improved 3-item grid handling ───────────────────
-            crossAxisCount:
-                images.length == 3 ? 3 : (images.length > 1 ? 2 : 1),
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 10,
-            childAspectRatio:
-                images.length == 3 ? 1.5 : (images.length > 1 ? 3 : 4),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const double spacing = 16.0;
+              final double itemWidth =
+                  (constraints.maxWidth - spacing) / 2 - 0.1;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: 20.0,
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children:
+                    images.map((img) {
+                      return Container(
+                        width: itemWidth,
+                        alignment: Alignment.center,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth:
+                                itemWidth, // Allow it to fill its column width
+                            maxHeight:
+                                dynamicMaxHeight, // Cap the height responsively
+                          ),
+                          child: Image.network(img, fit: BoxFit.contain),
+                        ),
+                      );
+                    }).toList(),
+              );
+            },
           ),
-          itemBuilder: (context, index) {
-            return Center(
-              child: SizedBox(
-                height: _sponsorImgHeight,
-                width: _sponsorImgWidth,
-                child: Image.network(images[index], fit: BoxFit.contain),
-              ),
-            );
-          },
         ),
       ],
     );
