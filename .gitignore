@@ -14,6 +14,7 @@ migrate_working_dir/
 .env
 .metadata
 jfbfestival/devtools_options.yaml
+backend/appsettings.json
 
 # IntelliJ related
 *.iml
