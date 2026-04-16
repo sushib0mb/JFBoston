@@ -252,8 +252,7 @@ class _SettingsPageState extends State<SettingsPage> {
   // Handles the admin code submission and routes to the appropriate action
   // ---------------------------------------------------------------------------
   void _handleSubmit() {
-    // TODO: TESTING PURPOSES ONLY — replace with _codeController.text.trim().toLowerCase() before production
-    const String inputCode = 'jfbadmin';
+    String inputCode = _codeController.text.trim().toLowerCase();
 
     if (inputCode.isEmpty) {
       ScaffoldMessenger.of(
@@ -286,10 +285,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    // TODO: ONLY FOR DEBUG — remove pre-filled credentials before production
-    emailController.text = 'jfbstudents@gmail.com';
-    passwordController.text = 'jfbadmin';
-
     showDialog(
       context: context,
       builder:
@@ -316,6 +311,16 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  if (emailController.text == '' ||
+                      passwordController.text == '') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Enter in a username and password'),
+                      ),
+                    );
+                    return;
+                  }
+
                   try {
                     await supabase.auth.signInWithPassword(
                       email: emailController.text.trim(),

@@ -28,6 +28,7 @@ import 'models/survey_entry.dart';
 import 'config/supabase_config.dart';
 import 'services/notification_service.dart';
 import 'services/location_service.dart';
+import './SplashScreen/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -99,7 +100,7 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Fredoka',
             ),
             themeMode: theme.mode,
-            home: const MainScreen(),
+            home: const VideoSplashScreen(),
             routes: {SettingsPage.routeName: (_) => const SettingsPage()},
           ),
     );
@@ -139,6 +140,9 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
         await _maybeShowAllergyDisclaimer();
+
+        // TODO: Uncomment survey
+        // if (mounted) await QuickSurveyPopup.show(context);
       }
     });
   }
