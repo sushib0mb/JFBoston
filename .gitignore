@@ -65,6 +65,7 @@ app.*.map.json
 # Backend build and object files (.NET)
 **/bin/
 **/obj/
+**/publish/
 *.user
 .vs/
 

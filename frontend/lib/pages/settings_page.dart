@@ -39,13 +39,13 @@ class _SettingsPageState extends State<SettingsPage> {
   static const double _titleSize = 16.0;
   static const double _subtitleSize = 14.0;
   static const double _headerSize = 20.0;
-  static const double _codeSectionHPad = 38.0; // _padH + 30
+  static const double _codeSectionHPad = 12.5; // _padH + 30
   static const double _codeRowSpacing = 16.0;
   static const double _codeFieldHPad = 12.0;
   static const double _codeFieldVPad = 12.0;
   static const double _submitBtnRadius = 4.0;
   static const double _sectionGap = 25.0;
-  static const double _borderWidth = 2.0;
+  static const double _borderWidth = 1.0;
   // ──────────────────────────────────────────────────────────────────────────
 
   final TextEditingController _codeController = TextEditingController();
@@ -194,7 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
           const SizedBox(height: _sectionGap),
 
-          // ── Admin code entry ─────────────────────────────────────────────
+          // Code entry
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: _codeSectionHPad),
             child: Row(
@@ -212,7 +212,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: TextField(
                     controller: _codeController,
                     decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 1),
+                      ),
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           color: Color.fromARGB(255, 224, 105, 96),

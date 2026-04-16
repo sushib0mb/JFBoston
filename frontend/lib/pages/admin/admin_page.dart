@@ -41,10 +41,14 @@ class AdminPageState extends State<AdminPage> {
     // Sort events in chronological order
     sortedStageEvents.sort((a, b) => a.time.compareTo(b.time));
 
-    final Map<String, String> stageOptions = {
-      for (String stageName in ScheduleDataService.stageNames)
-        stageName: stageName,
-    };
+    // Day 2 only has 1 stage
+    final Map<String, String> stageOptions =
+        selectedDay == 1
+            ? {
+              for (String stageName in ScheduleDataService.stageNames)
+                stageName: stageName,
+            }
+            : {"Main Stage": "Main Stage"};
 
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent),
@@ -86,10 +90,8 @@ class AdminPageState extends State<AdminPage> {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    // FIX: Replaced the outer SingleChildScrollView and Row with just the Column
                     child: Column(
                       children: [
-                        // 1. FIXED HEADER
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -131,7 +133,7 @@ class AdminPageState extends State<AdminPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 2. SCROLLABLE MIDDLE SECTION
+                        // SCROLLABLE MIDDLE SECTION
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
