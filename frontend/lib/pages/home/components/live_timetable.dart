@@ -189,22 +189,25 @@ class _LiveTimetableState extends State<LiveTimetable> {
     List<EventItem> events, {
     required bool isCurrent,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 8),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: _sectionTitleFont,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 8),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: _sectionTitleFont,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
           ),
-        ),
-        ...events.map((e) => _buildEventCard(e, isCurrent)),
-      ],
+          ...events.map((e) => _buildEventCard(e, isCurrent)),
+        ],
+      ),
     );
   }
 

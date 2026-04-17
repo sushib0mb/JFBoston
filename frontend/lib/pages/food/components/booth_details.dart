@@ -282,10 +282,7 @@ class _DishCardState extends State<DishCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: hasAlert ? Colors.red.withOpacity(0.4) : Colors.black.withOpacity(0.08),
-          width: hasAlert ? 1.5 : 1,
-        ),
+        border: hasAlert ? Border.all(color: Colors.red.withValues(alpha: 0.4), width: 1.5) : null,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -305,7 +302,6 @@ class _DishCardState extends State<DishCard> {
             ),
           ),
           if (_expanded) ...[
-            const Divider(height: 1),
             Container(
               padding: const EdgeInsets.all(16),
               color: Colors.grey.withOpacity(0.02),

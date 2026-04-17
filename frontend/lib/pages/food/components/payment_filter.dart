@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class PaymentFilterRow extends StatelessWidget {
@@ -18,14 +17,22 @@ class PaymentFilterRow extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
-        // Adjust spacing based on width
-        final double spacing = width > 600 ? 20 : 12;
+        final bool isTablet = width > 600;
+        final double spacing = isTablet ? 20 : 16;
 
-        return Wrap(
-          alignment: WrapAlignment.center,
-          spacing: spacing,
-          runSpacing: spacing,
-          children: payments.map((method) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            childAspectRatio: isTablet ? 1.1 : 0.95,
+          ),
+          itemCount: payments.length,
+          itemBuilder: (context, index) {
+            final method = payments[index];
             final isSelected = selectedPayments.contains(method);
             return _ShadcnPaymentItem(
               method: method,
@@ -33,7 +40,7 @@ class PaymentFilterRow extends StatelessWidget {
               onTap: () => onPaymentSelected(method, !isSelected),
               parentWidth: width,
             );
-          }).toList(),
+          },
         );
       },
     );
@@ -89,8 +96,10 @@ class _ShadcnPaymentItem extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            method.replaceAll(' ', '\n'), // Dynamic break
+            method,
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: isTablet ? 14 : 11,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

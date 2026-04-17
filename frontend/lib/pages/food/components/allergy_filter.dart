@@ -1,12 +1,3 @@
-/// ────────────────────────────────────────────────────────────────────────────
-/// DYNAMIC ALLERGY FILTER GRID - SHADCN EDITION
-/// ────────────────────────────────────────────────────────────────────────────
-/// Features:
-/// - LayoutBuilder for real-time constraint sensing.
-/// - Adaptive childAspectRatio to prevent text overflow on narrow screens.
-/// - Dynamic icon scaling based on available width.
-/// ────────────────────────────────────────────────────────────────────────────
-
 import 'package:flutter/material.dart';
 
 class AllergyFilterGrid extends StatelessWidget {
@@ -22,43 +13,37 @@ class AllergyFilterGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const allergens = [
-      "Egg", "Wheat", "Peanut", "Milk", "Soy", 
+      "Egg", "Wheat", "Peanut", "Milk", "Soy",
       "Tree Nut", "Fish", "Shellfish", "Sesame",
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate dynamic counts based on width
-        final double width = constraints.maxWidth;
-        final int crossCount = width > 600 ? 4 : 3;
-        
-        // Dynamically calculate spacing: 4% of width
-        final double spacing = width * 0.04;
-        
+        final bool isTablet = constraints.maxWidth > 600;
+        final double spacing = isTablet ? 20 : 16;
+
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(vertical: spacing),
+          padding: EdgeInsets.zero,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossCount,
+            crossAxisCount: 3,
             crossAxisSpacing: spacing,
             mainAxisSpacing: spacing,
-            childAspectRatio: 0.85,
+            childAspectRatio: isTablet ? 1.1 : 0.95,
           ),
           itemCount: allergens.length,
-          itemBuilder: (ctx, i) {
-            final a = allergens[i];
-            final isSelected = selectedAllergens.contains(a);
-
-            return _buildDynamicTile(context, a, isSelected, width / crossCount);
+          itemBuilder: (context, index) {
+            final label = allergens[index];
+            final isSelected = selectedAllergens.contains(label);
+            return _buildTile(label, isSelected, isTablet);
           },
         );
       },
     );
   }
 
-  Widget _buildDynamicTile(BuildContext context, String label, bool isSelected, double cellWidth) {
-    final bool isTablet = cellWidth > 150;
+  Widget _buildTile(String label, bool isSelected, bool isTablet) {
     final double boxSize = isTablet ? 70 : 54;
     final double iconSize = isTablet ? 32 : 24;
     final double fontSize = isTablet ? 14.0 : 11.0;
@@ -86,8 +71,8 @@ class AllergyFilterGrid extends StatelessWidget {
                 'assets/allergens/${label.toLowerCase().replaceAll(' ', '_')}.png',
                 width: iconSize,
                 height: iconSize,
-                color: isSelected ? null : Colors.grey.withValues(alpha: 0.4),
-                colorBlendMode: isSelected ? null : BlendMode.modulate,
+                color: isSelected ? null : const Color(0xFFA1A1AA),
+                colorBlendMode: isSelected ? null : BlendMode.srcIn,
                 fit: BoxFit.contain,
               ),
             ),
