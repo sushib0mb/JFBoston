@@ -142,7 +142,7 @@ class _MainScreenState extends State<MainScreen> {
         await _maybeShowAllergyDisclaimer();
 
         // TODO: Uncomment survey
-        // if (mounted) await QuickSurveyPopup.show(context);
+         if (mounted) await QuickSurveyPopup.show(context);
       }
     });
   }
