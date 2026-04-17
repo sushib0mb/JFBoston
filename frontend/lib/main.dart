@@ -139,6 +139,9 @@ class _MainScreenState extends State<MainScreen> {
     _dayForTimetable = widget.selectedDay ?? 1;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
+        // DEBUG ONLY — remove before release
+        final p = await SharedPreferences.getInstance();
+        await p.remove(_kAllergyDisclaimerKey);
         await _maybeShowAllergyDisclaimer();
 
         // TODO: Uncomment survey
