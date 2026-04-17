@@ -114,8 +114,14 @@ class _LiveTimetableState extends State<LiveTimetable> {
             : scheduleService.day2ScheduleData;
 
     if (scheduleList.isEmpty) {
-      return _buildMessageCard(
-        "No schedule data available for Day ${widget.dayNumber}",
+      // return _buildMessageCard(
+      //   "No schedule data available for Day ${widget.dayNumber}",
+      // );
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 25),
+        child: _buildMessageCard(
+          "No schedule data available for Day ${widget.dayNumber}",
+        ),
       );
     }
 
@@ -143,7 +149,12 @@ class _LiveTimetableState extends State<LiveTimetable> {
 
         if (events.currentStageEvents.isEmpty &&
             events.upcomingStageEvents.isEmpty)
-          _buildMessageCard("No events scheduled for the rest of today."),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 25),
+            child: _buildMessageCard(
+              "No events scheduled for the rest of today.",
+            ),
+          ),
       ],
     );
   }
