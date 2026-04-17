@@ -35,10 +35,6 @@ class AllergyFilterGrid extends StatelessWidget {
         // Dynamically calculate spacing: 4% of width
         final double spacing = width * 0.04;
         
-        // Adaptive Aspect Ratio: 
-        // Narrower screens need more vertical space for text (lower ratio)
-        final double adaptiveRatio = width > 400 ? 0.9 : 0.75;
-
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -47,7 +43,7 @@ class AllergyFilterGrid extends StatelessWidget {
             crossAxisCount: crossCount,
             crossAxisSpacing: spacing,
             mainAxisSpacing: spacing,
-            childAspectRatio: adaptiveRatio,
+            childAspectRatio: 0.85,
           ),
           itemCount: allergens.length,
           itemBuilder: (ctx, i) {
@@ -62,9 +58,10 @@ class AllergyFilterGrid extends StatelessWidget {
   }
 
   Widget _buildDynamicTile(BuildContext context, String label, bool isSelected, double cellWidth) {
-    // Dynamic sizing based on the cell width
-    final double iconPadding = cellWidth * 0.15;
-    final double fontSize = (cellWidth * 0.12).clamp(10.0, 16.0);
+    final bool isTablet = cellWidth > 150;
+    final double boxSize = isTablet ? 70 : 54;
+    final double iconSize = isTablet ? 32 : 24;
+    final double fontSize = isTablet ? 14.0 : 11.0;
 
     return GestureDetector(
       onTap: () => onAllergenSelected(label, !isSelected),
@@ -72,39 +69,40 @@ class AllergyFilterGrid extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded( // Use Expanded to let the container fill available height
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.all(iconPadding),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF4F4F5) : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? const Color(0xFF18181B) : const Color(0xFFE4E4E7),
-                  width: isSelected ? 1.5 : 1.0,
-                ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: boxSize,
+            height: boxSize,
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFF4F4F5) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? const Color(0xFF18181B) : const Color(0xFFE4E4E7),
+                width: isSelected ? 1.5 : 1.0,
               ),
+            ),
+            child: Center(
               child: Image.asset(
                 'assets/allergens/${label.toLowerCase().replaceAll(' ', '_')}.png',
-                color: isSelected ? null : Colors.grey.withOpacity(0.4),
+                width: iconSize,
+                height: iconSize,
+                color: isSelected ? null : Colors.grey.withValues(alpha: 0.4),
                 colorBlendMode: isSelected ? null : BlendMode.modulate,
                 fit: BoxFit.contain,
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 2),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis, // Guard against very long labels
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF18181B) : const Color(0xFFA1A1AA),
-                letterSpacing: -0.2,
-              ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? const Color(0xFF18181B) : const Color(0xFFA1A1AA),
+              letterSpacing: -0.2,
             ),
           ),
         ],

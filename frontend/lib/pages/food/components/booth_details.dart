@@ -176,32 +176,40 @@ class BoothDetails extends StatelessWidget {
       "Apple": "assets/payments/apple_pay.png",
     };
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: assetMap.entries.map((entry) {
+    final entries = assetMap.entries.toList();
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 2.8,
+      ),
+      itemCount: entries.length,
+      itemBuilder: (context, index) {
+        final entry = entries[index];
         final bool isAccepted = payments.contains(entry.key);
         return Opacity(
           opacity: isAccepted ? 1.0 : 0.3,
-          child: Column(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black12),
-                ),
-                child: Image.asset(entry.value, fit: BoxFit.contain),
-              ),
-              const SizedBox(height: 4),
-              Text(entry.key, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500)),
-            ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.black12),
+            ),
+            child: Row(
+              children: [
+                Image.asset(entry.value, width: 28, height: 28, fit: BoxFit.contain),
+                const SizedBox(width: 10),
+                Text(entry.key, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              ],
+            ),
           ),
         );
-      }).toList(),
+      },
     );
   }
 
