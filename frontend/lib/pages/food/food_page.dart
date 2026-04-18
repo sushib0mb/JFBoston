@@ -442,7 +442,6 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Left column: logo
                   if (booth.logoPath.isNotEmpty)
                     Container(
                       width: 56,
@@ -460,7 +459,6 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
                         errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
-                  // Right column: name, location, payments
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
