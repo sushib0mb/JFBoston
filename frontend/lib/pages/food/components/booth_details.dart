@@ -31,7 +31,7 @@ class BoothDetails extends StatelessWidget {
         Positioned.fill(
           child: GestureDetector(
             onTap: onClose,
-            child: Container(color: Colors.black.withOpacity(0.4)),
+            child: Container(color: Colors.black.withValues(alpha: 0.4)),
           ),
         ),
 
@@ -46,7 +46,7 @@ class BoothDetails extends StatelessWidget {
 
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 10),
                 ),
@@ -104,7 +104,12 @@ class BoothDetails extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                stops: const [0.0, 0.35, 1.0],
+                colors: [
+                  Colors.black.withValues(alpha: 0.5),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.75),
+                ],
               ),
             ),
           ),
@@ -112,26 +117,39 @@ class BoothDetails extends StatelessWidget {
         Positioned(
           bottom: 16,
           left: 16,
+          right: 48,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 booth.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
+                  shadows: [
+                    Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+                  ],
                 ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.location_on, color: Colors.white70, size: 16),
+                  const Icon(Icons.location_on, color: Colors.white70, size: 16,
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 6)]),
                   const SizedBox(width: 4),
                   Text(
                     "Food Booth: ${booth.boothLocation}",
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      shadows: [
+                        Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 1)),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -217,9 +235,9 @@ class BoothDetails extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isVegan ? Colors.green.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+        color: isVegan ? Colors.green.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isVegan ? Colors.green.withOpacity(0.1) : Colors.black12),
+        border: Border.all(color: isVegan ? Colors.green.withValues(alpha: 0.1) : Colors.black12),
       ),
       child: Row(
         children: [
@@ -296,19 +314,68 @@ class _DishCardState extends State<DishCard> {
             ),
             title: Text(widget.dish.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             subtitle: Text(widget.dish.description, maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: Icon(
-              hasAlert ? Icons.warning_rounded : Icons.keyboard_arrow_down,
-              color: hasAlert ? Colors.red : Colors.grey,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: widget.dish.isVegan
+                        ? Colors.green.withValues(alpha: 0.12)
+                        : Colors.grey.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: widget.dish.isVegan
+                          ? Colors.green.withValues(alpha: 0.4)
+                          : Colors.grey.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Image.asset(
+                    "assets/vegan.png",
+                    width: 18,
+                    height: 18,
+                    color: widget.dish.isVegan ? null : Colors.grey.withValues(alpha: 0.5),
+                    colorBlendMode: widget.dish.isVegan ? null : BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  hasAlert ? Icons.warning_rounded : Icons.keyboard_arrow_down,
+                  color: hasAlert ? Colors.red : Colors.grey,
+                ),
+              ],
             ),
           ),
           if (_expanded) ...[
             Container(
               padding: const EdgeInsets.all(16),
-              color: Colors.grey.withOpacity(0.02),
+              color: Colors.grey.withValues(alpha: 0.02),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Image.asset(
+                        "assets/vegan.png",
+                        width: 20,
+                        height: 20,
+                        color: widget.dish.isVegan ? null : Colors.grey.withValues(alpha: 0.35),
+                        colorBlendMode: widget.dish.isVegan ? null : BlendMode.srcIn,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.dish.isVegan ? "Vegetarian" : "Not Vegetarian",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: widget.dish.isVegan ? Colors.green.shade700 : Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
                   if (widget.dish.allergens.isNotEmpty) ...[
+                    const SizedBox(height: 12),
                     const Text("ALLERGENS", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
                     const SizedBox(height: 12),
                     Wrap(
@@ -323,7 +390,7 @@ class _DishCardState extends State<DishCard> {
                               height: 36,
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.red.withOpacity(0.1) : Colors.white,
+                                color: isSelected ? Colors.red.withValues(alpha: 0.1) : Colors.white,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: isSelected ? Colors.red : Colors.black12),
                               ),

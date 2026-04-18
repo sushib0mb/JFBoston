@@ -9,12 +9,13 @@ class FoodBooth {
   final String genre;
   final String logoPath;
   final String boothImagePath;
-  final bool isVegan;
   final String mapPageFoodLocation;
   final List<String> payments;
   final List<String> allergens;
   final List<Dish> dishes;
   final String location; 
+
+  bool get isVegan => dishes.any((d) => d.isVegan);
 
   FoodBooth({
     required this.name,
@@ -24,7 +25,6 @@ class FoodBooth {
     required this.genre,
     required this.logoPath,
     required this.boothImagePath,
-    required this.isVegan,
     required this.mapPageFoodLocation,
     required this.payments,
     required this.allergens,

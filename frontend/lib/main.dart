@@ -139,10 +139,9 @@ class _MainScreenState extends State<MainScreen> {
     _dayForTimetable = widget.selectedDay ?? 1;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.initialIndex == 0) {
-        await _maybeShowAllergyDisclaimer();
-
-        // TODO: Uncomment survey
-         if (mounted) await QuickSurveyPopup.show(context);
+        // DEBUG ONLY — remove before release
+        if (mounted) await QuickSurveyPopup.show(context);
+        if (mounted) await _maybeShowAllergyDisclaimer();
       }
     });
   }
