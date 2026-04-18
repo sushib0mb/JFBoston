@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase/supabase.dart';
+import '../../pages/home/home_page.dart';
 
 class FestivalDates {
-  static final DateTime day1 = DateTime(2026, 4, 12);
-  static final DateTime day2 = DateTime(2026, 4, 13);
-  static DateTime forDay(int day) => day == 2 ? day2 : day1;
+  static DateTime forDay(int day) => DateTime(
+    festivalStartYear,
+    festivalStartMonth,
+    festivalStartDay + (day - 1),
+  );
 }
 
 // Event item model

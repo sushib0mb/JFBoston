@@ -285,8 +285,9 @@ class _FoodPageState extends State<FoodPage> {
           Image.asset("assets/JFBDowntownPoster.png"),
           const SizedBox(height: 20),
           const Text(
-            "Please come we are lonely",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight(600)),
+            "We've got Japanese sake and prepackaged food available at Downtown Crossing! Come stop by and enjoy authentic Japanese flavors along with great music 🎶",
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight(600)),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 50),
         ],

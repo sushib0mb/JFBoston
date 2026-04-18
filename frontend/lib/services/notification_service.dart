@@ -42,7 +42,6 @@ class NotificationService {
   Future<void> init() async {
     /* 0. Time‑zone */
     tz.initializeTimeZones();
-    // Set local timezone using timezone package without flutter_native_timezone
     try {
       // Default to device's timezone
       tz.setLocalLocation(tz.local);
@@ -92,6 +91,12 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.requestNotificationsPermission();
+
+      await fln
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestExactAlarmsPermission();
     }
   }
 
@@ -104,7 +109,7 @@ class NotificationService {
   }
 
   /* ─────────────────── schedule ─────────────────── */
-  Future<void> schedule({
+  Future<bool> schedule({
     required int id,
     required String title,
     required DateTime when,
@@ -112,19 +117,42 @@ class NotificationService {
     Duration leadTime = const Duration(minutes: 10),
   }) async {
     final fireTime = tz.TZDateTime.from(when, tz.local).subtract(leadTime);
-    if (fireTime.isBefore(tz.TZDateTime.now(tz.local))) return;
+    if (fireTime.isBefore(tz.TZDateTime.now(tz.local))) {
+      debugPrint('⚠️ Reminder skipped: fire time is in the past');
+      return false; // ← caller handles the message
+    }
 
-    await fln.zonedSchedule(
-      id,
-      title,
-      body,
-      fireTime,
-      _notifDetails,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    );
+    // if (fireTime.isBefore(tz.TZDateTime.now(tz.local))) {
+    //   debugPrint('⚠️ Reminder skipped: fire time is in the past ($fireTime)');
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(
+    //         content: Text('This performance has already started or passed.'),
+    //         duration: Duration(seconds: 2),
+    //       ),
+    //     );
+    //   }
+    //   return;
+    // }
+
+    try {
+      await fln.zonedSchedule(
+        id,
+        title,
+        body,
+        fireTime,
+        _notifDetails,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode:
+            AndroidScheduleMode.exactAllowWhileIdle, // ← change to exact
+      );
+      debugPrint('✅ scheduled');
+    } catch (e, stack) {
+      debugPrint('❌ $e');
+      debugPrint('$stack');
+    }
+    return true;
   }
 
   /* ─────────────────── cancel helpers ─────────────────── */

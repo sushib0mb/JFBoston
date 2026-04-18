@@ -2,9 +2,8 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
 import '../../../data/timetable_data.dart';
-import '../../../services/location_service.dart';
+// import '../../../services/location_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../utils/time_utils.dart';
 
@@ -19,7 +18,7 @@ class Performance extends StatefulWidget {
 }
 
 class _PerformanceState extends State<Performance>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool isPressed = false;
   int? _reminderMinutes;
 
@@ -28,7 +27,33 @@ class _PerformanceState extends State<Performance>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadReminderState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkIfReminderExpired();
+    }
+  }
+
+  Future<void> _checkIfReminderExpired() async {
+    if (_reminderMinutes == null) return;
+    final fireTime = widget.eventItem.startDateTime.subtract(
+      Duration(minutes: _reminderMinutes!),
+    );
+    if (fireTime.isBefore(DateTime.now())) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefsKey);
+      if (mounted) setState(() => _reminderMinutes = null);
+    }
   }
 
   Future<void> _loadReminderState() async {
@@ -37,14 +62,14 @@ class _PerformanceState extends State<Performance>
     if (mounted) {
       setState(() => _reminderMinutes = val);
       // Restart GPS on app relaunch if this event has a saved reminder
-      if (val != null) context.read<LocationService>().start();
+      // if (val != null) context.read<LocationService>().start();
     }
   }
 
   Future<void> _scheduleReminder(int minutes) async {
     // Start GPS tracking the first time a reminder is set
-    context.read<LocationService>().start();
-    await notificationService.schedule(
+    // context.read<LocationService>().start();
+    final success = await notificationService.schedule(
       id: widget.eventItem.id,
       title: '${widget.eventItem.performanceName} is starting soon!',
       body:
@@ -52,6 +77,14 @@ class _PerformanceState extends State<Performance>
       when: widget.eventItem.startDateTime,
       leadTime: Duration(minutes: minutes),
     );
+
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This performance has already passed.')),
+      );
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_prefsKey, minutes);
     if (mounted) {
@@ -74,8 +107,8 @@ class _PerformanceState extends State<Performance>
     if (mounted) setState(() => _reminderMinutes = null);
 
     // Stop GPS if no other reminders remain
-    final hasOthers = prefs.getKeys().any((k) => k.startsWith('reminder_'));
-    if (!hasOthers && mounted) context.read<LocationService>().stop();
+    // final hasOthers = prefs.getKeys().any((k) => k.startsWith('reminder_'));
+    // if (!hasOthers && mounted) context.read<LocationService>().stop();
   }
 
   void _showReminderPicker(BuildContext context) {
@@ -88,146 +121,153 @@ class _PerformanceState extends State<Performance>
           (ctx) => StatefulBuilder(
             builder:
                 (ctx, setSheet) => Dialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Set Reminder',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Set Reminder',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${widget.eventItem.performanceName}  ·  ${widget.eventItem.stage}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 16),
-                      // Quick chips
-                      Wrap(
-                        spacing: 8,
-                        children:
-                            [5, 10, 15, 20].map((min) {
-                              final isChipSelected = selected == min;
-                              return GestureDetector(
-                                onTap: () {
-                                  setSheet(() => selected = min);
-                                  scrollCtrl.animateToItem(
-                                    min - 1,
-                                    duration: const Duration(milliseconds: 250),
-                                    curve: Curves.easeOut,
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isChipSelected
-                                            ? const Color(0xFFBF1D23)
-                                            : Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
+                        const SizedBox(height: 2),
+                        Text(
+                          '${widget.eventItem.performanceName}  ·  ${widget.eventItem.stage}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Quick chips
+                        Wrap(
+                          spacing: 8,
+                          children:
+                              [5, 10, 15, 20].map((min) {
+                                final isChipSelected = selected == min;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setSheet(() => selected = min);
+                                    scrollCtrl.animateToItem(
+                                      min - 1,
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
+                                      curve: Curves.easeOut,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
                                       color:
                                           isChipSelected
                                               ? const Color(0xFFBF1D23)
-                                              : Colors.grey[300]!,
+                                              : Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color:
+                                            isChipSelected
+                                                ? const Color(0xFFBF1D23)
+                                                : Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '$min min',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color:
+                                            isChipSelected
+                                                ? Colors.white
+                                                : Colors.black87,
+                                      ),
                                     ),
                                   ),
-                                  child: Text(
-                                    '$min min',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color:
-                                          isChipSelected
-                                              ? Colors.white
-                                              : Colors.black87,
-                                    ),
-                                  ),
+                                );
+                              }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        // Scroll wheel
+                        SizedBox(
+                          height: 150,
+                          child: CupertinoPicker(
+                            scrollController: scrollCtrl,
+                            itemExtent: 40,
+                            selectionOverlay:
+                                CupertinoPickerDefaultSelectionOverlay(
+                                  background: const Color(
+                                    0xFF0B3775,
+                                  ).withValues(alpha: 0.08),
                                 ),
-                              );
-                            }).toList(),
-                      ),
-                      const SizedBox(height: 12),
-                      // Scroll wheel
-                      SizedBox(
-                        height: 150,
-                        child: CupertinoPicker(
-                          scrollController: scrollCtrl,
-                          itemExtent: 40,
-                          selectionOverlay:
-                              CupertinoPickerDefaultSelectionOverlay(
-                                background: const Color(
-                                  0xFF0B3775,
-                                ).withValues(alpha: 0.08),
-                              ),
-                          onSelectedItemChanged: (i) {
-                            setSheet(() => selected = i + 1);
-                          },
-                          children: List.generate(
-                            60,
-                            (i) => Center(
-                              child: Text(
-                                '${i + 1} ${i + 1 == 1 ? "minute" : "minutes"}',
-                                style: const TextStyle(fontSize: 15),
+                            onSelectedItemChanged: (i) {
+                              setSheet(() => selected = i + 1);
+                            },
+                            children: List.generate(
+                              60,
+                              (i) => Center(
+                                child: Text(
+                                  '${i + 1} ${i + 1 == 1 ? "minute" : "minutes"}',
+                                  style: const TextStyle(fontSize: 15),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Set button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _scheduleReminder(selected);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFBF1D23),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Remind me $selected min before',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_reminderMinutes != null) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
+                        // Set button
                         SizedBox(
                           width: double.infinity,
-                          child: TextButton(
+                          child: ElevatedButton(
                             onPressed: () {
                               Navigator.pop(ctx);
-                              _cancelReminder();
+                              _scheduleReminder(selected);
                             },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFBF1D23),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            child: const Text('Remove reminder'),
+                            child: Text(
+                              'Remind me $selected min before',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
+                        if (_reminderMinutes != null) ...[
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _cancelReminder();
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                              child: const Text('Remove reminder'),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
                 ),
           ),
     ).then((_) => scrollCtrl.dispose());
@@ -329,7 +369,9 @@ class _PerformanceState extends State<Performance>
                     borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isPressed ? 0.05 : 0.1),
+                        color: Colors.black.withValues(
+                          alpha: isPressed ? 0.05 : 0.1,
+                        ),
                         blurRadius: isPressed ? 1 : 3,
                         offset: Offset(0, isPressed ? 0 : 1),
                       ),
