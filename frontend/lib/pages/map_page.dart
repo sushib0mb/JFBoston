@@ -91,7 +91,7 @@ class MapPageState extends State<MapPage> {
               onPressed: _toggleMap,
               icon: const Icon(Icons.swap_horiz, color: Colors.black87),
               label: Text(
-                _currentPage == 0 ? 'Boston Common' : 'Downtown',
+                _currentPage == 0 ? 'Commons' : 'Downtown',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,
