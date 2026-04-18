@@ -69,10 +69,6 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           // ── Share this app ───────────────────────────────────────────────
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: _padH,
-              vertical: _padV,
-            ),
             leading: const Icon(Icons.share, size: _iconSize),
             title: const Text(
               'Share this App',

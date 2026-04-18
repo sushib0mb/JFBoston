@@ -17,7 +17,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
     super.initState();
 
     _controller = VideoPlayerController.asset('assets/Intro1.mp4', videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),)
-    
+
       ..initialize().then((_) {
         setState(() {});
         _controller.setVolume(0);

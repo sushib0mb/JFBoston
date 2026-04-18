@@ -125,7 +125,6 @@ Future<List<FoodBooth>> getFoodBooths() async {
               genre: boothData['genre'] ?? '',
               logoPath: boothData['logo_path'] ?? '',
               boothImagePath: boothData['booth_image_path'] ?? '',
-              isVegan: boothData['is_vegan'] ?? false,
               mapPageFoodLocation: boothData['map_page_food_location'] ?? '',
               payments:
                   boothData['payments'] != null &&

@@ -195,7 +195,7 @@ class _FoodPageState extends State<FoodPage> {
           Column(
             children: [
               // Safe-area + header space using fixed padding
-              SizedBox(height: topInset + 84),
+              SizedBox(height: topInset + (_isSearching ? 134 : 84)),
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(25),
@@ -220,18 +220,23 @@ class _FoodPageState extends State<FoodPage> {
             },
           ),
           if (_isSearching)
-            CustomSearchBar(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              topPadding: topInset + 80,
-              onChanged: (_) => setState(() {}),
-              onCancel: () {
-                setState(() {
-                  _searchController.clear();
-                  _isSearching = false;
-                });
-                _searchFocusNode.unfocus();
-              },
+            Positioned(
+              top: topInset + 80,
+              left: 0,
+              right: 0,
+              child: CustomSearchBar(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                topPadding: topInset + 80,
+                onChanged: (_) => setState(() {}),
+                onCancel: () {
+                  setState(() {
+                    _searchController.clear();
+                    _isSearching = false;
+                  });
+                  _searchFocusNode.unfocus();
+                },
+              ),
             ),
         ],
       ),
@@ -325,7 +330,7 @@ class _FoodPageState extends State<FoodPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 18),
+        const SizedBox(height: 40),
 
         // Map section label
         if (widget.selectedMapLetter != null)
@@ -382,7 +387,7 @@ class _FoodPageState extends State<FoodPage> {
       maxCrossAxisExtent: 400,
       mainAxisSpacing: 32,
       crossAxisSpacing: 32,
-      mainAxisExtent: 370, // Fixed height for alignment
+      mainAxisExtent: 310,
     ),
     itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
   );
@@ -394,7 +399,6 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
     child: Opacity(
       opacity: faded ? 0.5 : 1.0,
       child: Container(
-        // Shadcn Style: 1px border instead of heavy shadow
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
@@ -406,7 +410,7 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
           children: [
             // Image Section
             AspectRatio(
-              aspectRatio: 16 / 10,
+              aspectRatio: 16 / 9,
               child: Stack(
                 children: [
                   Image.network(
@@ -414,7 +418,6 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
-                  // Overlay Badge for Genre (Shadcn Badge style)
                   Positioned(
                     top: 12,
                     left: 12,
@@ -433,39 +436,62 @@ Widget _buildBoothCard(FoodBooth booth, bool faded) {
                 ],
               ),
             ),
-            // Text Section
+            // Text + Logo Section
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    booth.name,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        booth.boothLocation,
-                        style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+                  // Left column: logo
+                  if (booth.logoPath.isNotEmpty)
+                    Container(
+                      width: 56,
+                      height: 56,
+                      margin: const EdgeInsets.only(right: 10),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.black.withValues(alpha: 0.12), width: 1),
                       ),
-                    ],
+                      child: Image.network(
+                        booth.logoPath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  // Right column: name, location, payments
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          booth.name,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: -0.3),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                booth.boothLocation,
+                                style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        if (booth.payments.isNotEmpty)
+                          _buildMiniTag(Icons.payments_outlined, booth.payments.first),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  // Horizontal list of tiny icons/tags for details
-                  Row(
-                    children: [
-                      _buildMiniTag(Icons.payments_outlined, booth.payments.first),
-                      const SizedBox(width: 8),
-                      if (booth.dishes.any((d) => d.isVegan))
-                        _buildMiniTag(Icons.eco_outlined, 'Vegetarian Opt'),
-                    ],
-                  )
                 ],
               ),
             ),
@@ -634,9 +660,9 @@ Widget _buildMiniTag(IconData icon, String label) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: isTablet ? 12 : 5),
-                Center(child: _buildSectionTitle('Payment')),
                 SizedBox(height: isTablet ? 16 : 10),
+                Center(child: _buildSectionTitle('Payment')),
+                SizedBox(height: isTablet ? 20 : 16),
                 PaymentFilterRow(
                   selectedPayments: selectedPayments,
                   onPaymentSelected: (method, isSel) {
@@ -645,16 +671,16 @@ Widget _buildMiniTag(IconData icon, String label) {
                         : selectedPayments.remove(method));
                   },
                 ),
-                SizedBox(height: isTablet ? 20 : 12),
+                SizedBox(height: isTablet ? 28 : 22),
                 Center(child: _buildSectionTitle('Vegetarian')),
-                SizedBox(height: isTablet ? 16 : 12),
+                SizedBox(height: isTablet ? 20 : 16),
                 VeganFilterOption(
                   isVegan: veganOnly ?? false,
                   onChanged: (v) => setModalState(() => veganOnly = v),
                 ),
-                SizedBox(height: isTablet ? 20 : 10),
+                SizedBox(height: isTablet ? 28 : 22),
                 Center(child: _buildSectionTitle('Allergens')),
-                SizedBox(height: isTablet ? 16 : 8),
+                SizedBox(height: isTablet ? 20 : 16),
                 AllergyFilterGrid(
                   selectedAllergens: selectedAllergens,
                   onAllergenSelected: (all, isSel) {
