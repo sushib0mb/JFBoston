@@ -86,7 +86,6 @@ class FoodService extends ChangeNotifier {
 
         final dish = Dish(
           name: dishData['name'],
-          description: dishData['description'] ?? '',
           imagePath: dishData['image_path'] ?? '',
           allergens: allergensList,
           isVegan: dishData['is_vegan'] ?? false,
@@ -120,7 +119,6 @@ class FoodService extends ChangeNotifier {
               return FoodBooth(
                 name: boothData['name'],
                 image: boothData['image'] ?? '',
-                description: boothData['description'] ?? '',
                 boothLocation: boothData['booth_location'] ?? '',
                 genre: boothData['genre'] ?? '',
                 logoPath: boothData['logo_path'] ?? '',

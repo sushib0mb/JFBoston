@@ -995,9 +995,7 @@ class _FoodPageState extends State<FoodPage> {
               booth.boothLocation.toLowerCase().contains(searchQuery) ||
               booth.genre.toLowerCase().contains(searchQuery) ||
               booth.dishes.any(
-                (d) =>
-                    d.name.toLowerCase().contains(searchQuery) ||
-                    d.description.toLowerCase().contains(searchQuery),
+                (d) => d.name.toLowerCase().contains(searchQuery),
               );
           if (!matches) continue;
         }
