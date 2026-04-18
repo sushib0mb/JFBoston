@@ -48,6 +48,8 @@ class _SettingsPageState extends State<SettingsPage> {
   static const double _borderWidth = 1.0;
   // ──────────────────────────────────────────────────────────────────────────
 
+  static bool _hasVerifiedThisSession = false;
+
   final TextEditingController _codeController = TextEditingController();
 
   @override
@@ -259,7 +261,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
     switch (inputCode) {
       case 'jfbadmin':
-        _showLoginDialog(context);
+        if (supabase.auth.currentUser != null && _hasVerifiedThisSession) {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => const AdminPage()));
+        } else {
+          _showLoginDialog(context);
+        }
         break;
       case 'ilovejapan':
         ScaffoldMessenger.of(
@@ -322,6 +330,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       email: emailController.text.trim(),
                       password: passwordController.text.trim(),
                     );
+
+                    _hasVerifiedThisSession = true;
+
                     if (context.mounted) {
                       Navigator.pop(context);
                       Navigator.of(context).push(

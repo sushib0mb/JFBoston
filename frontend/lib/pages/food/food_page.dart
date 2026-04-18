@@ -89,7 +89,7 @@ class FoodPage extends StatefulWidget {
 
 class _FoodPageState extends State<FoodPage> {
   // ── State variables ──
-  String selectedLocation = 'All';
+  String selectedLocation = 'Commons';
   List<FoodBooth> filteredBooths = foodBooths;
   Set<String> selectedPayments = {};
   bool? veganOnly = false;
@@ -278,13 +278,26 @@ class _FoodPageState extends State<FoodPage> {
   // Booths section (safe / unsafe split)
   // ─────────────────────────────────────────────
   Widget _buildAllBoothsSection() {
+    if (selectedLocation == 'Downtown') {
+      return Column(
+        children: [
+          const SizedBox(height: 40),
+          Image.asset("assets/JFBDowntownPoster.png"),
+          const SizedBox(height: 20),
+          const Text(
+            "Please come we are lonely",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight(600)),
+          ),
+          const SizedBox(height: 50),
+        ],
+      );
+    }
+
     final bool showSplitSections =
         safeBooths.isNotEmpty || unsafeBoothsWithAllergens.isNotEmpty;
 
-    // If filteredBooths is empty but foodBooths has loaded (async),
-    // and no filters are active, show all booths directly.
     final bool noActiveFilters =
-        selectedLocation == 'All' &&
+        selectedLocation == 'Commons' &&
         selectedPayments.isEmpty &&
         selectedAllergens.isEmpty &&
         (veganOnly != true) &&
@@ -331,21 +344,6 @@ class _FoodPageState extends State<FoodPage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 40),
-
-        // Map section label
-        if (widget.selectedMapLetter != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Showing booths in section ${widget.selectedMapLetter}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-
         // Safe booths
         if (showSplitSections && safeBooths.isNotEmpty) ...[
           Text(
@@ -882,83 +880,30 @@ class _FoodPageState extends State<FoodPage> {
     return Positioned(
       left: 20,
       top: topInset + 15,
-      child: PopupMenuButton<String>(
-        initialValue: selectedLocation,
-        onSelected: (value) {
+      child: ElevatedButton.icon(
+        onPressed: () {
           setState(() {
-            selectedLocation = value;
+            selectedLocation =
+                selectedLocation == 'Commons' ? 'Downtown' : 'Commons';
             _applyFilters();
           });
         },
-        offset: const Offset(0, 55),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        itemBuilder:
-            (_) => [
-              _buildLocationMenuItem('All', Icons.location_on, Colors.grey),
-              _buildLocationMenuItem(
-                'Commons',
-                Icons.location_city,
-                Colors.blue,
-              ),
-              _buildLocationMenuItem(
-                'Downtown',
-                Icons.location_city,
-                Colors.orange,
-              ),
-            ],
-        child: Container(
-          width: 55,
-          height: 55,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(
-            selectedLocation == 'All' ? Icons.location_on : Icons.location_city,
-            size: 24,
-            color:
-                selectedLocation == 'Commons'
-                    ? Colors.blue
-                    : selectedLocation == 'Downtown'
-                    ? Colors.orange
-                    : Colors.grey.shade700,
+        icon: const Icon(Icons.swap_horiz, color: Colors.black87),
+        label: Text(
+          selectedLocation, // Displays the currently selected location
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-    );
-  }
-
-  PopupMenuItem<String> _buildLocationMenuItem(
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    final bool isSelected = selectedLocation == value;
-    return PopupMenuItem<String>(
-      value: value,
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? color : Colors.black87,
-            ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          if (isSelected) ...[
-            const Spacer(),
-            Icon(Icons.check, size: 18, color: color),
-          ],
-        ],
+          elevation: 4,
+        ),
       ),
     );
   }

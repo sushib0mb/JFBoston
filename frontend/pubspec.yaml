@@ -128,7 +128,9 @@ flutter:
     - assets/timetableIcons/Closing ceremony (Frame).png
     - assets/timetableIcons/taiko.png
     - assets/timetableIcons/taiko(frame).png
-    
+
+    # Downtown Poster
+    - assets/JFBDowntownPoster.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

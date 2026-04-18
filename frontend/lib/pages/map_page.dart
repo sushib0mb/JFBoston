@@ -68,8 +68,16 @@ class MapPageState extends State<MapPage> {
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 children: [
-                  _buildMapContainer(screenSize, _mainStageFile, mapContainerHeight),
-                  _buildMapContainer(screenSize, _downtownFile, mapContainerHeight),
+                  _buildMapContainer(
+                    screenSize,
+                    _mainStageFile,
+                    mapContainerHeight,
+                  ),
+                  _buildMapContainer(
+                    screenSize,
+                    _downtownFile,
+                    mapContainerHeight,
+                  ),
                 ],
               ),
             ),
@@ -83,7 +91,7 @@ class MapPageState extends State<MapPage> {
               onPressed: _toggleMap,
               icon: const Icon(Icons.swap_horiz, color: Colors.black87),
               label: Text(
-                _currentPage == 0 ? 'Downtown' : 'Main Stage',
+                _currentPage == 0 ? 'Boston Common' : 'Downtown',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,
@@ -91,7 +99,10 @@ class MapPageState extends State<MapPage> {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -104,7 +115,11 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildMapContainer(Size screenSize, String fileName, double heightFactor) {
+  Widget _buildMapContainer(
+    Size screenSize,
+    String fileName,
+    double heightFactor,
+  ) {
     return Container(
       height: screenSize.height * heightFactor,
       margin: const EdgeInsets.symmetric(horizontal: 25),
@@ -132,17 +147,18 @@ class MapPageState extends State<MapPage> {
               if (loadingProgress == null) return child;
               return const Center(child: CircularProgressIndicator());
             },
-            errorBuilder: (context, error, stackTrace) => const Center(
-              child: Text(
-                "Map Coming Soon!",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+            errorBuilder:
+                (context, error, stackTrace) => const Center(
+                  child: Text(
+                    "Map Coming Soon!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
-            ),
           ),
         ),
       ),
