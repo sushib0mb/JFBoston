@@ -29,8 +29,7 @@ class AnimatedBoothDetailWrapper extends StatefulWidget {
       _AnimatedBoothDetailWrapperState();
 }
 
-class _AnimatedBoothDetailWrapperState
-    extends State<AnimatedBoothDetailWrapper>
+class _AnimatedBoothDetailWrapperState extends State<AnimatedBoothDetailWrapper>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -148,11 +147,12 @@ class _FoodPageState extends State<FoodPage> {
 
   void _applyInitialMapFilter() {
     setState(() {
-      filteredBooths = currentMapLetter != null
-          ? foodBooths
-              .where((b) => b.mapPageFoodLocation == currentMapLetter)
-              .toList()
-          : List<FoodBooth>.from(foodBooths);
+      filteredBooths =
+          currentMapLetter != null
+              ? foodBooths
+                  .where((b) => b.mapPageFoodLocation == currentMapLetter)
+                  .toList()
+              : List<FoodBooth>.from(foodBooths);
     });
   }
 
@@ -266,10 +266,7 @@ class _FoodPageState extends State<FoodPage> {
             padding: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildAllBoothsSection(),
-                const SizedBox(height: 40),
-              ],
+              children: [_buildAllBoothsSection(), const SizedBox(height: 40)],
             ),
           ),
         ),
@@ -286,41 +283,44 @@ class _FoodPageState extends State<FoodPage> {
 
     // If filteredBooths is empty but foodBooths has loaded (async),
     // and no filters are active, show all booths directly.
-    final bool noActiveFilters = selectedLocation == 'All' &&
+    final bool noActiveFilters =
+        selectedLocation == 'All' &&
         selectedPayments.isEmpty &&
         selectedAllergens.isEmpty &&
         (veganOnly != true) &&
         _searchController.text.isEmpty;
 
-    final List<FoodBooth> boothsToShow = showSplitSections
-        ? [...safeBooths, ...unsafeBoothsWithAllergens]
-        : (filteredBooths.isEmpty && noActiveFilters
-            ? (List<FoodBooth>.from(foodBooths)
-              ..sort((a, b) => a.name.compareTo(b.name)))
-            : filteredBooths);
+    final List<FoodBooth> boothsToShow =
+        showSplitSections
+            ? [...safeBooths, ...unsafeBoothsWithAllergens]
+            : (filteredBooths.isEmpty && noActiveFilters
+                ? (List<FoodBooth>.from(foodBooths)
+                  ..sort((a, b) => a.name.compareTo(b.name)))
+                : filteredBooths);
 
     // Empty state
     if (boothsToShow.isEmpty) {
       return Column(
         children: [
           const SizedBox(height: 60),
-          Icon(Icons.search_off,
-              size: 60, color: Theme.of(context).disabledColor),
+          Icon(
+            Icons.search_off,
+            size: 60,
+            color: Theme.of(context).disabledColor,
+          ),
           const SizedBox(height: 20),
           Text(
             'No food booths found',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge!
-                .copyWith(color: Theme.of(context).disabledColor),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: Theme.of(context).disabledColor,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
             'Try different search terms or filters',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(color: Theme.of(context).disabledColor),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              color: Theme.of(context).disabledColor,
+            ),
           ),
           const SizedBox(height: 40),
         ],
@@ -348,9 +348,10 @@ class _FoodPageState extends State<FoodPage> {
 
         // Safe booths
         if (showSplitSections && safeBooths.isNotEmpty) ...[
-          Text(safeSectionTitle,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 20)),
+          Text(
+            safeSectionTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
           const SizedBox(height: 30),
           _buildBoothGrid(safeBooths),
         ],
@@ -358,11 +359,14 @@ class _FoodPageState extends State<FoodPage> {
         // Unsafe booths
         if (showSplitSections && unsafeBoothsWithAllergens.isNotEmpty) ...[
           const SizedBox(height: 30),
-          Text(unsafeSectionTitle,
-              style: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20)),
+          Text(
+            unsafeSectionTitle,
+            style: const TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
           const SizedBox(height: 30),
           _buildBoothGrid(unsafeBoothsWithAllergens, faded: true),
         ] else if (!showSplitSections) ...[
@@ -378,147 +382,186 @@ class _FoodPageState extends State<FoodPage> {
   // Booth card grid
   // ─────────────────────────────────────────────
   Widget _buildBoothGrid(List<FoodBooth> booths, {bool faded = false}) {
-  return GridView.builder(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    padding: EdgeInsets.zero,
-    itemCount: booths.length,
-    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-      maxCrossAxisExtent: 400,
-      mainAxisSpacing: 32,
-      crossAxisSpacing: 32,
-      mainAxisExtent: 310,
-    ),
-    itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
-  );
-}
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemCount: booths.length,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 400,
+        mainAxisSpacing: 32,
+        crossAxisSpacing: 32,
+        mainAxisExtent: 310,
+      ),
+      itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
+    );
+  }
 
-Widget _buildBoothCard(FoodBooth booth, bool faded) {
-  return GestureDetector(
-    onTap: () => _showBoothDetails(context, booth),
-    child: Opacity(
-      opacity: faded ? 0.5 : 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Section
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Stack(
-                children: [
-                  Image.network(
-                    booth.boothImagePath,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        booth.genre,
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                      ),
+  Widget _buildBoothCard(FoodBooth booth, bool faded) {
+    return GestureDetector(
+      onTap: () => _showBoothDetails(context, booth),
+      child: Opacity(
+        opacity: faded ? 0.5 : 1.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image Section
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Stack(
+                  children: [
+                    Image.network(
+                      booth.boothImagePath,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                  ),
-                ],
-              ),
-            ),
-            // Text + Logo Section
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Left column: logo
-                  if (booth.logoPath.isNotEmpty)
-                    Container(
-                      width: 56,
-                      height: 56,
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.black.withValues(alpha: 0.12), width: 1),
-                      ),
-                      child: Image.network(
-                        booth.logoPath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                      ),
-                    ),
-                  // Right column: name, location, payments
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          booth.name,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: -0.3),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
-                        const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: Text(
-                                booth.boothLocation,
-                                style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          booth.genre,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Text + Logo Section
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Left column: logo
+                    if (booth.logoPath.isNotEmpty)
+                      Container(
+                        // 1. Increased the container footprint
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(right: 12),
+                        // 2. Reduced padding so the logo has more room to breathe
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          // Scaled the radius slightly to match the larger size
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            width: 1,
+                          ),
+                        ),
+                        // 3. Using ClipRRect so the image corners match the container corners
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            booth.logoPath,
+                            // 4. BoxFit.contain is safest for logos to prevent cropping,
+                            // but since we increased the Container size, the logo will naturally be larger.
+                            fit: BoxFit.contain,
+                            errorBuilder:
+                                (_, __, ___) => const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
+                    // Right column: name, location, payments
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            booth.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        if (booth.payments.isNotEmpty)
-                          _buildMiniTag(Icons.payments_outlined, booth.payments.first),
-                      ],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 13,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: Text(
+                                  booth.boothLocation,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          if (booth.payments.isNotEmpty)
+                            _buildMiniTag(
+                              Icons.payments_outlined,
+                              booth.payments.first,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-// Shadcn-style mini tag
-Widget _buildMiniTag(IconData icon, String label) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: Colors.grey.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Row(
-      children: [
-        Icon(icon, size: 12, color: Colors.black87),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
-      ],
-    ),
-  );
-}
+  // Shadcn-style mini tag
+  Widget _buildMiniTag(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 12, color: Colors.black87),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─────────────────────────────────────────────
   // Booth detail bottom sheet
   // ─────────────────────────────────────────────
@@ -527,14 +570,17 @@ Widget _buildMiniTag(IconData icon, String label) {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        margin: const EdgeInsets.only(top: 16), // fixed margin, no screen size
-        child: AnimatedBoothDetailWrapper(
-          booth: booth,
-          onClose: () => Navigator.of(ctx).pop(),
-          selectedAllergens: selectedAllergens.toList(),
-        ),
-      ),
+      builder:
+          (ctx) => Container(
+            margin: const EdgeInsets.only(
+              top: 16,
+            ), // fixed margin, no screen size
+            child: AnimatedBoothDetailWrapper(
+              booth: booth,
+              onClose: () => Navigator.of(ctx).pop(),
+              selectedAllergens: selectedAllergens.toList(),
+            ),
+          ),
     ).then((_) {
       _applyFilters();
       _searchFocusNode.unfocus();
@@ -560,8 +606,7 @@ Widget _buildMiniTag(IconData icon, String label) {
         transitionDuration: const Duration(milliseconds: 200),
         pageBuilder: (_, __, ___) => const SizedBox.shrink(),
         transitionBuilder: (ctx, anim, _, __) {
-          final curved =
-              CurvedAnimation(parent: anim, curve: Curves.easeOut);
+          final curved = CurvedAnimation(parent: anim, curve: Curves.easeOut);
 
           return FadeTransition(
             opacity: curved,
@@ -571,8 +616,7 @@ Widget _buildMiniTag(IconData icon, String label) {
                 GestureDetector(
                   onTap: () => Navigator.of(ctx).maybePop(),
                   child: Container(
-                    color: Colors.black
-                        .withValues(alpha: curved.value * 0.5),
+                    color: Colors.black.withValues(alpha: curved.value * 0.5),
                   ),
                 ),
                 Center(
@@ -587,7 +631,8 @@ Widget _buildMiniTag(IconData icon, String label) {
                           maxHeight: isTablet ? 700 : 600,
                         ),
                         margin: EdgeInsets.symmetric(
-                            horizontal: isTablet ? 30 : 24),
+                          horizontal: isTablet ? 30 : 24,
+                        ),
                         padding: EdgeInsets.symmetric(
                           horizontal: isTablet ? 24 : 16,
                           vertical: isTablet ? 16 : 10,
@@ -596,14 +641,16 @@ Widget _buildMiniTag(IconData icon, String label) {
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: const [
-                            BoxShadow(
-                                color: Colors.black26, blurRadius: 10),
+                            BoxShadow(color: Colors.black26, blurRadius: 10),
                           ],
                         ),
                         child: StatefulBuilder(
-                          builder: (context, setModalState) =>
-                              _buildFilterContent(
-                                  isTablet, ctx, setModalState),
+                          builder:
+                              (context, setModalState) => _buildFilterContent(
+                                isTablet,
+                                ctx,
+                                setModalState,
+                              ),
                         ),
                       ),
                     ),
@@ -637,10 +684,9 @@ Widget _buildMiniTag(IconData icon, String label) {
             children: [
               Text(
                 'Filters',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge!
-                    .copyWith(fontSize: isTablet ? 24 : 20),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge!.copyWith(fontSize: isTablet ? 24 : 20),
               ),
               IconButton(
                 icon: Icon(Icons.close, size: isTablet ? 28 : 24),
@@ -666,9 +712,12 @@ Widget _buildMiniTag(IconData icon, String label) {
                 PaymentFilterRow(
                   selectedPayments: selectedPayments,
                   onPaymentSelected: (method, isSel) {
-                    setModalState(() => isSel
-                        ? selectedPayments.add(method)
-                        : selectedPayments.remove(method));
+                    setModalState(
+                      () =>
+                          isSel
+                              ? selectedPayments.add(method)
+                              : selectedPayments.remove(method),
+                    );
                   },
                 ),
                 SizedBox(height: isTablet ? 28 : 22),
@@ -684,9 +733,12 @@ Widget _buildMiniTag(IconData icon, String label) {
                 AllergyFilterGrid(
                   selectedAllergens: selectedAllergens,
                   onAllergenSelected: (all, isSel) {
-                    setModalState(() => isSel
-                        ? selectedAllergens.add(all)
-                        : selectedAllergens.remove(all));
+                    setModalState(
+                      () =>
+                          isSel
+                              ? selectedAllergens.add(all)
+                              : selectedAllergens.remove(all),
+                    );
                   },
                 ),
                 SizedBox(height: isTablet ? 24 : 16),
@@ -710,7 +762,8 @@ Widget _buildMiniTag(IconData icon, String label) {
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   padding: EdgeInsets.symmetric(
                     vertical: isTablet ? 16 : 12,
                     horizontal: isTablet ? 32 : 24,
@@ -718,7 +771,8 @@ Widget _buildMiniTag(IconData icon, String label) {
                   elevation: isTablet ? 12 : 10,
                 ).copyWith(
                   shadowColor: WidgetStateProperty.all(
-                      Colors.black.withValues(alpha: 0.3)),
+                    Colors.black.withValues(alpha: 0.3),
+                  ),
                 ),
                 onPressed: () {
                   setState(() {
@@ -796,13 +850,13 @@ Widget _buildMiniTag(IconData icon, String label) {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         elevation: 10,
       ).copyWith(
         shadowColor: WidgetStateProperty.all(
-            Colors.redAccent.withValues(alpha: 0.5)),
+          Colors.redAccent.withValues(alpha: 0.5),
+        ),
       ),
       onPressed: () {
         onApply();
@@ -837,15 +891,21 @@ Widget _buildMiniTag(IconData icon, String label) {
           });
         },
         offset: const Offset(0, 55),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        itemBuilder: (_) => [
-          _buildLocationMenuItem('All', Icons.location_on, Colors.grey),
-          _buildLocationMenuItem(
-              'Commons', Icons.location_city, Colors.blue),
-          _buildLocationMenuItem(
-              'Downtown', Icons.location_city, Colors.orange),
-        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        itemBuilder:
+            (_) => [
+              _buildLocationMenuItem('All', Icons.location_on, Colors.grey),
+              _buildLocationMenuItem(
+                'Commons',
+                Icons.location_city,
+                Colors.blue,
+              ),
+              _buildLocationMenuItem(
+                'Downtown',
+                Icons.location_city,
+                Colors.orange,
+              ),
+            ],
         child: Container(
           width: 55,
           height: 55,
@@ -861,13 +921,12 @@ Widget _buildMiniTag(IconData icon, String label) {
             ],
           ),
           child: Icon(
-            selectedLocation == 'All'
-                ? Icons.location_on
-                : Icons.location_city,
+            selectedLocation == 'All' ? Icons.location_on : Icons.location_city,
             size: 24,
-            color: selectedLocation == 'Commons'
-                ? Colors.blue
-                : selectedLocation == 'Downtown'
+            color:
+                selectedLocation == 'Commons'
+                    ? Colors.blue
+                    : selectedLocation == 'Downtown'
                     ? Colors.orange
                     : Colors.grey.shade700,
           ),
@@ -877,7 +936,10 @@ Widget _buildMiniTag(IconData icon, String label) {
   }
 
   PopupMenuItem<String> _buildLocationMenuItem(
-      String value, IconData icon, Color color) {
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     final bool isSelected = selectedLocation == value;
     return PopupMenuItem<String>(
       value: value,
@@ -888,8 +950,7 @@ Widget _buildMiniTag(IconData icon, String label) {
           Text(
             value,
             style: TextStyle(
-              fontWeight:
-                  isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected ? color : Colors.black87,
             ),
           ),
@@ -915,25 +976,29 @@ Widget _buildMiniTag(IconData icon, String label) {
 
       final searchQuery = _searchController.text.toLowerCase();
 
-      final baseList = currentMapLetter != null
-          ? foodBooths
-              .where((b) => b.mapPageFoodLocation == currentMapLetter)
-              .toList()
-          : List<FoodBooth>.from(foodBooths);
+      final baseList =
+          currentMapLetter != null
+              ? foodBooths
+                  .where((b) => b.mapPageFoodLocation == currentMapLetter)
+                  .toList()
+              : List<FoodBooth>.from(foodBooths);
 
       for (final booth in baseList) {
         // Location filter
-        if (selectedLocation != 'All' &&
-            booth.location != selectedLocation) continue;
+        if (selectedLocation != 'All' && booth.location != selectedLocation)
+          continue;
 
         // Search filter
         if (searchQuery.isNotEmpty) {
-          final matches = booth.name.toLowerCase().contains(searchQuery) ||
+          final matches =
+              booth.name.toLowerCase().contains(searchQuery) ||
               booth.boothLocation.toLowerCase().contains(searchQuery) ||
               booth.genre.toLowerCase().contains(searchQuery) ||
-              booth.dishes.any((d) =>
-                  d.name.toLowerCase().contains(searchQuery) ||
-                  d.description.toLowerCase().contains(searchQuery));
+              booth.dishes.any(
+                (d) =>
+                    d.name.toLowerCase().contains(searchQuery) ||
+                    d.description.toLowerCase().contains(searchQuery),
+              );
           if (!matches) continue;
         }
 
@@ -946,9 +1011,11 @@ Widget _buildMiniTag(IconData icon, String label) {
         // Vegan / allergen logic
         final hasVeganDish = booth.dishes.any((d) => d.isVegan);
         final allHaveAllergens = booth.dishes.every(
-            (d) => d.allergens.any((a) => selectedAllergens.contains(a)));
+          (d) => d.allergens.any((a) => selectedAllergens.contains(a)),
+        );
         final hasSafeDish = booth.dishes.any(
-            (d) => !d.allergens.any((a) => selectedAllergens.contains(a)));
+          (d) => !d.allergens.any((a) => selectedAllergens.contains(a)),
+        );
 
         if (selectedAllergens.isNotEmpty && veganOnly == true) {
           (hasVeganDish && hasSafeDish ? safeBooths : unsafeBoothsWithAllergens)
@@ -956,8 +1023,9 @@ Widget _buildMiniTag(IconData icon, String label) {
           continue;
         }
         if (selectedAllergens.isNotEmpty) {
-          (allHaveAllergens ? unsafeBoothsWithAllergens : safeBooths)
-              .add(booth);
+          (allHaveAllergens ? unsafeBoothsWithAllergens : safeBooths).add(
+            booth,
+          );
           continue;
         }
         if (veganOnly == true) {
