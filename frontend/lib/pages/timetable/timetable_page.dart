@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -11,12 +12,14 @@ class TimetablePage extends StatefulWidget {
   final EventItem? selectedEvent;
   final int? selectedDay;
   final String? initialStage;
+  final bool isVisible;
 
   const TimetablePage({
     super.key,
     this.selectedEvent,
     this.selectedDay,
     this.initialStage,
+    this.isVisible = true,
   });
 
   @override
@@ -28,6 +31,7 @@ class _TimetablePageState extends State<TimetablePage> {
   String selectedStage = 'Main Stage';
   EventItem? selectedEvent;
   bool isShowingDetail = false;
+  bool _hasAutoScrolled = false;
   late ScrollController _scrollController;
 
   static const List<String> _stageNames = [
@@ -65,10 +69,25 @@ class _TimetablePageState extends State<TimetablePage> {
     if (widget.selectedEvent != null) {
       selectedEvent = widget.selectedEvent;
       isShowingDetail = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToEventTime(widget.selectedEvent!.time);
-      });
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasAutoScrolled) return;
+    final svc = Provider.of<ScheduleDataService>(context);
+    final schedule = selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
+    if (schedule.isEmpty) return;
+    _hasAutoScrolled = true;
+    final baseTime = parseTimeToMinutes(schedule.first.time);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.selectedEvent != null) {
+        _scrollToEventTime(widget.selectedEvent!.time);
+      } else {
+        _scrollToCurrentTime(baseTime);
+      }
+    });
   }
 
   void _scrollToEventTime(String time) {
@@ -77,10 +96,41 @@ class _TimetablePageState extends State<TimetablePage> {
     final offset = (start - base) * _pixelsPerMinute;
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        offset,
+        offset.clamp(0.0, double.infinity),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+    }
+  }
+
+  void _scrollToCurrentTime(int baseTime) {
+    final now = DateTime.now();
+    final nowMinutes = now.hour * 60 + now.minute;
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted || !_scrollController.hasClients) return;
+      final viewportHeight = _scrollController.position.viewportDimension;
+      final redLinePosition = (nowMinutes - baseTime) * _pixelsPerMinute;
+      final offset = (redLinePosition - viewportHeight / 3).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void didUpdateWidget(TimetablePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible && !oldWidget.isVisible) {
+      final svc = Provider.of<ScheduleDataService>(context, listen: false);
+      final schedule = selectedDay == 1 ? svc.day1ScheduleData : svc.day2ScheduleData;
+      if (schedule.isNotEmpty) {
+        _scrollToCurrentTime(parseTimeToMinutes(schedule.first.time));
+      }
     }
   }
 
@@ -322,7 +372,7 @@ class _TimetablePageState extends State<TimetablePage> {
   }
 }
 
-class ScheduleList extends StatelessWidget {
+class ScheduleList extends StatefulWidget {
   final List<ScheduleItem> scheduleItems;
   final void Function(EventItem) onEventTap;
   final String stageName;
@@ -334,21 +384,47 @@ class ScheduleList extends StatelessWidget {
     super.key,
   });
 
+  @override
+  State<ScheduleList> createState() => _ScheduleListState();
+}
+
+class _ScheduleListState extends State<ScheduleList> {
   static const double _timeColumnWidth = 52.0;
   static const double _timeFontSize = 14.0;
   static const double _pixelsPerMinute = 10.0;
+  static const double _timeColumnLeftPad = 13.0;
+
+  late DateTime _now;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _nowMinutes => _now.hour * 60 + _now.minute;
 
   @override
   Widget build(BuildContext context) {
-    if (scheduleItems.isEmpty) return const SizedBox.shrink();
+    if (widget.scheduleItems.isEmpty) return const SizedBox.shrink();
 
-    final timelineSlots = scheduleItems.map((item) => item.time).toList();
+    final timelineSlots = widget.scheduleItems.map((item) => item.time).toList();
     final baseTime = parseTimeToMinutes(timelineSlots.first);
 
     int latestEventEndTime = baseTime;
-    for (var item in scheduleItems) {
+    for (var item in widget.scheduleItems) {
       final itemStartTime = parseTimeToMinutes(item.time);
-      final events = item.eventsByStage[stageName] ?? [];
+      final events = item.eventsByStage[widget.stageName] ?? [];
       for (var event in events) {
         final end = itemStartTime + event.duration;
         if (end > latestEventEndTime) latestEventEndTime = end;
@@ -358,55 +434,86 @@ class ScheduleList extends StatelessWidget {
     final latestTime = latestEventEndTime + 35;
     final timelineHeight = (latestTime - baseTime) * _pixelsPerMinute;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final nowMinutes = _nowMinutes;
+    final bool showNowLine = nowMinutes >= baseTime && nowMinutes <= latestTime;
+    final double nowTop = (nowMinutes - baseTime) * _pixelsPerMinute;
+
+    return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 13),
-          child: SizedBox(
-            width: _timeColumnWidth,
-            height: timelineHeight,
-            child: Stack(
-              children:
-                  timelineSlots.map((timeString) {
-                    final timeInMinutes = parseTimeToMinutes(timeString);
-                    final displayLabel = _minutesToDisplayFormat(timeInMinutes);
-                    final parts = displayLabel.split(" ");
-                    return Positioned(
-                      top: (timeInMinutes - baseTime) * _pixelsPerMinute,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            parts[0],
-                            style: const TextStyle(
-                              fontSize: _timeFontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: _timeColumnLeftPad),
+              child: SizedBox(
+                width: _timeColumnWidth,
+                height: timelineHeight,
+                child: Stack(
+                  children:
+                      timelineSlots.map((timeString) {
+                        final timeInMinutes = parseTimeToMinutes(timeString);
+                        final displayLabel = _minutesToDisplayFormat(timeInMinutes);
+                        final parts = displayLabel.split(" ");
+                        return Positioned(
+                          top: (timeInMinutes - baseTime) * _pixelsPerMinute,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                parts[0],
+                                style: const TextStyle(
+                                  fontSize: _timeFontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (parts.length > 1)
+                                Text(
+                                  parts[1],
+                                  style: const TextStyle(fontSize: _timeFontSize),
+                                ),
+                            ],
                           ),
-                          if (parts.length > 1)
-                            Text(
-                              parts[1],
-                              style: const TextStyle(fontSize: _timeFontSize),
-                            ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
+                ),
+              ),
             ),
-          ),
+            Expanded(
+              child: SizedBox(
+                height: timelineHeight,
+                child: Stack(
+                  children: [
+                    _buildTimelineLines(baseTime, latestTime),
+                    ..._buildEvents(baseTime),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        Expanded(
-          child: SizedBox(
-            height: timelineHeight,
-            child: Stack(
+        if (showNowLine)
+          Positioned(
+            top: nowTop,
+            left: 0,
+            right: 0,
+            child: Row(
               children: [
-                _buildTimelineLines(baseTime, latestTime),
-                ..._buildEvents(baseTime),
+                const SizedBox(width: _timeColumnLeftPad + _timeColumnWidth - 5),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Expanded(
+                  child: Container(height: 2, color: Colors.red),
+                ),
+                const SizedBox(width: 12),
               ],
             ),
           ),
-        ),
       ],
     );
   }
@@ -428,8 +535,8 @@ class ScheduleList extends StatelessWidget {
 
   List<Widget> _buildEvents(int baseTime) {
     final events =
-        scheduleItems
-            .expand((item) => item.eventsByStage[stageName] ?? [])
+        widget.scheduleItems
+            .expand((item) => item.eventsByStage[widget.stageName] ?? [])
             .where((e) => e.performanceName.isNotEmpty)
             .toList();
 
@@ -442,7 +549,7 @@ class ScheduleList extends StatelessWidget {
         right: 20,
         child: SizedBox(
           height: (e.duration * _pixelsPerMinute) - 4,
-          child: Performance(eventItem: e, onTap: onEventTap),
+          child: Performance(eventItem: e, onTap: widget.onEventTap),
         ),
       );
     }).toList();
