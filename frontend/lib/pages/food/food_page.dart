@@ -381,18 +381,14 @@ class _FoodPageState extends State<FoodPage> {
   // Booth card grid
   // ─────────────────────────────────────────────
   Widget _buildBoothGrid(List<FoodBooth> booths, {bool faded = false}) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      itemCount: booths.length,
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 400,
-        mainAxisSpacing: 32,
-        crossAxisSpacing: 32,
-        mainAxisExtent: 310,
-      ),
-      itemBuilder: (context, index) => _buildBoothCard(booths[index], faded),
+    return Column(
+      children: [
+        for (int i = 0; i < booths.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 32),
+            child: _buildBoothCard(booths[i], faded),
+          ),
+      ],
     );
   }
 
@@ -523,9 +519,12 @@ class _FoodPageState extends State<FoodPage> {
                           ),
                           const SizedBox(height: 6),
                           if (booth.payments.isNotEmpty)
-                            _buildMiniTag(
-                              Icons.payments_outlined,
-                              booth.payments.first,
+                            Wrap(
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: booth.payments
+                                  .map((p) => _buildMiniTag(Icons.payments_outlined, p))
+                                  .toList(),
                             ),
                         ],
                       ),
@@ -540,21 +539,22 @@ class _FoodPageState extends State<FoodPage> {
     );
   }
 
-  // Shadcn-style mini tag
   Widget _buildMiniTag(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.grey.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.25), width: 1),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.black87),
-          const SizedBox(width: 4),
+          Icon(icon, size: 11, color: Colors.black54),
+          const SizedBox(width: 3),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.black87),
           ),
         ],
       ),
