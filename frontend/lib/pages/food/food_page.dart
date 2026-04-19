@@ -569,16 +569,16 @@ class _FoodPageState extends State<FoodPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      constraints: BoxConstraints(
+        minHeight: MediaQuery.of(context).size.height,
+        maxHeight: MediaQuery.of(context).size.height,
+      ),
       builder:
-          (ctx) => Container(
-            margin: const EdgeInsets.only(
-              top: 16,
-            ), // fixed margin, no screen size
-            child: AnimatedBoothDetailWrapper(
-              booth: booth,
-              onClose: () => Navigator.of(ctx).pop(),
-              selectedAllergens: selectedAllergens.toList(),
-            ),
+          (ctx) => AnimatedBoothDetailWrapper(
+            booth: booth,
+            onClose: () => Navigator.of(ctx).pop(),
+            selectedAllergens: selectedAllergens.toList(),
           ),
     ).then((_) {
       _applyFilters();
