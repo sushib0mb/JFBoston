@@ -14,7 +14,7 @@ class FoodBooth {
   final List<Dish> dishes;
   final String location;
 
-  bool get isVegan => dishes.any((d) => d.isVegan);
+  bool get isVegetarian => dishes.any((d) => d.isVegetarian);
 
   FoodBooth({
     required this.name,

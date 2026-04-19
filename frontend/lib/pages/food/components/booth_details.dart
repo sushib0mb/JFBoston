@@ -2,7 +2,7 @@
 /// BOOTH DETAILS COMPONENT
 /// ────────────────────────────────────────────────────────────────────────────
 /// A high-fidelity modal following Shadcn UI principles.
-/// - Integrated custom payment, vegan, and allergen assets.
+/// - Integrated custom payment, vegetarian, and allergen assets.
 /// - Refined typography and "flat" card design.
 /// - Optimized for clarity with expandable dish details.
 /// ────────────────────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ class BoothDetails extends StatelessWidget {
                         const SizedBox(height: 32),
                         _buildSectionHeader("Vegetarian Status"),
                         const SizedBox(height: 16),
-                        _buildVeganStatus(booth.isVegan),
+                        _buildVegetarianStatus(booth.isVegetarian),
 
                         const SizedBox(height: 32),
                         _buildSectionHeader("Menu Items"),
@@ -257,33 +257,39 @@ class BoothDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildVeganStatus(bool isVegan) {
+  Widget _buildVegetarianStatus(bool isVegetarian) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color:
-            isVegan
+            isVegetarian
                 ? Colors.green.withValues(alpha: 0.05)
                 : Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isVegan ? Colors.green.withValues(alpha: 0.1) : Colors.black12,
+          color:
+              isVegetarian
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.black12,
         ),
       ),
       child: Row(
         children: [
           Image.asset(
-            "assets/vegan.png",
+            "assets/vegetarian.png",
             width: 24,
             height: 24,
-            color: isVegan ? null : Colors.grey,
+            color: isVegetarian ? null : Colors.grey,
           ),
           const SizedBox(width: 12),
           Text(
-            isVegan ? "Vegetarian Options Available" : "No Vegetarian Options",
+            isVegetarian
+                ? "Vegetarian Options Available"
+                : "No Vegetarian Options",
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isVegan ? Colors.green.shade700 : Colors.grey.shade700,
+              color:
+                  isVegetarian ? Colors.green.shade700 : Colors.grey.shade700,
             ),
           ),
         ],
@@ -384,28 +390,28 @@ class _DishCardState extends State<DishCard> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color:
-                        widget.dish.isVegan
+                        widget.dish.isVegetarian
                             ? Colors.green.withValues(alpha: 0.12)
                             : Colors.grey.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color:
-                          widget.dish.isVegan
+                          widget.dish.isVegetarian
                               ? Colors.green.withValues(alpha: 0.4)
                               : Colors.grey.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
                   child: Image.asset(
-                    "assets/vegan.png",
+                    "assets/vegetarian.png",
                     width: 18,
                     height: 18,
                     color:
-                        widget.dish.isVegan
+                        widget.dish.isVegetarian
                             ? null
                             : Colors.grey.withValues(alpha: 0.5),
                     colorBlendMode:
-                        widget.dish.isVegan ? null : BlendMode.srcIn,
+                        widget.dish.isVegetarian ? null : BlendMode.srcIn,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -426,24 +432,26 @@ class _DishCardState extends State<DishCard> {
                   Row(
                     children: [
                       Image.asset(
-                        "assets/vegan.png",
+                        "assets/vegetarian.png",
                         width: 20,
                         height: 20,
                         color:
-                            widget.dish.isVegan
+                            widget.dish.isVegetarian
                                 ? null
                                 : Colors.grey.withValues(alpha: 0.35),
                         colorBlendMode:
-                            widget.dish.isVegan ? null : BlendMode.srcIn,
+                            widget.dish.isVegetarian ? null : BlendMode.srcIn,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        widget.dish.isVegan ? "Vegetarian" : "Not Vegetarian",
+                        widget.dish.isVegetarian
+                            ? "Vegetarian"
+                            : "Not Vegetarian",
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color:
-                              widget.dish.isVegan
+                              widget.dish.isVegetarian
                                   ? Colors.green.shade700
                                   : Colors.grey.shade500,
                         ),

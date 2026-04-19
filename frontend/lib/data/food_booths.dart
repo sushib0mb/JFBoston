@@ -88,7 +88,7 @@ class FoodService extends ChangeNotifier {
           name: dishData['name'],
           imagePath: dishData['image_path'] ?? '',
           allergens: allergensList,
-          isVegan: dishData['is_vegan'] ?? false,
+          isVegetarian: dishData['is_vegetarian'] ?? false,
           boothId: dishData['booth_id'],
         );
 

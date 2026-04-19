@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/food_booths.dart';
 import '../../models/food_booth.dart';
 import 'components/payment_filter.dart';
-import 'components/vegan_filter.dart';
+import 'components/vegetarian_filter.dart';
 import 'components/allergy_filter.dart';
 import 'components/booth_details.dart';
 import 'components/top_action_buttons.dart';
@@ -92,13 +92,13 @@ class _FoodPageState extends State<FoodPage> {
   String selectedLocation = 'Commons';
   List<FoodBooth> filteredBooths = foodBooths;
   Set<String> selectedPayments = {};
-  bool? veganOnly = false;
+  bool? vegetarianOnly = false;
   Set<String> excludedAllergens = {};
   List<FoodBooth> safeBooths = [];
   List<FoodBooth> unsafeBoothsWithAllergens = [];
   Set<String> selectedAllergens = {};
-  List<FoodBooth> safeVeganBooths = [];
-  List<FoodBooth> nonVeganBooths = [];
+  List<FoodBooth> safeVegetarianBooths = [];
+  List<FoodBooth> nonVegetarianBooths = [];
   bool _isFilterPopupOpen = false;
   String? currentMapLetter;
   bool _isSearching = false;
@@ -158,9 +158,9 @@ class _FoodPageState extends State<FoodPage> {
 
   // ── Section title helpers ──
   String get safeSectionTitle {
-    if (veganOnly! && selectedAllergens.isNotEmpty) {
+    if (vegetarianOnly! && selectedAllergens.isNotEmpty) {
       return '✅ Vegetarian & Allergen-Safe Options';
-    } else if (veganOnly!) {
+    } else if (vegetarianOnly!) {
       return '✅ Vegetarian Options';
     } else if (selectedAllergens.isNotEmpty) {
       return '✅ Allergen-Safe Options';
@@ -169,9 +169,9 @@ class _FoodPageState extends State<FoodPage> {
   }
 
   String get unsafeSectionTitle {
-    if (veganOnly! && selectedAllergens.isNotEmpty) {
+    if (vegetarianOnly! && selectedAllergens.isNotEmpty) {
       return '⚠️ Contains Allergens Or Not Vegetarian';
-    } else if (veganOnly!) {
+    } else if (vegetarianOnly!) {
       return '⚠️ Not Vegetarian';
     } else if (selectedAllergens.isNotEmpty) {
       return '⚠️ May Contain Allergens';
@@ -286,7 +286,7 @@ class _FoodPageState extends State<FoodPage> {
           const SizedBox(height: 20),
           const Text(
             "We've got Japanese sake and food available at Downtown Crossing! Come stop by and enjoy authentic Japanese flavors along with great music 🎶",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight(700)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 50),
@@ -301,7 +301,7 @@ class _FoodPageState extends State<FoodPage> {
         selectedLocation == 'Commons' &&
         selectedPayments.isEmpty &&
         selectedAllergens.isEmpty &&
-        (veganOnly != true) &&
+        (vegetarianOnly != true) &&
         _searchController.text.isEmpty;
 
     final List<FoodBooth> boothsToShow =
@@ -722,9 +722,9 @@ class _FoodPageState extends State<FoodPage> {
                 SizedBox(height: isTablet ? 28 : 22),
                 Center(child: _buildSectionTitle('Vegetarian')),
                 SizedBox(height: isTablet ? 20 : 16),
-                VeganFilterOption(
-                  isVegan: veganOnly ?? false,
-                  onChanged: (v) => setModalState(() => veganOnly = v),
+                VegetarianFilterOption(
+                  isVegetarian: vegetarianOnly ?? false,
+                  onChanged: (v) => setModalState(() => vegetarianOnly = v),
                 ),
                 SizedBox(height: isTablet ? 28 : 22),
                 Center(child: _buildSectionTitle('Allergens')),
@@ -776,12 +776,12 @@ class _FoodPageState extends State<FoodPage> {
                 onPressed: () {
                   setState(() {
                     selectedPayments.clear();
-                    veganOnly = false;
+                    vegetarianOnly = false;
                     selectedAllergens.clear();
                   });
                   setModalState(() {
                     selectedPayments.clear();
-                    veganOnly = false;
+                    vegetarianOnly = false;
                     selectedAllergens.clear();
                   });
                   _applyFilters();
@@ -916,8 +916,8 @@ class _FoodPageState extends State<FoodPage> {
     setState(() {
       safeBooths = [];
       unsafeBoothsWithAllergens = [];
-      safeVeganBooths = [];
-      nonVeganBooths = [];
+      safeVegetarianBooths = [];
+      nonVegetarianBooths = [];
       filteredBooths = [];
 
       final searchQuery = _searchController.text.toLowerCase();
@@ -952,8 +952,8 @@ class _FoodPageState extends State<FoodPage> {
           continue;
         }
 
-        // Vegan / allergen logic
-        final hasVeganDish = booth.dishes.any((d) => d.isVegan);
+        // Cegetarian / allergen logic
+        final hasVegetarianDish = booth.dishes.any((d) => d.isVegetarian);
         final allHaveAllergens = booth.dishes.every(
           (d) => d.allergens.any((a) => selectedAllergens.contains(a)),
         );
@@ -961,8 +961,10 @@ class _FoodPageState extends State<FoodPage> {
           (d) => !d.allergens.any((a) => selectedAllergens.contains(a)),
         );
 
-        if (selectedAllergens.isNotEmpty && veganOnly == true) {
-          (hasVeganDish && hasSafeDish ? safeBooths : unsafeBoothsWithAllergens)
+        if (selectedAllergens.isNotEmpty && vegetarianOnly == true) {
+          (hasVegetarianDish && hasSafeDish
+                  ? safeBooths
+                  : unsafeBoothsWithAllergens)
               .add(booth);
           continue;
         }
@@ -972,8 +974,10 @@ class _FoodPageState extends State<FoodPage> {
           );
           continue;
         }
-        if (veganOnly == true) {
-          (hasVeganDish ? safeVeganBooths : nonVeganBooths).add(booth);
+        if (vegetarianOnly == true) {
+          (hasVegetarianDish ? safeVegetarianBooths : nonVegetarianBooths).add(
+            booth,
+          );
           continue;
         }
 
@@ -983,8 +987,8 @@ class _FoodPageState extends State<FoodPage> {
       // Assemble final list
       if (selectedAllergens.isNotEmpty) {
         filteredBooths = [...safeBooths];
-      } else if (veganOnly == true) {
-        filteredBooths = [...safeVeganBooths];
+      } else if (vegetarianOnly == true) {
+        filteredBooths = [...safeVegetarianBooths];
       }
 
       // Sort all lists
@@ -992,7 +996,7 @@ class _FoodPageState extends State<FoodPage> {
         filteredBooths,
         safeBooths,
         unsafeBoothsWithAllergens,
-        safeVeganBooths,
+        safeVegetarianBooths,
       ]) {
         list.sort((a, b) => a.name.compareTo(b.name));
       }
