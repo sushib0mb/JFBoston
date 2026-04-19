@@ -268,6 +268,7 @@ class _MainScreenState extends State<MainScreen> {
         selectedEvent: widget.selectedEvent,
         selectedDay: _dayForTimetable,
         initialStage: widget.initialStage,
+        isVisible: _currentIndex == 2,
       ),
       MapPage(supabase),
     ];
