@@ -15,7 +15,7 @@ const int festivalDays = 2;
 const int festivalStartYear = 2026;
 const int festivalStartMonth = 4;
 // ── Incoming: updated start day ───────────────────────────────────────────────
-const int festivalStartDay = 18;
+const int festivalStartDay = 25;
 const String festivalLocation = "Boston Common";
 
 /// Returns the current festival day (1-based), or 0 if not during the festival.
