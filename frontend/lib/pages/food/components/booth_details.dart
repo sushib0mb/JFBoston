@@ -200,13 +200,27 @@ class BoothDetails extends StatelessWidget {
   }
 
   Widget _buildPaymentRow(List<String> payments) {
+    String normalize(String s) {
+      final lower = s.toLowerCase().trim();
+      if (lower == 'cc') return 'Credit Card';
+      if (lower == 'apple pay' || lower == 'apple') return 'Apple Pay';
+      if (lower == 'credit card') return 'Credit Card';
+      if (lower == 'paypal') return 'PayPal';
+      if (lower == 'venmo') return 'Venmo';
+      if (lower == 'zelle') return 'Zelle';
+      if (lower == 'cash') return 'Cash';
+      return s;
+    }
+
+    final normalizedPayments = payments.map(normalize).toSet();
+
     final Map<String, String> assetMap = {
       "Venmo": "assets/payments/venmo.png",
       "Zelle": "assets/payments/zelle.png",
       "Cash": "assets/payments/cash.png",
       "Credit Card": "assets/payments/credit_card.png",
       "PayPal": "assets/payments/paypal.png",
-      "Apple": "assets/payments/apple_pay.png",
+      "Apple Pay": "assets/payments/apple_pay.png",
     };
 
     final entries = assetMap.entries.toList();
@@ -223,7 +237,7 @@ class BoothDetails extends StatelessWidget {
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final entry = entries[index];
-        final bool isAccepted = payments.contains(entry.key);
+        final bool isAccepted = normalizedPayments.contains(entry.key);
         return Opacity(
           opacity: isAccepted ? 1.0 : 0.3,
           child: Container(
