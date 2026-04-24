@@ -1,12 +1,4 @@
-/// ────────────────────────────────────────────────────────────────────────────
-/// BOOTH DETAILS COMPONENT
-/// ────────────────────────────────────────────────────────────────────────────
-/// A high-fidelity modal following Shadcn UI principles.
-/// - Integrated custom payment, vegetarian, and allergen assets.
-/// - Refined typography and "flat" card design.
-/// - Optimized for clarity with expandable dish details.
-/// ────────────────────────────────────────────────────────────────────────────
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../models/food_booth.dart';
 import '../../../models/dish.dart';
@@ -43,7 +35,6 @@ class BoothDetails extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.2),
@@ -57,29 +48,46 @@ class BoothDetails extends StatelessWidget {
               children: [
                 _buildHeader(context),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader("Accepted Payments"),
-                        const SizedBox(height: 16),
-                        _buildPaymentRow(booth.payments),
+                  child: CustomScrollView(
+                    slivers: [
+                      // ── Static sections ──────────────────────────────
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader("Accepted Payments"),
+                              const SizedBox(height: 16),
+                              _buildPaymentRow(booth.payments),
+                              const SizedBox(height: 32),
+                              _buildSectionHeader("Vegetarian Status"),
+                              const SizedBox(height: 16),
+                              _buildVegetarianStatus(booth.isVegetarian),
+                              const SizedBox(height: 32),
+                              _buildSectionHeader("Menu Items"),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                      ),
 
-                        const SizedBox(height: 32),
-                        _buildSectionHeader("Vegetarian Status"),
-                        const SizedBox(height: 16),
-                        _buildVegetarianStatus(booth.isVegetarian),
+                      // ── Lazy dish list ───────────────────────────────
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverList.separated(
+                          itemCount: booth.dishes.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) => DishCard(
+                            dish: booth.dishes[index],
+                            selectedAllergens: selectedAllergens,
+                          ),
+                        ),
+                      ),
 
-                        const SizedBox(height: 32),
-                        _buildSectionHeader("Menu Items"),
-                        const SizedBox(height: 16),
-                        _buildDishesSection(booth.dishes, selectedAllergens),
-                      ],
-                    ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                    ],
                   ),
                 ),
               ],
@@ -93,12 +101,17 @@ class BoothDetails extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Stack(
       children: [
+        // Cap decode size to 2× display height (220px) to avoid full-res decode
         Container(
           height: 220,
           width: double.infinity,
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: NetworkImage(booth.boothImagePath),
+              image: ResizeImage(
+                CachedNetworkImageProvider(booth.boothImagePath),
+                width: 1100,
+                height: 440,
+              ),
               fit: BoxFit.cover,
             ),
           ),
@@ -275,16 +288,14 @@ class BoothDetails extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color:
-            isVegetarian
-                ? Colors.green.withValues(alpha: 0.05)
-                : Colors.grey.withValues(alpha: 0.05),
+        color: isVegetarian
+            ? Colors.green.withValues(alpha: 0.05)
+            : Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color:
-              isVegetarian
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.black12,
+          color: isVegetarian
+              ? Colors.green.withValues(alpha: 0.1)
+              : Colors.black12,
         ),
       ),
       child: Row(
@@ -308,23 +319,6 @@ class BoothDetails extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDishesSection(
-    List<Dish> dishes,
-    List<String> selectedAllergens,
-  ) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: dishes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder:
-          (context, index) => DishCard(
-            dish: dishes[index],
-            selectedAllergens: selectedAllergens,
-          ),
     );
   }
 }
@@ -367,13 +361,9 @@ class _DishCardState extends State<DishCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border:
-            hasAlert
-                ? Border.all(
-                  color: Colors.red.withValues(alpha: 0.4),
-                  width: 1.5,
-                )
-                : null,
+        border: hasAlert
+            ? Border.all(color: Colors.red.withValues(alpha: 0.4), width: 1.5)
+            : null,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -386,11 +376,26 @@ class _DishCardState extends State<DishCard> {
             ),
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                widget.dish.imagePath,
+              // Constrain decode to 2× display size (64px) → 128px max in RAM
+              child: CachedNetworkImage(
+                imageUrl: widget.dish.imagePath,
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,
+                memCacheWidth: 128,
+                memCacheHeight: 128,
+                placeholder: (_, __) => Container(
+                  width: 64,
+                  height: 64,
+                  color: Colors.grey.withValues(alpha: 0.1),
+                ),
+                errorWidget: (_, __, ___) => Container(
+                  width: 64,
+                  height: 64,
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  child: const Icon(Icons.broken_image_outlined,
+                      color: Colors.grey, size: 24),
+                ),
               ),
             ),
             title: Text(
@@ -403,16 +408,14 @@ class _DishCardState extends State<DishCard> {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color:
-                        widget.dish.isVegetarian
-                            ? Colors.green.withValues(alpha: 0.12)
-                            : Colors.grey.withValues(alpha: 0.08),
+                    color: widget.dish.isVegetarian
+                        ? Colors.green.withValues(alpha: 0.12)
+                        : Colors.grey.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color:
-                          widget.dish.isVegetarian
-                              ? Colors.green.withValues(alpha: 0.4)
-                              : Colors.grey.withValues(alpha: 0.3),
+                      color: widget.dish.isVegetarian
+                          ? Colors.green.withValues(alpha: 0.4)
+                          : Colors.grey.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -420,10 +423,9 @@ class _DishCardState extends State<DishCard> {
                     "assets/vegetarian.png",
                     width: 18,
                     height: 18,
-                    color:
-                        widget.dish.isVegetarian
-                            ? null
-                            : Colors.grey.withValues(alpha: 0.5),
+                    color: widget.dish.isVegetarian
+                        ? null
+                        : Colors.grey.withValues(alpha: 0.5),
                     colorBlendMode:
                         widget.dish.isVegetarian ? null : BlendMode.srcIn,
                   ),
@@ -449,12 +451,12 @@ class _DishCardState extends State<DishCard> {
                         "assets/vegetarian.png",
                         width: 20,
                         height: 20,
-                        color:
-                            widget.dish.isVegetarian
-                                ? null
-                                : Colors.grey.withValues(alpha: 0.35),
-                        colorBlendMode:
-                            widget.dish.isVegetarian ? null : BlendMode.srcIn,
+                        color: widget.dish.isVegetarian
+                            ? null
+                            : Colors.grey.withValues(alpha: 0.35),
+                        colorBlendMode: widget.dish.isVegetarian
+                            ? null
+                            : BlendMode.srcIn,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -464,10 +466,9 @@ class _DishCardState extends State<DishCard> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color:
-                              widget.dish.isVegetarian
-                                  ? Colors.green.shade700
-                                  : Colors.grey.shade500,
+                          color: widget.dish.isVegetarian
+                              ? Colors.green.shade700
+                              : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -486,48 +487,44 @@ class _DishCardState extends State<DishCard> {
                     Wrap(
                       spacing: 16,
                       runSpacing: 16,
-                      children:
-                          widget.dish.allergens.map((allergen) {
-                            final isSelected = widget.selectedAllergens
-                                .contains(allergen);
-                            return Column(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isSelected
-                                            ? Colors.red.withValues(alpha: 0.1)
-                                            : Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color:
-                                          isSelected
-                                              ? Colors.red
-                                              : Colors.black12,
-                                    ),
-                                  ),
-                                  child: Image.asset(
-                                    _allergenIcons[allergen] ??
-                                        "assets/allergens/default.png",
-                                  ),
+                      children: widget.dish.allergens.map((allergen) {
+                        final isSelected =
+                            widget.selectedAllergens.contains(allergen);
+                        return Column(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.red.withValues(alpha: 0.1)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.red
+                                      : Colors.black12,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  allergen,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color:
-                                        isSelected
-                                            ? Colors.red
-                                            : Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
+                              ),
+                              child: Image.asset(
+                                _allergenIcons[allergen] ??
+                                    "assets/allergens/default.png",
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              allergen,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isSelected
+                                    ? Colors.red
+                                    : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
                     ),
                   ],
                 ],
