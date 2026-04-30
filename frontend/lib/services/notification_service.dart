@@ -68,8 +68,9 @@ class NotificationService {
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-
+    const androidInit = AndroidInitializationSettings(
+      'ic_stat_jfbostoniconnobg',
+    );
     await fln.initialize(
       const InitializationSettings(
         android: androidInit,

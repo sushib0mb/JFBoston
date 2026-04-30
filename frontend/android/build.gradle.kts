@@ -1,7 +1,7 @@
 // android/build.gradle.kts
 
 buildscript {
-    val kotlin_version by extra("1.8.10") // You can change this to 1.9.0 if needed
+    val kotlin_version by extra("2.1.0") // You can change this to 1.9.0 if needed
 
     repositories {
         google()

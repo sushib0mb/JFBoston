@@ -39,7 +39,7 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_launcher_icons: ^0.13.1
   hive_generator: ^2.0.0 # to generate type adapters
   build_runner: ^2.4.0 # to run code generation
   flutter_lints: ^5.0.0
@@ -150,6 +150,13 @@ flutter:
         - asset: assets/fonts/Fredoka-Regular.ttf
         - asset: assets/fonts/Fredoka-Light.ttf
         - asset: assets/fonts/NotoSansJP-Regular.ttf
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/jfbostonIconWhiteBg.png"
+  adaptive_icon_background: "#ffffff" # Android supplies the white bg
+  adaptive_icon_foreground: "assets/jfbostonIconNoBg.png"
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
